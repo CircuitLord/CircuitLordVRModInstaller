@@ -838,52 +838,26 @@ namespace BigWalkVRInstaller
         void OpenRepo_Click(object sender, RoutedEventArgs e) => Open(() => GameLauncher.OpenUrl(RepoUrl));
         async void CreateCrashReport_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedGame == SelectedGame.Titanfall2) await PromptTitanfallCrashReport();
+            if (_selectedGame == SelectedGame.Titanfall2)
+                await PromptCrashReport("Create crash report", "saved crash or freeze logs", () => CrashReportService.CreateTitanfall(_titanfall.GamePath));
             else await PromptCrashReport("Create crash report");
         }
 
-        async Task PromptCrashReport(string title)
-        {
-            if (await Confirm(title,
-                "Create a ZIP containing the BepInEx and Unity logs. Logs may contain personal or device details, so review them before sharing.",
-                "Create report", false)) await CreateCrashReport();
-        }
+        Task PromptCrashReport(string title) => PromptCrashReport(title, "the BepInEx and Unity logs", () => CrashReportService.Create(_bigWalk.GamePath));
 
-        async Task CreateCrashReport()
+        async Task PromptCrashReport(string title, string contents, Func<string> create)
         {
+            if (!await Confirm(title,
+                $"Create a ZIP containing {contents}. Logs may contain personal or device details, so review them before sharing.",
+                "Create report", false)) return;
+
             try
             {
-                var report = CrashReportService.Create(_bigWalk.GamePath);
-                GameLauncher.SelectFile(report);
+                GameLauncher.SelectFile(create());
                 Status("Crash report created on the Desktop.");
                 if (await Confirm("Crash report ready",
-                    "The ZIP is selected in Explorer. You can send it in the #support channel in the Big Walk VR Discord.",
+                    "The ZIP is selected in Explorer. You can send it in the #support channel on the Discord.",
                     "Open Discord", false)) GameLauncher.OpenUrl(DiscordUrl);
-            }
-            catch (Exception ex)
-            {
-                Status($"Couldn't create the crash report: {ex.Message}", true);
-            }
-        }
-
-        async Task PromptTitanfallCrashReport()
-        {
-            if (!await Confirm(
-                "Create crash report",
-                "Create a ZIP containing saved crash or freeze diagnostics. Dumps may contain account, server, device, or memory details. Share it only with support.",
-                "Create report",
-                false)) return;
-
-            try
-            {
-                var report = CrashReportService.CreateTitanfall(_titanfall.GamePath);
-                GameLauncher.SelectFile(report.path);
-                Status(report.dumpIncluded ? "Crash report created on the Desktop." : "Report saved without a dump.");
-                if (await Confirm(
-                    "Crash report ready",
-                    report.dumpIncluded ? "The ZIP includes process memory. Share it only with support." : "No dump was available. The ZIP contains logs and capture status.",
-                    "Open Discord",
-                    false)) GameLauncher.OpenUrl(DiscordUrl);
             }
             catch (Exception ex)
             {

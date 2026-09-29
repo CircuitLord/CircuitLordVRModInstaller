@@ -2,35 +2,52 @@
   <img src="bigwalkvr_icon.png" alt="Big Walk VR" width="160">
 </p>
 
-<h1 align="center">Big Walk VR Installer</h1>
-
-### Notes On Titanfall 2 VR:
-
-> This installer will be used for my Titanfall 2 VR mod, and people kept finding the early version of it in here so I took it down for now. It'll be ready when it's ready in a few days, please be patient. It's the kind of game you can only experience once so playing an early version is just gonna ruin it for yourself. Join the discord below for updates!
+<h1 align="center">CircuitLord's VR Mod Installer</h1>
 
 ### Join the [Discord](https://discord.gg/MTKwud2cCP) if you have questions or feedback!
 
+Hey, I'm CircuitLord! This is a utility to automatically install my full-conversion VR mods, keep them up-to-date, and launch them in VR. It currently supports:
+- Big Walk VR
+- Titanfall 2 VR
+
+These mods and this installer are community projects, not affiliated with or endorsed by the game developers or publishers. Use at your own risk.
+
+**[Download the installer](https://github.com/CircuitLord/BigWalkVRInstaller/releases/latest/download/BigWalkVRInstaller.exe)**
+
+
+## Titanfall 2 VR
+
+Titanfall 2 VR adds full VR support to the Titanfall 2 campaign. It also includes stereo rendering, full body IK, manual reloads, Titan controls, and more!
+
+### What the installer does
+
+1. **Finds Titanfall 2** through your Steam install.
+2. **Checks the EA app**, which Titanfall 2 needs you signed into to play. If it's missing, launch Titanfall 2 once from Steam to install it.
+3. **Installs Northstar and the mod** into a separate `TF2VR` profile in your game directory.
+
+Launching Titanfall 2 normally through Steam stays unmodded. To play in VR, start SteamVR and use the installer's Launch in VR button.
+
+### Campaign saves
+
+VR launches keep their own saves and settings in `Documents\Respawn\Titanfall2_VR`, so your regular campaign stays untouched. During install you can copy your existing campaign progress over or start fresh. Use the installer's Campaign saves button to check your saves or copy your progress later.
+
+## Big Walk VR
+
 Big Walk VR adds full multiplayer-compatible SteamVR support to the game Big Walk by House House. It includes stereo rendering support, full 6dof motion controls with support for grabbing and throwing objects, and more!
 
-This is a utility to automatically install the VR mod and associated files, and keep them up-to-date.
-
-Big Walk VR and this installer are community projects, not affiliated with or endorsed by House House. Use at your own risk.
-
-**[Download BigWalkVRInstaller](https://github.com/CircuitLord/BigWalkVRInstaller/releases/latest/download/BigWalkVRInstaller.exe)**
-
-
-## Do other players need the mod?
+### Do other players need the mod?
 The **host and other players** need the mod installed to **see your VR hands**.
 
 Your non-vr friends can install the mod and still play in flatscreen!
 
-## What it does
+### What the installer does
 
 1. **Finds Big Walk** through your Steam install.
 2. **Sets up BepInEx**, the mod loader Big Walk VR depends on.
 3. **Installs the mod** into your game directory.
 
 Launching Big Walk normally through Steam stays non-VR while showing VR players' tracked movement. To play in VR, start SteamVR and use the installer's Launch in VR button.
+
 
 ## Building from source
 
@@ -40,7 +57,7 @@ Needs the .NET Framework 4.8 SDK.
 dotnet build src/Installer -c Release
 ```
 
-Output is a single `src/Installer/bin/Release/net48/BigWalkVRInstaller.exe` using only .NET Framework assemblies.
+Output is a single `src/Installer/bin/Release/net48/CircuitLordsVRModsInstaller.exe` using only .NET Framework assemblies.
 
 ## How it works
 

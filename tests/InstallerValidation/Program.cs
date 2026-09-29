@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -117,11 +118,10 @@ namespace InstallerValidation
                 File.WriteAllText(Path.Combine(diagnostics, "engine.txt"), "engine-log");
                 File.WriteAllText(Path.Combine(diagnostics, "events.txt"), "events");
                 var report = CrashReportService.CreateTitanfall(root, root);
-                Assert(report.dumpIncluded, "available dump was not reported");
-                using (var archive = ZipFile.OpenRead(report.path))
+                using (var archive = ZipFile.OpenRead(report))
                 {
                     Assert(archive.GetEntry("Northstar/nslog-test.txt") != null, "Northstar log missing from crash report");
-                    Assert(archive.GetEntry("Northstar/nsdump-test.dmp") != null, "minidump missing from crash report");
+                    Assert(archive.GetEntry("Northstar/nsdump-test.dmp") == null, "Northstar memory dump was packaged");
                     Assert(archive.GetEntry("Titanfall2VR/engine.txt") != null, "engine log missing from crash report");
                     Assert(archive.GetEntry("report.json") != null, "crash metadata missing from report");
                 }
@@ -299,17 +299,17 @@ namespace InstallerValidation
             File.WriteAllText(Path.Combine(session, "session.json"), "{\"modSha256\":\"captured-plugin\"}");
             File.WriteAllText(Path.Combine(incident, "capture.txt"), "dump_written=1");
             File.WriteAllText(Path.Combine(incident, "engine.txt"), "frozen-log");
+            File.WriteAllText(Path.Combine(incident, "stacks.txt"), "thread 11 event\n  Titanfall2VR.dll+0x11");
             File.WriteAllText(Path.Combine(incident, "process.dmp"), "captured-memory");
             File.WriteAllText(Path.Combine(incident, "process.partial"), "incomplete-memory");
             var later = Path.Combine(profile, "crashes", "20260920T010000000Z-12");
             Directory.CreateDirectory(later);
             File.WriteAllText(Path.Combine(later, "monitor.txt"), "normal exit");
             var report = CrashReportService.CreateTitanfall(root, root);
-            Assert(report.dumpIncluded, "captured dump was not reported");
-            using (var archive = ZipFile.OpenRead(report.path))
+            using (var archive = ZipFile.OpenRead(report))
             {
-                Assert(archive.GetEntry("Capture/exception-11/process.dmp") != null, "captured dump missing");
-                Assert(archive.GetEntry("Capture/exception-11/process.partial") == null, "partial dump was packaged");
+                Assert(archive.GetEntry("Capture/exception-11/stacks.txt") != null, "captured stacks missing");
+                Assert(!archive.Entries.Any(entry => entry.Name.StartsWith("process.")), "memory dump was packaged");
                 Assert(archive.GetEntry("Northstar/nsdump-test.dmp") == null, "unrelated Northstar dump was mixed into capture");
                 using (var reader = new StreamReader(archive.GetEntry("Capture/exception-11/engine.txt").Open()))
                     Assert(reader.ReadToEnd() == "frozen-log", "live logs replaced incident logs");
@@ -322,10 +322,8 @@ namespace InstallerValidation
             File.WriteAllText(Path.Combine(later, "incident.txt"), "monitor_error");
             File.WriteAllText(Path.Combine(later, "session.json"), "{\"modSha256\":\"later-plugin\"}");
             var missing = CrashReportService.CreateTitanfall(root, root);
-            Assert(!missing.dumpIncluded, "capture failure borrowed an older dump");
-            using (var archive = ZipFile.OpenRead(missing.path))
-                using (var reader = new StreamReader(archive.GetEntry("report.json").Open()))
-                    Assert(!JsonUtil.Deserialize<TitanfallCrashMetadata>(reader.ReadToEnd()).dumpIncluded, "missing dump omitted from metadata");
+            using (var archive = ZipFile.OpenRead(missing))
+                Assert(!archive.Entries.Any(entry => entry.Name == "stacks.txt"), "capture failure borrowed older stacks");
         }
 
         static byte[] NorthstarPackage(string launcher, bool includeRanim)
