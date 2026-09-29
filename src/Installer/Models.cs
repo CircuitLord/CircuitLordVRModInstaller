@@ -20,7 +20,7 @@ namespace BigWalkVRInstaller
         protected void Notify(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-    // manifest-v2.json shapes
+    // manifest-v3.json shapes, v3 Titanfall 2 VR packages ship game derived files as patches
     public class Manifest
     {
         public int schemaVersion;

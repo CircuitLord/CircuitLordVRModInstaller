@@ -31,6 +31,7 @@ namespace BigWalkVRInstaller.Installers
         public const string NorthstarSha256 = "e622b96e7609912060a61ba3eed382eeafd6cc7b62c105ea609a36bc36e75322";
         public const long NorthstarSize = 107146100;
         public const string LauncherName = "Titanfall2VRLauncher.exe";
+        public const string AssetPatcherName = "asset_patcher.exe";
         public const string ProfileName = "TF2VR";
         public const string SteamAppId = "1237970";
 
@@ -86,6 +87,13 @@ namespace BigWalkVRInstaller.Installers
 
         public void Install(byte[] northstarPackage, byte[] modPackage, bool beta)
         {
+            var work = Path.Combine(Path.GetTempPath(), "Titanfall2VR-install-" + Guid.NewGuid().ToString("N"));
+            try { Install(northstarPackage, modPackage, beta, work); }
+            finally { if (Directory.Exists(work)) Directory.Delete(work, true); }
+        }
+
+        void Install(byte[] northstarPackage, byte[] modPackage, bool beta, string work)
+        {
             var previous = Record;
             var written = new List<string>();
             ReleaseInfo release;
@@ -113,9 +121,13 @@ namespace BigWalkVRInstaller.Installers
                     ?? throw new Exception("Titanfall 2 VR package is missing launch.json");
                 var releaseEntry = modArchive.GetEntry("release.json")
                     ?? throw new Exception("Titanfall 2 VR package is missing release.json");
+                var patcher = modArchive.GetEntry(AssetPatcherName)
+                    ?? throw new Exception("Titanfall 2 VR package is missing " + AssetPatcherName);
                 using (var reader = new StreamReader(releaseEntry.Open()))
                     release = JsonUtil.Deserialize<ReleaseInfo>(reader.ReadToEnd());
 
+                // before anything in the game folder changes
+                var assets = BuildGameAssets(patcher, modArchive, work);
                 Extract(launcher, LauncherName, written);
                 foreach (var entry in profileEntries)
                 {
@@ -128,6 +140,8 @@ namespace BigWalkVRInstaller.Installers
                 Extract(launch, ProfileName + "/tools/launch.json", written);
                 foreach (var entry in modArchive.Entries.Where(entry => entry.Name.Length > 0 && entry.FullName.StartsWith("mods/", StringComparison.Ordinal)))
                     Extract(entry, ProfileName + "/" + entry.FullName, written);
+                foreach (var file in Directory.GetFiles(assets, "*", SearchOption.AllDirectories))
+                    Copy(file, ProfileName + "/" + file.Substring(assets.Length + 1).Replace('\\', '/'), written);
             }
 
             if (previous?.files != null) InstallerFileSystem.RemoveStaleFiles(GamePath, previous.files, written);
@@ -142,13 +156,46 @@ namespace BigWalkVRInstaller.Installers
             });
         }
 
-        void Extract(ZipArchiveEntry entry, string relativePath, ICollection<string> written)
+        // game derived files ship as patches, the patcher builds them from the installed game and writes them only once every file verifies
+        string BuildGameAssets(ZipArchiveEntry patcher, ZipArchive modArchive, string work)
+        {
+            foreach (var entry in modArchive.Entries.Where(entry => entry.Name.Length > 0 && entry.FullName.StartsWith("patches/", StringComparison.Ordinal)).Append(patcher))
+            {
+                var destination = Path.Combine(work, entry.FullName);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination));
+                entry.ExtractToFile(destination);
+            }
+            var assets = Path.Combine(work, "assets");
+            var info = new ProcessStartInfo
+            {
+                FileName = Path.Combine(work, AssetPatcherName),
+                Arguments = "apply \"" + GamePath + "\" \"" + Path.Combine(work, "patches") + "\" \"" + assets + "\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true
+            };
+            using (var process = Process.Start(info))
+            {
+                var error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                if (process.ExitCode != 0) throw new Exception("Couldn't build the mod's game assets: " + error.Trim());
+            }
+            return assets;
+        }
+
+        void Extract(ZipArchiveEntry entry, string relativePath, ICollection<string> written) =>
+            entry.ExtractToFile(Destination(relativePath, written), true);
+
+        void Copy(string file, string relativePath, ICollection<string> written) =>
+            File.Copy(file, Destination(relativePath, written), true);
+
+        string Destination(string relativePath, ICollection<string> written)
         {
             var normalized = InstallerFileSystem.Normalize(relativePath);
             var destination = InstallerFileSystem.ResolveInside(GamePath, normalized);
             Directory.CreateDirectory(Path.GetDirectoryName(destination));
-            entry.ExtractToFile(destination, true);
             written.Add(normalized);
+            return destination;
         }
 
         public static string SaveDirectory(string documentsPath) => Path.Combine(documentsPath, "Respawn", "Titanfall2_VR");

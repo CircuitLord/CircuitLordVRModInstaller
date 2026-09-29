@@ -25,7 +25,7 @@ namespace BigWalkVRInstaller.Services
             var bust = url + (url.Contains("?") ? "&" : "?") + "t=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var json = await Http.GetStringAsync(bust);
             var manifest = JsonUtil.Deserialize<Manifest>(json);
-            if (manifest?.schemaVersion != 2 || manifest.bepinex == null || manifest.mods == null) throw new Exception("invalid manifest schema");
+            if (manifest?.schemaVersion != 3 || manifest.bepinex == null || manifest.mods == null) throw new Exception("invalid manifest schema");
             return manifest;
         }
 

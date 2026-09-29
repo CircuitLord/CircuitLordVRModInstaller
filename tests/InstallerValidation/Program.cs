@@ -16,7 +16,24 @@ namespace InstallerValidation
     {
 
         [STAThread]
-        static int Main()
+        static int Main(string[] args) => args.Length > 0 ? FakeAssetPatcher(args) : Validate();
+
+        // the installer runs this exe as the package's asset patcher, a fail-assets file in the game folder makes it fail
+        static int FakeAssetPatcher(string[] args)
+        {
+            if (args[0] != "apply" || !File.Exists(Path.Combine(args[2], "manifest.json"))) return 2;
+            if (File.Exists(Path.Combine(args[1], "fail-assets")))
+            {
+                Console.Error.WriteLine("game file differs");
+                return 1;
+            }
+            var output = Path.Combine(args[3], "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt");
+            Directory.CreateDirectory(Path.GetDirectoryName(output));
+            File.WriteAllText(output, "patched");
+            return 0;
+        }
+
+        static int Validate()
         {
             var root = Path.Combine(Path.GetTempPath(), "CircuitLordInstallerValidation-" + Guid.NewGuid().ToString("N"));
             try
@@ -82,6 +99,8 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")) == "probe", "resolution probe missing");
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")) == "monitor", "crash monitor missing");
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod.json")), "cockpit assets missing");
+                Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt")) == "patched", "patched game assets missing");
+                Assert(!File.Exists(Path.Combine(root, "TF2VR", "tools", "asset_patcher.exe")), "asset patcher was installed");
                 var launch = Titanfall2Installer.CreateLaunchInfo(root, new[] {
                     new OpenXrView { width = 2100, height = 2200 }, new OpenXrView { width = 2000, height = 2160 }
                 });
@@ -97,6 +116,17 @@ namespace InstallerValidation
                     new OpenXrView { width = 4000, height = 1000 }, new OpenXrView { width = 4100, height = 900 }
                 });
                 Assert(wide.Arguments.Contains("-w 4100 -h 1000"), "wide eye resolution was cropped");
+
+                var failFlag = Path.Combine(root, "fail-assets");
+                File.WriteAllText(failFlag, "");
+                var patchFailed = false;
+                try { installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), true); }
+                catch (Exception ex) { patchFailed = ex.Message.Contains("game file differs"); }
+                Assert(patchFailed, "asset patch failure did not stop the install");
+                Assert(installer.Record.version == "0.1.0", "failed install recorded a version");
+                Assert(File.ReadAllText(Path.Combine(root, "Titanfall2VRLauncher.exe")) == "vr-launcher-v1", "failed install changed the launcher");
+                Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Titanfall2VR.dll")) == "vr-plugin-v1", "failed install changed the plugin");
+                File.Delete(failFlag);
 
                 installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), true);
                 Assert(installer.Record.version == "0.2.0", "updated package version not recorded");
@@ -130,6 +160,7 @@ namespace InstallerValidation
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")), "probe survived uninstall");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")), "monitor survived uninstall");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod.json")), "cockpit survived uninstall");
+                Assert(!File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt")), "patched game assets survived uninstall");
                 Assert(File.ReadAllText(userFile) == "user-data", "user file changed during uninstall");
                 Assert(File.ReadAllText(Path.Combine(vrProfile, "savegames", "savegame.sav")) == "vr-progress", "uninstall changed VR progress");
                 Assert(File.ReadAllText(Path.Combine(root, "NorthstarLauncher.exe")) == "standard-launcher", "standard launcher changed after uninstall");
@@ -143,7 +174,7 @@ namespace InstallerValidation
                 Assert(!Titanfall2Installer.CanCopyCampaignSave(documents), "reinstall offered to replace VR progress");
                 Assert(File.ReadAllText(fnfSave) == "other-mod-progress", "FNF campaign progress changed");
                 Assert(File.ReadAllText(Path.Combine(vrProfile, "savegames", "savegame.sav")) == "vr-progress", "reinstall changed campaign progress");
-                Console.WriteLine("validated TF2VR install, save import consent, save isolation, updates, crash reports, uninstall, and reinstall");
+                Console.WriteLine("validated TF2VR install, asset patching and its failure, save import consent, save isolation, updates, crash reports, uninstall, and reinstall");
                 return 0;
             }
             catch (Exception ex)
@@ -327,19 +358,20 @@ namespace InstallerValidation
                         vrArguments = new[] { "+mat_vsync_mode", "0" }
                     }));
                     Add(archive, "mods/Titanfall2VR.Cockpit/mod.json", "{}");
+                    Add(archive, "asset_patcher.exe", File.ReadAllBytes(Assembly.GetExecutingAssembly().Location));
+                    Add(archive, "patches/manifest.json", "{}");
                 }
                 return stream.ToArray();
             }
         }
 
-        static void Add(ZipArchive archive, string path, string contents)
+        static void Add(ZipArchive archive, string path, string contents) => Add(archive, path, Encoding.UTF8.GetBytes(contents));
+
+        static void Add(ZipArchive archive, string path, byte[] bytes)
         {
             var entry = archive.CreateEntry(path);
             using (var output = entry.Open())
-            {
-                var bytes = Encoding.UTF8.GetBytes(contents);
                 output.Write(bytes, 0, bytes.Length);
-            }
         }
 
         static void Assert(bool condition, string message)

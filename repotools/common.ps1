@@ -1,7 +1,8 @@
 $ErrorActionPreference = "Stop"
 $PublicDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $PublicSlug = "CircuitLord/CircuitLordVRModInstaller"
-$ManifestPath = Join-Path $PublicDir "manifest-v2.json"
+# older manifests are frozen for older installers
+$ManifestPath = Join-Path $PublicDir "manifest-v3.json"
 
 function Invoke-Native([string]$Exe, [string[]]$Arguments, [switch]$Quiet) {
     $previous = $ErrorActionPreference
@@ -27,7 +28,7 @@ function Write-Utf8([string]$Path, [string]$Text) {
 
 function Read-Manifest {
     $manifest = Get-Content $ManifestPath -Raw | ConvertFrom-Json
-    if ($manifest.schemaVersion -ne 2) { throw "manifest schema is not supported" }
+    if ($manifest.schemaVersion -ne 3) { throw "manifest schema is not supported" }
     return $manifest
 }
 
@@ -61,7 +62,7 @@ function Publish-ReleaseAsset([string]$Path, [string]$Tag, [string]$Title, [stri
 }
 
 function Commit-Manifest([string]$Message) {
-    if ((Invoke-Native git @("-C", $PublicDir, "add", "--", "manifest-v2.json")) -ne 0) { throw "git add failed" }
+    if ((Invoke-Native git @("-C", $PublicDir, "add", "--", (Split-Path $ManifestPath -Leaf))) -ne 0) { throw "git add failed" }
     if ((Invoke-Native git @("-C", $PublicDir, "commit", "-m", $Message)) -ne 0) { throw "git commit failed" }
     if ((Invoke-Native git @("-C", $PublicDir, "push")) -ne 0) { throw "git push failed" }
 }
