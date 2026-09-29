@@ -81,6 +81,6 @@ if ($NoPush) {
     return
 }
 
-Publish-ReleaseAsset -Path $packagePath -Tag $releaseTag -Title "Mod packages" -Notes "Versioned packages used by CircuitLord's VR Mods Installer."
+Publish-ReleaseAsset -Path $packagePath -Tag $releaseTag -Title "Mod packages" -Notes "Versioned packages used by CircuitLord's VR Mod Installer."
 Commit-Manifest "update mod package $($metadata.version)"
 Write-Host "published $channel $($metadata.id) $($metadata.version)"

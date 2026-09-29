@@ -14,7 +14,6 @@ namespace InstallerValidation
 {
     static class Program
     {
-        const string AlphaCode = "685109";
 
         [STAThread]
         static int Main()
@@ -56,11 +55,8 @@ namespace InstallerValidation
                 Assert(Titanfall2Installer.CanCopyCampaignSave(documents), "default campaign save was not offered");
 
                 var installer = new Titanfall2Installer(new AppSettings { Titanfall2Path = root });
-                var release = new ManifestMod { version = "0.1.0" };
-                installer.Install(NorthstarPackage("vr-launcher-v1", true), release, ModPackage("vr-plugin-v1"), false);
-                Assert(installer.AlphaCode == null, "install wrote an alpha code");
-                installer.AlphaCode = AlphaCode;
-                Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "alpha-code.txt")) == AlphaCode, "alpha code not written beside plugin");
+                installer.Install(NorthstarPackage("vr-launcher-v1", true), ModPackage("vr-plugin-v1", "0.1.0"), false);
+                Assert(installer.Record.version == "0.1.0", "package version not recorded");
 
                 Assert(File.ReadAllText(Path.Combine(root, "NorthstarLauncher.exe")) == "standard-launcher", "standard launcher changed");
                 Assert(File.ReadAllText(Path.Combine(root, "R2Northstar", "Northstar.dll")) == "standard-profile", "standard profile changed");
@@ -102,8 +98,8 @@ namespace InstallerValidation
                 });
                 Assert(wide.Arguments.Contains("-w 4100 -h 1000"), "wide eye resolution was cropped");
 
-                installer.Install(NorthstarPackage("vr-launcher-v2", false), new ManifestMod { version = "0.2.0" }, ModPackage("vr-plugin-v2"), true);
-                Assert(installer.AlphaCode == AlphaCode, "update removed alpha code");
+                installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), true);
+                Assert(installer.Record.version == "0.2.0", "updated package version not recorded");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "plugins", "ranim.dll")), "stale owned file survived update");
                 Assert(File.ReadAllText(userFile) == "user-data", "user file changed during update");
                 Assert(installer.Record.beta, "beta channel was not recorded");
@@ -139,7 +135,7 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(root, "NorthstarLauncher.exe")) == "standard-launcher", "standard launcher changed after uninstall");
                 Assert(File.ReadAllText(Path.Combine(root, "R2Northstar", "Northstar.dll")) == "standard-profile", "standard profile changed after uninstall");
 
-                installer.Install(NorthstarPackage("vr-launcher-v3", false), new ManifestMod { version = "0.3.0" }, ModPackage("vr-plugin-v3"), false);
+                installer.Install(NorthstarPackage("vr-launcher-v3", false), ModPackage("vr-plugin-v3", "0.3.0"), false);
                 Assert(installer.IsInstalled, "VR package was not recognized after reinstall");
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Titanfall2VR.dll")) == "vr-plugin-v3", "reinstalled VR plugin missing");
                 Assert(File.ReadAllText(userFile) == "user-data", "user file changed during reinstall");
@@ -182,33 +178,9 @@ namespace InstallerValidation
             confirm.Invoke(window, new object[] { "Uninstall", "Remove files", "Uninstall", true, "Cancel" });
             Assert((string)((Button)window.FindName("ConfirmCancel")).Content == "Cancel", "save prompt changed other dialogs");
             close.Invoke(window, new object[] { false });
-            ValidateAlphaPrompt(window, close);
             ValidateSaveManagement(window, Path.Combine(root, "save-dialog"));
             window.Close();
         }
-
-        static void ValidateAlphaPrompt(MainWindow window, MethodInfo close)
-        {
-            var ask = typeof(MainWindow).GetMethod("AskAlphaCode", BindingFlags.Instance | BindingFlags.NonPublic);
-            var input = (TextBox)window.FindName("ConfirmInput");
-            var cancelled = (Task<string>)ask.Invoke(window, new object[] { null });
-            Assert(input.Visibility == System.Windows.Visibility.Visible && input.Text == "", "alpha prompt has no empty input");
-            close.Invoke(window, new object[] { false });
-            Pump();
-            Assert(cancelled.IsCompleted && cancelled.Result == null, "cancelled alpha prompt returned a code");
-            var result = (Task<string>)ask.Invoke(window, new object[] { AlphaCode });
-            Assert(input.Text == AlphaCode, "saved alpha code was not filled in");
-            input.Text = "123456";
-            close.Invoke(window, new object[] { true });
-            Pump();
-            Assert(result.IsCompleted && result.Result == "123456", "entered alpha code was not returned");
-            typeof(MainWindow).GetMethod("Confirm", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(window, new object[] { "Uninstall", "Remove files", "Uninstall", true, "Cancel" });
-            Assert(input.Visibility == System.Windows.Visibility.Collapsed, "alpha input leaked into other dialogs");
-            close.Invoke(window, new object[] { false });
-        }
-
-        static void Pump() => System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Background);
 
         static void ValidateSaveManagement(MainWindow window, string documents)
         {
@@ -340,13 +312,14 @@ namespace InstallerValidation
             }
         }
 
-        static byte[] ModPackage(string plugin)
+        static byte[] ModPackage(string plugin, string version)
         {
             using (var stream = new MemoryStream())
             {
                 using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true))
                 {
                     Add(archive, "Titanfall2VR.dll", plugin);
+                    Add(archive, "release.json", "{\n  \"version\": \"" + version + "\",\n  \"description\": \"test\"\n}\n");
                     Add(archive, "xr_probe.exe", "probe");
                     Add(archive, "crash_monitor.exe", "monitor");
                     Add(archive, "launch.json", JsonUtil.Serialize(new TitanfallLaunchSettings {

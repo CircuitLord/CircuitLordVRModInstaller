@@ -15,7 +15,7 @@ namespace BigWalkVRInstaller.Services
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
             Http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-            Http.DefaultRequestHeaders.UserAgent.ParseAdd("CircuitLordsVRModsInstaller");
+            Http.DefaultRequestHeaders.UserAgent.ParseAdd("CircuitLordVRModInstaller");
         }
 
         public static async Task<Manifest> FetchManifest(string url)

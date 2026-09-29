@@ -6,9 +6,9 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>CircuitLordsVRModsInstaller</AssemblyName>
+    <AssemblyName>CircuitLordVRModInstaller</AssemblyName>
     <RootNamespace>BigWalkVRInstaller</RootNamespace>
-    <Version>1.1.9</Version>
+    <Version>1.2.0</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
   </PropertyGroup>

@@ -5,7 +5,7 @@ namespace BigWalkVRInstaller.Services
 {
     public class AppSettings
     {
-        public const string ManifestUrl = "https://raw.githubusercontent.com/CircuitLord/BigWalkVRInstaller/main/manifest-v2.json";
+        public const string ManifestUrl = "https://raw.githubusercontent.com/CircuitLord/CircuitLordVRModInstaller/main/manifest-v2.json";
         public string GamePath;
         public string BigWalkPath;
         public string Titanfall2Path;

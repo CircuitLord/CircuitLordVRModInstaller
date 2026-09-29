@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 $PublicDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$PublicSlug = "CircuitLord/BigWalkVRInstaller"
+$PublicSlug = "CircuitLord/CircuitLordVRModInstaller"
 $ManifestPath = Join-Path $PublicDir "manifest-v2.json"
 
 function Invoke-Native([string]$Exe, [string[]]$Arguments, [switch]$Quiet) {

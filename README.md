@@ -12,7 +12,7 @@ Hey, I'm CircuitLord! This is a utility to automatically install my full-convers
 
 These mods and this installer are community projects, not affiliated with or endorsed by the game developers or publishers. Use at your own risk.
 
-**[Download the installer](https://github.com/CircuitLord/BigWalkVRInstaller/releases/latest/download/BigWalkVRInstaller.exe)**
+**[Download the installer](https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/latest/download/CircuitLordVRModInstaller.exe)**
 
 
 ## Titanfall 2 VR
@@ -57,7 +57,7 @@ Needs the .NET Framework 4.8 SDK.
 dotnet build src/Installer -c Release
 ```
 
-Output is a single `src/Installer/bin/Release/net48/CircuitLordsVRModsInstaller.exe` using only .NET Framework assemblies.
+Output is a single `src/Installer/bin/Release/net48/CircuitLordVRModInstaller.exe` using only .NET Framework assemblies.
 
 ## How it works
 

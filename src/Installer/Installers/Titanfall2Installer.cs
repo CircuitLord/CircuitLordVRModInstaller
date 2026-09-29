@@ -33,8 +33,6 @@ namespace BigWalkVRInstaller.Installers
         public const string LauncherName = "Titanfall2VRLauncher.exe";
         public const string ProfileName = "TF2VR";
         public const string SteamAppId = "1237970";
-        // the plugin checks this code at startup
-        public const string AlphaCodePath = ProfileName + "/plugins/alpha-code.txt";
 
         static readonly SteamGameLocator Locator = new SteamGameLocator(
             "Titanfall2", "Titanfall2.exe", @"SOFTWARE\Respawn\Titanfall2", "Install Dir");
@@ -58,16 +56,6 @@ namespace BigWalkVRInstaller.Installers
             && File.Exists(Path.Combine(GamePath, ProfileName, "tools", "crash_monitor.exe"))
             && File.Exists(Path.Combine(GamePath, ProfileName, "tools", "launch.json"));
         public string InstalledVersion => IsInstalled ? Record.version : null;
-
-        public string AlphaCode
-        {
-            get
-            {
-                var path = Path.Combine(GamePath, AlphaCodePath);
-                return File.Exists(path) ? File.ReadAllText(path) : null;
-            }
-            set => File.WriteAllText(Path.Combine(GamePath, AlphaCodePath), value);
-        }
 
         public static ReleaseInfo PinnedNorthstar => new ReleaseInfo
         {
@@ -96,10 +84,11 @@ namespace BigWalkVRInstaller.Installers
              || VersionUtil.IsNewer(modRelease.version, Record.version)
              || !string.Equals(Record.northstarVersion, NorthstarVersion, StringComparison.OrdinalIgnoreCase));
 
-        public void Install(byte[] northstarPackage, ManifestMod modRelease, byte[] modPackage, bool beta)
+        public void Install(byte[] northstarPackage, byte[] modPackage, bool beta)
         {
             var previous = Record;
             var written = new List<string>();
+            ReleaseInfo release;
             using (var northstarStream = new MemoryStream(northstarPackage))
             using (var northstarArchive = new ZipArchive(northstarStream, ZipArchiveMode.Read))
             using (var modStream = new MemoryStream(modPackage))
@@ -122,6 +111,10 @@ namespace BigWalkVRInstaller.Installers
                     ?? throw new Exception("VR package is missing crash_monitor.exe");
                 var launch = modArchive.GetEntry("launch.json")
                     ?? throw new Exception("Titanfall 2 VR package is missing launch.json");
+                var releaseEntry = modArchive.GetEntry("release.json")
+                    ?? throw new Exception("Titanfall 2 VR package is missing release.json");
+                using (var reader = new StreamReader(releaseEntry.Open()))
+                    release = JsonUtil.Deserialize<ReleaseInfo>(reader.ReadToEnd());
 
                 Extract(launcher, LauncherName, written);
                 foreach (var entry in profileEntries)
@@ -141,7 +134,7 @@ namespace BigWalkVRInstaller.Installers
             OwnedFileStore.Write(GamePath, new InstallRecord
             {
                 id = InstallerId,
-                version = modRelease.version,
+                version = release.version,
                 northstarVersion = NorthstarVersion,
                 runtime = "Northstar",
                 beta = beta,
