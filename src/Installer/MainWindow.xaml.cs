@@ -476,6 +476,7 @@ namespace BigWalkVRInstaller
                     "Copy your existing campaign save?",
                     "Launching from this installer uses a new save directory\n\nPress Yes if you'd like to copy your existing save file as a starting point.",
                     "Yes", danger: false, cancelLabel: "No");
+                await EnsureTitanfallFolderAccess();
                 Status("Downloading Northstar...");
                 var northstarProgress = new Progress<double>(value =>
                 {
@@ -515,12 +516,25 @@ namespace BigWalkVRInstaller
             }
         }
 
+        // asks for admin once when the game is in a protected folder
+        async Task EnsureTitanfallFolderAccess()
+        {
+            if (_titanfall.CanWriteGameFolder()) return;
+            if (!await Confirm("Allow access to the game folder",
+                $"Titanfall 2 VR needs to write to {_titanfall.GamePath}. Windows will ask for permission once.",
+                "Continue", danger: false))
+                throw new Exception("the game folder needs write access.");
+            Status("Approve the Windows prompt to allow access to the game folder.");
+            await Task.Run(() => _titanfall.GrantGameFolderAccess());
+        }
+
         async void TitanfallUninstall_Click(object sender, RoutedEventArgs e)
         {
             if (!Ready()) return;
             if (!await Confirm("Uninstall Titanfall 2 VR", "Removes the TF2VR profile, renamed launcher, and files owned by this installer.", "Uninstall")) return;
             try
             {
+                await EnsureTitanfallFolderAccess();
                 _titanfall.Uninstall();
                 Status("Titanfall 2 VR removed");
             }
@@ -569,6 +583,7 @@ namespace BigWalkVRInstaller
                 LaunchButton.IsEnabled = false;
                 try
                 {
+                    await EnsureTitanfallFolderAccess();
                     Status("Checking headset resolution...");
                     await Task.Run(() => _titanfall.Play());
                     Status("Launching Titanfall 2 VR");

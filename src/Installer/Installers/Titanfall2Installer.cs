@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using BigWalkVRInstaller.Services;
 using Microsoft.Win32;
 
@@ -19,6 +22,16 @@ namespace BigWalkVRInstaller.Installers
     {
         public int width;
         public int height;
+    }
+
+    public sealed class OpenXrRuntimeManifest
+    {
+        public OpenXrRuntimeInfo runtime;
+    }
+
+    public sealed class OpenXrRuntimeInfo
+    {
+        public string name;
     }
 
     public enum CampaignSaveStatus { Missing, Incomplete, Available }
@@ -230,6 +243,50 @@ namespace BigWalkVRInstaller.Installers
 
         public void Uninstall() => OwnedFileStore.Remove(GamePath, InstallerId);
 
+        // the EA app installs under Program Files, where only admins can write
+        public bool CanWriteGameFolder()
+        {
+            var probe = Path.Combine(GamePath, ".tf2vr-write-test");
+            try
+            {
+                File.WriteAllText(probe, "");
+                File.Delete(probe);
+                return true;
+            }
+            catch (UnauthorizedAccessException) { return false; }
+        }
+
+        public const string GrantAccessArgument = "--grant-game-folder-access";
+
+        // one UAC prompt for this installer gives this user modify rights on the game folder, so installs, launches, and the game's own logs work without admin
+        public void GrantGameFolderAccess()
+        {
+            var info = new ProcessStartInfo(Process.GetCurrentProcess().MainModule.FileName,
+                $"{GrantAccessArgument} \"{GamePath}\" {WindowsIdentity.GetCurrent().User.Value}")
+            {
+                Verb = "runas",
+                UseShellExecute = true
+            };
+            Process process;
+            try { process = Process.Start(info); }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) { throw new Exception("the Windows prompt was declined, so the installer can't write to the game folder."); }
+            using (process)
+            {
+                process.WaitForExit();
+                if (process.ExitCode != 0) throw new Exception($"couldn't unlock {GamePath}.");
+            }
+            if (!CanWriteGameFolder()) throw new Exception($"{GamePath} is still read only after unlocking it.");
+        }
+
+        // runs in the elevated copy, every file in the game folder inherits the rule
+        public static void ApplyGameFolderAccess(string path, string sid)
+        {
+            var security = Directory.GetAccessControl(path, AccessControlSections.Access);
+            security.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(sid), FileSystemRights.Modify,
+                InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+            Directory.SetAccessControl(path, security);
+        }
+
         static ProcessStartInfo VrProcess(string gamePath, string executable)
         {
             var info = new ProcessStartInfo
@@ -268,17 +325,35 @@ namespace BigWalkVRInstaller.Installers
             var info = VrProcess(GamePath, Path.Combine(tools, "xr_probe.exe"));
             info.Arguments = "--views \"" + viewsPath + "\"";
             info.CreateNoWindow = true;
+            info.RedirectStandardError = true;
             using (var probe = Process.Start(info))
             {
+                // the probe's last line names the failing OpenXR call, after any loader errors
+                var error = probe.StandardError.ReadToEndAsync();
                 if (!probe.WaitForExit(15000))
                 {
                     probe.Kill();
-                    throw new Exception("OpenXR probe timed out. Check your VR runtime and headset.");
+                    throw new Exception("The headset check timed out. " + RuntimeHelp());
                 }
-                if (probe.ExitCode != 0) throw new Exception("OpenXR probe failed. Check your VR runtime and headset.");
+                if (probe.ExitCode != 0)
+                    throw new Exception($"Couldn't reach your headset through OpenXR. {RuntimeHelp()}\nDetails: {error.Result.Trim().Split('\n').Last().Trim()} (exit 0x{probe.ExitCode:X8})");
             }
             var views = JsonUtil.Deserialize<OpenXrView[]>(File.ReadAllText(viewsPath));
             Process.Start(CreateLaunchInfo(GamePath, views));
+        }
+
+        static string RuntimeHelp()
+        {
+            string state;
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(@"SOFTWARE\Khronos\OpenXR\1"))
+            {
+                var manifest = key?.GetValue("ActiveRuntime") as string;
+                if (manifest == null) state = "No OpenXR runtime is set.";
+                else if (!File.Exists(manifest)) state = $"Your OpenXR runtime is set to {manifest}, which no longer exists.";
+                // name is optional in runtime manifests
+                else state = $"Your active OpenXR runtime is {JsonUtil.Deserialize<OpenXrRuntimeManifest>(File.ReadAllText(manifest)).runtime.name ?? Path.GetFileName(manifest)}.";
+            }
+            return state + " Make sure your headset is connected and that runtime is running, or set the runtime you play with as active (for SteamVR: SteamVR Settings > OpenXR > Set SteamVR as OpenXR runtime).";
         }
 
         // same key OriginSDK and Northstar use to start the EA app

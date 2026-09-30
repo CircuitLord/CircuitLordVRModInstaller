@@ -16,7 +16,14 @@ namespace InstallerValidation
     {
 
         [STAThread]
-        static int Main(string[] args) => args.Length > 0 ? FakeAssetPatcher(args) : Validate();
+        static int Main(string[] args) => args.Length == 0 ? Validate() : args[0] == "--views" ? FakeProbe() : FakeAssetPatcher(args);
+
+        // the installer runs this exe as the package's headset probe, which fails like a runtime without a headset
+        static int FakeProbe()
+        {
+            Console.Error.WriteLine("xrGetSystem(instance, &systemInfo, &system): XrResult -50");
+            return 1;
+        }
 
         // the installer runs this exe as the package's asset patcher, a fail-assets file in the game folder makes it fail
         static int FakeAssetPatcher(string[] args)
@@ -72,6 +79,13 @@ namespace InstallerValidation
                 Assert(Titanfall2Installer.CanCopyCampaignSave(documents), "default campaign save was not offered");
 
                 var installer = new Titanfall2Installer(new AppSettings { Titanfall2Path = root });
+                var user = System.Security.Principal.WindowsIdentity.GetCurrent().User.Value;
+                Icacls(root, $"/inheritance:r /grant:r *{user}:(OI)(CI)RX *S-1-5-18:(OI)(CI)F");
+                Assert(!installer.CanWriteGameFolder(), "protected game folder was reported writable");
+                // the elevated step's own code, the test folder's owner can change its access without admin
+                Titanfall2Installer.ApplyGameFolderAccess(root, user);
+                Assert(installer.CanWriteGameFolder(), "unlocked game folder was reported read only");
+                File.AppendAllText(Path.Combine(root, "R2Northstar", "Northstar.dll"), "");
                 installer.Install(NorthstarPackage("vr-launcher-v1", true), ModPackage("vr-plugin-v1", "0.1.0"), false);
                 Assert(installer.Record.version == "0.1.0", "package version not recorded");
 
@@ -96,7 +110,11 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(defaultProfile, "profile.cfg")) == "campaign-unlocks", "default profile changed");
 
                 Assert(installer.IsInstalled, "complete VR package was not recognized");
-                Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")) == "probe", "resolution probe missing");
+                Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")), "resolution probe missing");
+                var probeError = "";
+                try { installer.Play(); }
+                catch (Exception ex) { probeError = ex.Message; }
+                Assert(probeError.Contains("OpenXR runtime") && probeError.Contains("Details: xrGetSystem(instance, &systemInfo, &system): XrResult -50 (exit 0x00000001)"), "probe failure hid its cause: " + probeError);
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")) == "monitor", "crash monitor missing");
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod.json")), "cockpit assets missing");
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt")) == "patched", "patched game assets missing");
@@ -351,7 +369,7 @@ namespace InstallerValidation
                 {
                     Add(archive, "Titanfall2VR.dll", plugin);
                     Add(archive, "release.json", "{\n  \"version\": \"" + version + "\",\n  \"description\": \"test\"\n}\n");
-                    Add(archive, "xr_probe.exe", "probe");
+                    Add(archive, "xr_probe.exe", File.ReadAllBytes(Assembly.GetExecutingAssembly().Location));
                     Add(archive, "crash_monitor.exe", "monitor");
                     Add(archive, "launch.json", JsonUtil.Serialize(new TitanfallLaunchSettings {
                         arguments = new[] { "-profile={profile}", "-windowed", "-w", "{width}", "-h", "{height}", "+sound_without_focus", "{sound}" },
@@ -372,6 +390,16 @@ namespace InstallerValidation
             var entry = archive.CreateEntry(path);
             using (var output = entry.Open())
                 output.Write(bytes, 0, bytes.Length);
+        }
+
+        static void Icacls(string path, string arguments)
+        {
+            using (var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("icacls.exe", $"\"{path}\" {arguments}") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true }))
+            {
+                process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                Assert(process.ExitCode == 0, "icacls failed: " + arguments);
+            }
         }
 
         static void Assert(bool condition, string message)
