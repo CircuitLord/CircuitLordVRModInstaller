@@ -21,11 +21,11 @@ Titanfall 2 VR adds full VR support to the Titanfall 2 campaign. It also include
 
 ### What the installer does
 
-1. **Finds Titanfall 2** through your Steam install.
-2. **Checks the EA app**, which Titanfall 2 needs you signed into to play. If it's missing, launch Titanfall 2 once from Steam to install it.
+1. **Finds Titanfall 2** through your Steam/EA/Xbox install.
+2. **Checks the EA app**, which Titanfall 2 needs you signed into to play. If it's missing, launch Titanfall 2 once to install it.
 3. **Installs Northstar and the mod** into a separate `TF2VR` profile in your game directory.
 
-Launching Titanfall 2 normally through Steam stays unmodded. To play in VR, start SteamVR and use the installer's Launch in VR button.
+Launching Titanfall 2 normally stays unmodded. To play in VR, start SteamVR/your VR runtime of choice and use the installer's Launch in VR button.
 
 ### Campaign saves
 
