@@ -63,6 +63,26 @@ namespace BigWalkVRInstaller.Services
             return bytes;
         }
 
+        // keeps only the latest package in the directory, so updates skip an unchanged download
+        public static async Task<byte[]> CachedDownload(string url, string expectedSha256, string directory, IProgress<double> progress = null)
+        {
+            var path = Path.Combine(directory, expectedSha256.ToLowerInvariant() + ".zip");
+            if (File.Exists(path))
+            {
+                var cached = await Task.Run(() => File.ReadAllBytes(path));
+                if (string.Equals(Sha256(cached), expectedSha256, StringComparison.OrdinalIgnoreCase))
+                {
+                    progress?.Report(1);
+                    return cached;
+                }
+            }
+            var bytes = await Download(url, expectedSha256, progress);
+            Directory.CreateDirectory(directory);
+            foreach (var old in Directory.GetFiles(directory)) File.Delete(old);
+            File.WriteAllBytes(path, bytes);
+            return bytes;
+        }
+
         static async Task<byte[]> Read(Stream stream, long total, IProgress<double> progress)
         {
             using (var buffer = new MemoryStream())

@@ -505,8 +505,8 @@ namespace BigWalkVRInstaller
                     TitanfallProgress.Value = northstarShare * value;
                     TitanfallProgressText.Text = $"Downloading Northstar  {value * 100:0}%";
                 });
-                var northstar = await RepoClient.Download(
-                    Titanfall2Installer.NorthstarUrl, Titanfall2Installer.NorthstarSha256, northstarProgress);
+                var northstar = await RepoClient.CachedDownload(Titanfall2Installer.NorthstarUrl, Titanfall2Installer.NorthstarSha256,
+                    Titanfall2Installer.NorthstarCache(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)), northstarProgress);
 
                 Status("Downloading Titanfall 2 VR...");
                 var modProgress = new Progress<double>(value =>

@@ -55,6 +55,7 @@ namespace InstallerValidation
             try
             {
                 ValidateSaveModal(root);
+                ValidateNorthstarCache(root);
                 Directory.CreateDirectory(Path.Combine(root, "R2Northstar"));
                 File.WriteAllText(Path.Combine(root, "Titanfall2.exe"), "game");
                 File.WriteAllText(Path.Combine(root, "NorthstarLauncher.exe"), "standard-launcher");
@@ -195,7 +196,7 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(defaultProfile, "profile.cfg")) == "campaign-unlocks", "reinstall changed the default profile");
                 Assert(File.ReadAllText(fnfSave) == "other-mod-progress", "FNF campaign progress changed");
                 Assert(File.ReadAllText(Path.Combine(vrProfile, "savegames", "savegame.sav")) == "vr-progress", "reinstall changed campaign progress");
-                Console.WriteLine("validated TF2VR install, install progress, asset patching and its failure, save isolation, updates, crash reports, uninstall, and reinstall");
+                Console.WriteLine("validated Northstar cache, TF2VR install, install progress, asset patching and its failure, save isolation, updates, crash reports, uninstall, and reinstall");
                 return 0;
             }
             catch (Exception ex)
@@ -225,6 +226,27 @@ namespace InstallerValidation
         }
 
         // the saves modal reports the VR save and opens its folder, with no base game import
+        // the URL refuses connections, so only cache hits succeed
+        static void ValidateNorthstarCache(string root)
+        {
+            const string url = "https://127.0.0.1:1/Northstar.zip";
+            var cache = Titanfall2Installer.NorthstarCache(Path.Combine(root, "Local"));
+            var package = Encoding.UTF8.GetBytes("northstar-package");
+            var sha256 = RepoClient.Sha256(package);
+            Directory.CreateDirectory(cache);
+            File.WriteAllBytes(Path.Combine(cache, sha256 + ".zip"), package);
+            var progress = new ProgressLog();
+            Assert(RepoClient.CachedDownload(url, sha256, cache, progress).GetAwaiter().GetResult().SequenceEqual(package), "cached Northstar was not reused");
+            Assert(progress.Values.SequenceEqual(new[] { 1.0 }), "cached Northstar did not complete its progress");
+
+            File.WriteAllText(Path.Combine(cache, sha256 + ".zip"), "corrupt");
+            var downloaded = false;
+            try { RepoClient.CachedDownload(url, sha256, cache).GetAwaiter().GetResult(); }
+            catch (System.Net.Http.HttpRequestException) { downloaded = true; }
+            Assert(downloaded, "corrupt cached Northstar was reused");
+            Directory.Delete(cache, true);
+        }
+
         static void ValidateSaveModal(string root)
         {
             var app = new App();

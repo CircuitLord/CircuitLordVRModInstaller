@@ -230,6 +230,7 @@ namespace BigWalkVRInstaller.Installers
 
         // mod 1.0.4 and later, Controlled folder access blocks the launcher from Documents
         public static string SaveDirectory(string localAppDataPath) => Path.Combine(localAppDataPath, "Respawn", "Titanfall2_VR");
+        public static string NorthstarCache(string localAppDataPath) => Path.Combine(localAppDataPath, "BigWalkVRInstaller", "Northstar");
 
         public static CampaignSaveStatus GetCampaignSaveStatus(string directory)
         {
