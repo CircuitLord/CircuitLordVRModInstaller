@@ -15,24 +15,22 @@ namespace BigWalkVRInstaller.Services
 
         public static string ExePath => Process.GetCurrentProcess().MainModule.FileName;
 
+        static string OldExePath => Path.ChangeExtension(ExePath, null) + OldSuffix;
+
         // delete leftover renamed exe from a previous update, the old process may still hold it so retry briefly
         public static void CleanupOldExe()
         {
-            var dir = Path.GetDirectoryName(ExePath);
+            var old = OldExePath;
             Task.Run(async () =>
             {
                 for (var attempt = 0; attempt < 12; attempt++)
                 {
-                    string[] leftovers;
-                    try { leftovers = Directory.GetFiles(dir, "*" + OldSuffix); }
-                    catch { return; }
-                    if (leftovers.Length == 0) return;
-
-                    foreach (var old in leftovers)
+                    try
                     {
-                        try { File.Delete(old); }
-                        catch { } // still locked, try again next tick
+                        File.Delete(old);
+                        return;
                     }
+                    catch { } // still locked, try again next tick
                     await Task.Delay(500);
                 }
             });
@@ -46,7 +44,7 @@ namespace BigWalkVRInstaller.Services
         {
             var bytes = await RepoClient.Download(mgr.url, mgr.sha256, progress);
             var exe = ExePath;
-            var old = Path.ChangeExtension(exe, null) + OldSuffix;
+            var old = OldExePath;
             if (File.Exists(old)) File.Delete(old);
             File.Move(exe, old);
             try
