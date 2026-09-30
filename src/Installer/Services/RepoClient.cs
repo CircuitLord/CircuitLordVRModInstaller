@@ -10,6 +10,8 @@ namespace BigWalkVRInstaller.Services
     public static class RepoClient
     {
         static readonly HttpClient Http;
+        // unpublished builds for local testing, packages in it may be file URLs
+        public static readonly string LocalManifest = Environment.GetEnvironmentVariable("CIRCUITLORD_LOCAL_MANIFEST");
 
         static RepoClient()
         {
@@ -20,10 +22,15 @@ namespace BigWalkVRInstaller.Services
 
         public static async Task<Manifest> FetchManifest(string url)
         {
-            RequireHttps(url);
-            // cache buster, raw.githubusercontent holds manifests for a few minutes
-            var bust = url + (url.Contains("?") ? "&" : "?") + "t=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var json = await Http.GetStringAsync(bust);
+            string json;
+            if (LocalManifest != null) json = File.ReadAllText(LocalManifest);
+            else
+            {
+                RequireHttps(url);
+                // cache buster, raw.githubusercontent holds manifests for a few minutes
+                var bust = url + (url.Contains("?") ? "&" : "?") + "t=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                json = await Http.GetStringAsync(bust);
+            }
             var manifest = JsonUtil.Deserialize<Manifest>(json);
             if (manifest?.schemaVersion != 3 || manifest.bepinex == null || manifest.mods == null) throw new Exception("invalid manifest schema");
             return manifest;
@@ -31,25 +38,22 @@ namespace BigWalkVRInstaller.Services
 
         public static async Task<byte[]> Download(string url, string expectedSha256, IProgress<double> progress = null)
         {
-            RequireHttps(url);
             ValidateSha256(expectedSha256);
 
             byte[] bytes;
-            using (var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+            if (LocalManifest != null && new Uri(url).IsFile)
             {
-                response.EnsureSuccessStatusCode();
-                var total = response.Content.Headers.ContentLength ?? 0;
-                using (var stream = await response.Content.ReadAsStreamAsync())
-                using (var buffer = new MemoryStream())
+                using (var stream = File.OpenRead(new Uri(url).LocalPath))
+                    bytes = await Read(stream, stream.Length, progress);
+            }
+            else
+            {
+                RequireHttps(url);
+                using (var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
                 {
-                    var chunk = new byte[81920];
-                    int read;
-                    while ((read = await stream.ReadAsync(chunk, 0, chunk.Length)) > 0)
-                    {
-                        buffer.Write(chunk, 0, read);
-                        if (total > 0) progress?.Report((double)buffer.Length / total);
-                    }
-                    bytes = buffer.ToArray();
+                    response.EnsureSuccessStatusCode();
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                        bytes = await Read(stream, response.Content.Headers.ContentLength ?? 0, progress);
                 }
             }
 
@@ -57,6 +61,21 @@ namespace BigWalkVRInstaller.Services
             if (!string.Equals(actual, expectedSha256, StringComparison.OrdinalIgnoreCase))
                 throw new Exception($"sha256 mismatch for {url}");
             return bytes;
+        }
+
+        static async Task<byte[]> Read(Stream stream, long total, IProgress<double> progress)
+        {
+            using (var buffer = new MemoryStream())
+            {
+                var chunk = new byte[81920];
+                int read;
+                while ((read = await stream.ReadAsync(chunk, 0, chunk.Length)) > 0)
+                {
+                    buffer.Write(chunk, 0, read);
+                    if (total > 0) progress?.Report((double)buffer.Length / total);
+                }
+                return buffer.ToArray();
+            }
         }
 
         static void RequireHttps(string url)

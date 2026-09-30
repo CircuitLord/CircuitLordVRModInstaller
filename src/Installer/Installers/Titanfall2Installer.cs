@@ -98,14 +98,17 @@ namespace BigWalkVRInstaller.Installers
              || VersionUtil.IsNewer(modRelease.version, Record.version)
              || !string.Equals(Record.northstarVersion, NorthstarVersion, StringComparison.OrdinalIgnoreCase));
 
-        public void Install(byte[] northstarPackage, byte[] modPackage, bool beta)
+        // building game assets takes most of the install, extracting files the rest
+        const double AssetShare = 0.8;
+
+        public void Install(byte[] northstarPackage, byte[] modPackage, bool beta, IProgress<double> progress)
         {
             var work = Path.Combine(Path.GetTempPath(), "Titanfall2VR-install-" + Guid.NewGuid().ToString("N"));
-            try { Install(northstarPackage, modPackage, beta, work); }
+            try { Install(northstarPackage, modPackage, beta, work, progress); }
             finally { if (Directory.Exists(work)) Directory.Delete(work, true); }
         }
 
-        void Install(byte[] northstarPackage, byte[] modPackage, bool beta, string work)
+        void Install(byte[] northstarPackage, byte[] modPackage, bool beta, string work, IProgress<double> progress)
         {
             var previous = Record;
             var written = new List<string>();
@@ -140,21 +143,27 @@ namespace BigWalkVRInstaller.Installers
                     release = JsonUtil.Deserialize<ReleaseInfo>(reader.ReadToEnd());
 
                 // before anything in the game folder changes
-                var assets = BuildGameAssets(patcher, modArchive, work);
-                Extract(launcher, LauncherName, written);
+                var assets = BuildGameAssets(patcher, modArchive, work, built => progress.Report(AssetShare * built));
+                var files = new List<(long size, Action write)> { (launcher.Length, () => Extract(launcher, LauncherName, written)) };
                 foreach (var entry in profileEntries)
-                {
-                    var relative = ProfileName + "/" + entry.FullName.Substring(sourcePrefix.Length);
-                    Extract(entry, relative, written);
-                }
-                Extract(plugin, ProfileName + "/plugins/Titanfall2VR.dll", written);
-                Extract(probe, ProfileName + "/tools/xr_probe.exe", written);
-                Extract(monitor, ProfileName + "/tools/crash_monitor.exe", written);
-                Extract(launch, ProfileName + "/tools/launch.json", written);
+                    files.Add((entry.Length, () => Extract(entry, ProfileName + "/" + entry.FullName.Substring(sourcePrefix.Length), written)));
+                files.Add((plugin.Length, () => Extract(plugin, ProfileName + "/plugins/Titanfall2VR.dll", written)));
+                files.Add((probe.Length, () => Extract(probe, ProfileName + "/tools/xr_probe.exe", written)));
+                files.Add((monitor.Length, () => Extract(monitor, ProfileName + "/tools/crash_monitor.exe", written)));
+                files.Add((launch.Length, () => Extract(launch, ProfileName + "/tools/launch.json", written)));
                 foreach (var entry in modArchive.Entries.Where(entry => entry.Name.Length > 0 && entry.FullName.StartsWith("mods/", StringComparison.Ordinal)))
-                    Extract(entry, ProfileName + "/" + entry.FullName, written);
+                    files.Add((entry.Length, () => Extract(entry, ProfileName + "/" + entry.FullName, written)));
                 foreach (var file in Directory.GetFiles(assets, "*", SearchOption.AllDirectories))
-                    Copy(file, ProfileName + "/" + file.Substring(assets.Length + 1).Replace('\\', '/'), written);
+                    files.Add((new FileInfo(file).Length, () => Copy(file, ProfileName + "/" + file.Substring(assets.Length + 1).Replace('\\', '/'), written)));
+
+                var total = files.Sum(file => file.size);
+                long done = 0;
+                foreach (var file in files)
+                {
+                    file.write();
+                    done += file.size;
+                    progress.Report(AssetShare + (1 - AssetShare) * done / total);
+                }
             }
 
             if (previous?.files != null) InstallerFileSystem.RemoveStaleFiles(GamePath, previous.files, written);
@@ -170,7 +179,7 @@ namespace BigWalkVRInstaller.Installers
         }
 
         // game derived files ship as patches, the patcher builds them from the installed game and writes them only once every file verifies
-        string BuildGameAssets(ZipArchiveEntry patcher, ZipArchive modArchive, string work)
+        string BuildGameAssets(ZipArchiveEntry patcher, ZipArchive modArchive, string work, Action<double> built)
         {
             foreach (var entry in modArchive.Entries.Where(entry => entry.Name.Length > 0 && entry.FullName.StartsWith("patches/", StringComparison.Ordinal)).Append(patcher))
             {
@@ -185,13 +194,21 @@ namespace BigWalkVRInstaller.Installers
                 Arguments = "apply \"" + GamePath + "\" \"" + Path.Combine(work, "patches") + "\" \"" + assets + "\"",
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
             using (var process = Process.Start(info))
             {
-                var error = process.StandardError.ReadToEnd();
+                var error = process.StandardError.ReadToEndAsync();
+                // "progress <read bytes> <total bytes>" lines
+                string line;
+                while ((line = process.StandardOutput.ReadLine()) != null)
+                {
+                    var parts = line.Split(' ');
+                    if (parts[0] == "progress") built((double)long.Parse(parts[1]) / long.Parse(parts[2]));
+                }
                 process.WaitForExit();
-                if (process.ExitCode != 0) throw new Exception("Couldn't build the mod's game assets: " + error.Trim());
+                if (process.ExitCode != 0) throw new Exception("Couldn't build the mod's game assets: " + error.Result.Trim());
             }
             return assets;
         }
@@ -212,33 +229,11 @@ namespace BigWalkVRInstaller.Installers
         }
 
         public static string SaveDirectory(string documentsPath) => Path.Combine(documentsPath, "Respawn", "Titanfall2_VR");
-        public static string BaseSaveDirectory(string documentsPath) => Path.Combine(documentsPath, "Respawn", "Titanfall2");
 
         public static CampaignSaveStatus GetCampaignSaveStatus(string directory)
         {
             var count = CampaignFiles.Count(name => File.Exists(Path.Combine(directory, "profile", name)));
             return count == 0 ? CampaignSaveStatus.Missing : count == CampaignFiles.Length ? CampaignSaveStatus.Available : CampaignSaveStatus.Incomplete;
-        }
-
-        public static bool CanCopyCampaignSave(string documentsPath) =>
-            GetCampaignSaveStatus(BaseSaveDirectory(documentsPath)) == CampaignSaveStatus.Available
-            && GetCampaignSaveStatus(SaveDirectory(documentsPath)) == CampaignSaveStatus.Missing;
-
-        public static void CopyCampaignSave(string documentsPath, bool overwrite = false)
-        {
-            if (Process.GetProcessesByName("Titanfall2").Any()) throw new InvalidOperationException("Close Titanfall 2 before copying saves.");
-            if (GetCampaignSaveStatus(BaseSaveDirectory(documentsPath)) != CampaignSaveStatus.Available)
-                throw new InvalidOperationException("No complete base game save to copy.");
-            if (!overwrite && GetCampaignSaveStatus(SaveDirectory(documentsPath)) != CampaignSaveStatus.Missing)
-                throw new InvalidOperationException("Copying would overwrite existing campaign progress.");
-            var source = Path.Combine(BaseSaveDirectory(documentsPath), "profile");
-            var destination = Path.Combine(SaveDirectory(documentsPath), "profile");
-            foreach (var name in CampaignFiles)
-            {
-                var target = Path.Combine(destination, name);
-                Directory.CreateDirectory(Path.GetDirectoryName(target));
-                File.Copy(Path.Combine(source, name), target, overwrite);
-            }
         }
 
         public void Uninstall() => OwnedFileStore.Remove(GamePath, InstallerId);

@@ -479,9 +479,14 @@
                         <ItemsControl x:Name="LogsList">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <!-- a star column bounds the message width so long errors wrap -->
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
                                         <TextBlock Text="{Binding Time}" FontSize="11.5" Foreground="{StaticResource TextDim}" FontFamily="Consolas" Margin="0,0,10,0" />
-                                        <TextBlock Text="{Binding Message}" FontSize="11.5" TextWrapping="Wrap">
+                                        <TextBlock Grid.Column="1" Text="{Binding Message}" FontSize="11.5" TextWrapping="Wrap">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                                     <Style.Triggers>
@@ -492,7 +497,7 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                    </StackPanel>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -547,47 +552,23 @@
             <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
                     CornerRadius="10" Padding="22,18" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="Save settings" FontSize="16" FontWeight="SemiBold" />
-                    <TextBlock Text="Save status" FontSize="12" FontWeight="SemiBold" Margin="0,18,0,0" />
-                    <Grid Margin="0,10,0,0">
+                    <TextBlock Text="Campaign save" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="Titanfall 2 VR keeps its own campaign, separate from the base game save."
+                               FontSize="12" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                    <Grid Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <TextBlock Text="Base game save" FontSize="12.5" />
-                        <TextBlock x:Name="TitanfallBaseSaveStatus" Grid.Column="1" FontSize="12.5" Foreground="{StaticResource TextDim}" />
-                        <TextBlock Text="VR save" Grid.Row="1" FontSize="12.5" Margin="0,8,0,0" />
-                        <TextBlock x:Name="TitanfallVrSaveStatus" Grid.Row="1" Grid.Column="1" FontSize="12.5"
-                                   Foreground="{StaticResource TextDim}" Margin="0,8,0,0" />
+                        <TextBlock Text="VR save" FontSize="12.5" />
+                        <TextBlock x:Name="TitanfallVrSaveStatus" Grid.Column="1" FontSize="12.5" Foreground="{StaticResource TextDim}" />
                     </Grid>
-                    <Border Height="1" Background="{StaticResource Stroke}" Margin="0,18,0,16" />
-                    <TextBlock Text="VR save" FontSize="12" FontWeight="SemiBold" />
-                    <TextBlock x:Name="TitanfallSaveHelp" Text="Import your base game progress into the VR save."
-                               FontSize="12" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,6,0,12" />
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="TitanfallCopySaveButton" Style="{StaticResource Primary}" Content="Import"
-                                Padding="16,7" Click="CopyTitanfallSave_Click" />
+                    <Grid Margin="0,18,0,0">
                         <Button x:Name="TitanfallSaveDirectoryButton" Style="{StaticResource Ghost}" Content="Open folder"
-                                Padding="16,7" Margin="8,0,0,0" Click="OpenTitanfallSaves_Click" />
-                    </StackPanel>
-                    <TextBlock x:Name="TitanfallSaveMessage" FontSize="12" TextWrapping="Wrap" Margin="0,12,0,0"
-                               AutomationProperties.LiveSetting="Polite">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value="">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <Button x:Name="TitanfallSavesCloseButton" Style="{StaticResource Ghost}" Content="Close" Padding="16,7"
-                            HorizontalAlignment="Right" Margin="0,12,0,0" Click="CloseTitanfallSaves_Click" />
+                                Padding="16,7" HorizontalAlignment="Left" Click="OpenTitanfallSaves_Click" />
+                        <Button x:Name="TitanfallSavesCloseButton" Style="{StaticResource Ghost}" Content="Close" Padding="16,7"
+                                HorizontalAlignment="Right" Click="CloseTitanfallSaves_Click" />
+                    </Grid>
                 </StackPanel>
             </Border>
         </Border>

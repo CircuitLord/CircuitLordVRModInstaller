@@ -294,9 +294,10 @@ namespace BigWalkVRInstaller
             BackButton.IsEnabled = !_titanfallBusy;
             RefreshButton.IsEnabled = !_titanfallBusy;
             LaunchButton.IsEnabled = installed && !_titanfallBusy;
+            LaunchButton.Content = update ? "Update and launch" : "Launch in VR";
             TitanfallCrashReportButton.IsEnabled = hasGame;
             TitanfallSavesButton.IsEnabled = !_titanfallBusy;
-            LaunchButton.ToolTip = installed ? "Launch Titanfall 2 VR" : "Install Titanfall 2 VR first";
+            LaunchButton.ToolTip = installed ? update ? "Update Titanfall 2 VR, then launch it" : "Launch Titanfall 2 VR" : "Install Titanfall 2 VR first";
             SelectedGameStatus.Text = installed ? update ? "Update available" : "Ready to play" : hasGame ? "Setup required" : "Game not found";
         }
 
@@ -465,22 +466,43 @@ namespace BigWalkVRInstaller
         async void TitanfallInstall_Click(object sender, RoutedEventArgs e)
         {
             if (!Ready() || _titanfallRelease == null) return;
-            _titanfallBusy = true;
-            TitanfallProgressPanel.Visibility = Visibility.Visible;
-            TitanfallProgress.Value = 0;
-            RefreshTitanfallState();
+            SetTitanfallBusy(true);
             try
             {
-                var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                var copySave = Titanfall2Installer.CanCopyCampaignSave(documents) && await Confirm(
-                    "Copy your existing campaign save?",
-                    "Launching from this installer uses a new save directory\n\nPress Yes if you'd like to copy your existing save file as a starting point.",
-                    "Yes", danger: false, cancelLabel: "No");
+                await InstallTitanfall();
+            }
+            catch (Exception ex)
+            {
+                Status($"Titanfall 2 VR install failed: {ex.Message}", true);
+            }
+            finally
+            {
+                SetTitanfallBusy(false);
+            }
+        }
+
+        void SetTitanfallBusy(bool busy)
+        {
+            _titanfallBusy = busy;
+            RefreshTitanfallState();
+            UpdateGameCards();
+        }
+
+        // downloads fill the first half of the bar by size, installing the rest
+        const double TitanfallDownloadShare = 0.5;
+
+        async Task InstallTitanfall()
+        {
+            TitanfallProgressPanel.Visibility = Visibility.Visible;
+            TitanfallProgress.Value = 0;
+            try
+            {
                 await EnsureTitanfallFolderAccess();
+                var northstarShare = TitanfallDownloadShare * Titanfall2Installer.NorthstarSize / (Titanfall2Installer.NorthstarSize + _titanfallRelease.size);
                 Status("Downloading Northstar...");
                 var northstarProgress = new Progress<double>(value =>
                 {
-                    TitanfallProgress.Value = value * 0.95;
+                    TitanfallProgress.Value = northstarShare * value;
                     TitanfallProgressText.Text = $"Downloading Northstar  {value * 100:0}%";
                 });
                 var northstar = await RepoClient.Download(
@@ -489,30 +511,24 @@ namespace BigWalkVRInstaller
                 Status("Downloading Titanfall 2 VR...");
                 var modProgress = new Progress<double>(value =>
                 {
-                    TitanfallProgress.Value = 0.95 + value * 0.05;
+                    TitanfallProgress.Value = northstarShare + (TitanfallDownloadShare - northstarShare) * value;
                     TitanfallProgressText.Text = $"Downloading Titanfall 2 VR  {value * 100:0}%";
                 });
                 var mod = await RepoClient.Download(_titanfallRelease.url, _titanfallRelease.sha256, modProgress);
 
-                TitanfallProgressText.Text = "Installing isolated Northstar profile...";
-                TitanfallProgress.Value = 1;
-                await Task.Run(() =>
+                Status("Installing Titanfall 2 VR...");
+                TitanfallProgressText.Text = "Installing  0%";
+                var installProgress = new Progress<double>(value =>
                 {
-                    _titanfall.Install(northstar, mod, _titanfallIsBeta);
-                    if (copySave) Titanfall2Installer.CopyCampaignSave(documents);
+                    TitanfallProgress.Value = TitanfallDownloadShare + (1 - TitanfallDownloadShare) * value;
+                    TitanfallProgressText.Text = $"Installing  {value * 100:0}%";
                 });
+                await Task.Run(() => _titanfall.Install(northstar, mod, _titanfallIsBeta, installProgress));
                 Status($"Titanfall 2 VR v{_titanfall.Record.version} installed");
-            }
-            catch (Exception ex)
-            {
-                Status($"Titanfall 2 VR install failed: {ex.Message}", true);
             }
             finally
             {
-                _titanfallBusy = false;
                 TitanfallProgressPanel.Visibility = Visibility.Collapsed;
-                RefreshTitanfallState();
-                UpdateGameCards();
             }
         }
 
@@ -580,9 +596,17 @@ namespace BigWalkVRInstaller
         {
             if (_selectedGame == SelectedGame.Titanfall2)
             {
-                LaunchButton.IsEnabled = false;
+                SetTitanfallBusy(true);
                 try
                 {
+                    // launching plays the latest release on the chosen channel
+                    await Refresh();
+                    if (_titanfallRelease != null && _titanfall.CanUpdate(_titanfallRelease, _titanfallIsBeta))
+                    {
+                        if (!Ready()) return;
+                        Status($"Updating Titanfall 2 VR to v{_titanfallRelease.version} before launch");
+                        await InstallTitanfall();
+                    }
                     await EnsureTitanfallFolderAccess();
                     Status("Checking headset resolution...");
                     await Task.Run(() => _titanfall.Play());
@@ -594,7 +618,7 @@ namespace BigWalkVRInstaller
                 }
                 finally
                 {
-                    LaunchButton.IsEnabled = true;
+                    SetTitanfallBusy(false);
                 }
                 return;
             }
@@ -769,8 +793,7 @@ namespace BigWalkVRInstaller
 
         void ShowTitanfallSaves(string documents)
         {
-            RefreshTitanfallSaves(documents);
-            TitanfallSaveMessage.Text = "";
+            TitanfallVrSaveStatus.Text = SaveStatusText(Titanfall2Installer.GetCampaignSaveStatus(Titanfall2Installer.SaveDirectory(documents)));
             InstallerView.IsEnabled = false;
             TitanfallSavesOverlay.Visibility = Visibility.Visible;
             TitanfallSavesCloseButton.Focus();
@@ -783,53 +806,8 @@ namespace BigWalkVRInstaller
             TitanfallSavesButton.Focus();
         }
 
-        void RefreshTitanfallSaves(string documents)
-        {
-            var baseSave = Titanfall2Installer.GetCampaignSaveStatus(Titanfall2Installer.BaseSaveDirectory(documents));
-            var vrSave = Titanfall2Installer.GetCampaignSaveStatus(Titanfall2Installer.SaveDirectory(documents));
-            TitanfallBaseSaveStatus.Text = SaveStatusText(baseSave);
-            TitanfallVrSaveStatus.Text = SaveStatusText(vrSave);
-            TitanfallCopySaveButton.IsEnabled = baseSave == CampaignSaveStatus.Available;
-            TitanfallSaveHelp.Text = baseSave == CampaignSaveStatus.Available
-                ? "Import your base game progress into the VR save."
-                : "Import needs a complete base game save.";
-        }
-
         static string SaveStatusText(CampaignSaveStatus status) =>
             status == CampaignSaveStatus.Available ? "Save found" : status == CampaignSaveStatus.Missing ? "No save" : "Incomplete save";
-
-        async void CopyTitanfallSave_Click(object sender, RoutedEventArgs e) =>
-            await CopyTitanfallSave(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-
-        async Task CopyTitanfallSave(string documents)
-        {
-            TitanfallSaveMessage.Text = "";
-            var overwrite = Titanfall2Installer.GetCampaignSaveStatus(Titanfall2Installer.SaveDirectory(documents)) != CampaignSaveStatus.Missing;
-            var confirmation = Confirm(
-                overwrite ? "Overwrite VR save?" : "Import base game save?",
-                overwrite ? "The VR save and its progress will be replaced by the base game save. This cannot be undone."
-                    : "The base game save will be copied into the VR save.",
-                overwrite ? "Overwrite" : "Import", danger: overwrite);
-            ConfirmCancel.Focus();
-            if (!await confirmation)
-            {
-                TitanfallSavesCloseButton.Focus();
-                return;
-            }
-            try
-            {
-                Titanfall2Installer.CopyCampaignSave(documents, overwrite);
-                TitanfallSaveMessage.Text = "Campaign save copied.";
-                TitanfallSaveMessage.Foreground = Brush("Green");
-            }
-            catch (Exception ex)
-            {
-                TitanfallSaveMessage.Text = ex.Message;
-                TitanfallSaveMessage.Foreground = Brush("Red");
-            }
-            RefreshTitanfallSaves(documents);
-            TitanfallSavesCloseButton.Focus();
-        }
 
         void OpenTitanfallSaves_Click(object sender, RoutedEventArgs e) => Open(() =>
         {
@@ -963,7 +941,8 @@ namespace BigWalkVRInstaller
         void Status(string text, bool error = false)
         {
             _logs.Add(new LogEntry { Time = DateTime.Now.ToString("HH:mm:ss"), Message = text, IsError = error });
-            StatusText.Text = text;
+            // one line, the logs tab keeps the full message
+            StatusText.Text = text.Replace('\n', ' ');
             StatusText.Foreground = Brush(error ? "Red" : "TextDim");
             LogsView.ScrollToEnd();
         }

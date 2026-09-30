@@ -57,7 +57,7 @@ namespace BigWalkVRInstaller.Services
             string capturedHash = null;
             if (session != null)
             {
-                var names = new HashSet<string> { "session.json", "monitor.txt", "incident.txt", "capture.txt", "stacks.txt", "engine.txt", "events.txt", "runtime.txt", "frames.csv", "northstar.txt" };
+                var names = new HashSet<string> { "session.json", "monitor.txt", "incident.txt", "capture.txt", "stacks.txt", "stderr.txt", "engine.txt", "events.txt", "runtime.txt", "frames.csv", "northstar.txt" };
                 foreach (var file in session.EnumerateFiles("*", SearchOption.AllDirectories).Where(file => names.Contains(file.Name)))
                     files["Capture/" + file.FullName.Substring(session.FullName.Length + 1).Replace('\\', '/')] = file.FullName;
                 var identity = Path.Combine(session.FullName, "session.json");

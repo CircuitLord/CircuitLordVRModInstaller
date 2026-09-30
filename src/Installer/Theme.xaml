@@ -576,11 +576,13 @@
         <Setter Property="Foreground" Value="{StaticResource Accent}" />
         <Setter Property="Template">
             <Setter.Value>
+                <!-- the indicator width follows the value only when both parts exist -->
                 <ControlTemplate TargetType="ProgressBar">
-                    <Border Background="{StaticResource Hover}" CornerRadius="2" ClipToBounds="True">
+                    <Grid ClipToBounds="True">
+                        <Border x:Name="PART_Track" Background="{StaticResource Hover}" CornerRadius="2" />
                         <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}"
                                 CornerRadius="2" HorizontalAlignment="Left" />
-                    </Border>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
