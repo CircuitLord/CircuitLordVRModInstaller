@@ -323,14 +323,26 @@ namespace BigWalkVRInstaller.Installers
             info.Arguments = "--views \"" + viewsPath + "\"";
             info.CreateNoWindow = true;
             info.RedirectStandardError = true;
-            using (var probe = Process.Start(info))
+            info.RedirectStandardOutput = true;
+            var output = new List<string>();
+            using (var probe = new Process { StartInfo = info })
             {
+                probe.OutputDataReceived += (sender, line) => { if (line.Data != null) lock (output) output.Add(line.Data); };
+                probe.Start();
+                probe.BeginOutputReadLine();
                 // the probe's last line names the failing OpenXR call, after any loader errors
                 var error = probe.StandardError.ReadToEndAsync();
-                if (!probe.WaitForExit(15000))
+                // SteamVR can take most of a minute to start its server and connect a streamed headset
+                if (!probe.WaitForExit(60000))
                 {
                     probe.Kill();
-                    throw new Exception("The headset check timed out. " + RuntimeHelp());
+                    // the probe prints these after creating the OpenXR instance and finding the headset
+                    string stalled;
+                    lock (output)
+                        stalled = !output.Any(line => line.StartsWith("OpenXR runtime:")) ? "The OpenXR runtime didn't start within a minute."
+                            : !output.Any(line => line.StartsWith("Headset:")) ? "The OpenXR runtime started but didn't find a headset within a minute."
+                            : "The headset check stopped responding after finding the headset.";
+                    throw new Exception(stalled + " " + RuntimeHelp());
                 }
                 if (probe.ExitCode != 0)
                     throw new Exception($"Couldn't reach your headset through OpenXR. {RuntimeHelp()}\nDetails: {error.Result.Trim().Split('\n').Last().Trim()} (exit 0x{probe.ExitCode:X8})");
