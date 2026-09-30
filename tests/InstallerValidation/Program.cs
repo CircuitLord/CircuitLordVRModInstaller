@@ -74,8 +74,9 @@ namespace InstallerValidation
 
                 var documents = Path.Combine(root, "Documents");
                 var defaultProfile = Path.Combine(documents, "Respawn", "Titanfall2", "profile");
-                var saveDirectory = Titanfall2Installer.SaveDirectory(documents);
-                Assert(saveDirectory == Path.Combine(documents, "Respawn", "Titanfall2_VR"), "wrong save directory");
+                var localAppData = Path.Combine(root, "Local");
+                var saveDirectory = Titanfall2Installer.SaveDirectory(localAppData);
+                Assert(saveDirectory == Path.Combine(localAppData, "Respawn", "Titanfall2_VR"), "wrong save directory");
                 var vrProfile = Path.Combine(saveDirectory, "profile");
                 var fnfSave = Path.Combine(documents, "Respawn", "Titanfall2_fnf", "profile", "savegames", "savegame.sav");
                 Directory.CreateDirectory(Path.GetDirectoryName(fnfSave));

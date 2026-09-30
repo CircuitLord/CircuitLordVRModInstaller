@@ -789,11 +789,11 @@ namespace BigWalkVRInstaller
             GameLauncher.OpenFolder(_selectedGame == SelectedGame.Titanfall2 ? _titanfall.GamePath : _bigWalk.GamePath));
 
         void TitanfallSaves_Click(object sender, RoutedEventArgs e) =>
-            ShowTitanfallSaves(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            ShowTitanfallSaves(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
 
-        void ShowTitanfallSaves(string documents)
+        void ShowTitanfallSaves(string localAppData)
         {
-            TitanfallVrSaveStatus.Text = SaveStatusText(Titanfall2Installer.GetCampaignSaveStatus(Titanfall2Installer.SaveDirectory(documents)));
+            TitanfallVrSaveStatus.Text = SaveStatusText(Titanfall2Installer.GetCampaignSaveStatus(Titanfall2Installer.SaveDirectory(localAppData)));
             InstallerView.IsEnabled = false;
             TitanfallSavesOverlay.Visibility = Visibility.Visible;
             TitanfallSavesCloseButton.Focus();
@@ -811,7 +811,7 @@ namespace BigWalkVRInstaller
 
         void OpenTitanfallSaves_Click(object sender, RoutedEventArgs e) => Open(() =>
         {
-            var path = Titanfall2Installer.SaveDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            var path = Titanfall2Installer.SaveDirectory(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
             Directory.CreateDirectory(path);
             GameLauncher.OpenFolder(path);
         });

@@ -228,7 +228,8 @@ namespace BigWalkVRInstaller.Installers
             return destination;
         }
 
-        public static string SaveDirectory(string documentsPath) => Path.Combine(documentsPath, "Respawn", "Titanfall2_VR");
+        // mod 1.0.4 and later, Controlled folder access blocks the launcher from Documents
+        public static string SaveDirectory(string localAppDataPath) => Path.Combine(localAppDataPath, "Respawn", "Titanfall2_VR");
 
         public static CampaignSaveStatus GetCampaignSaveStatus(string directory)
         {
