@@ -116,6 +116,14 @@ namespace InstallerValidation
                 Assert(installer.IsInstalled, "complete VR package was not recognized");
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")), "diagnostic probe missing");
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")), "crash monitor missing");
+                var replacedDirectX = Path.Combine(root, "bin", "x64_retail", "dxgi.dll");
+                Directory.CreateDirectory(Path.GetDirectoryName(replacedDirectX));
+                File.WriteAllText(replacedDirectX, "reshade");
+                var replacementError = "";
+                try { installer.Play(); }
+                catch (Exception ex) { replacementError = ex.Message; }
+                Assert(replacementError.Contains(replacedDirectX) && !File.Exists(Path.Combine(profile, "monitor-started")), "launch ignored a replaced DirectX file: " + replacementError);
+                File.Delete(replacedDirectX);
                 installer.Play();
                 Assert(System.Threading.SpinWait.SpinUntil(() => File.Exists(Path.Combine(profile, "monitor-started")), 5000), "Play did not launch the crash monitor");
                 var monitored = File.ReadAllLines(Path.Combine(profile, "monitor-launch.txt"));

@@ -295,7 +295,17 @@ namespace BigWalkVRInstaller.Installers
             return info;
         }
 
-        public void Play() => Process.Start(CreateLaunchInfo(GamePath));
+        // mods drop these beside the game to replace DirectX, which takes Present away from VR rendering
+        static readonly string[] DirectXReplacements = { "dxgi.dll", "d3d11.dll" };
+
+        public void Play()
+        {
+            var replacements = DirectXReplacements.SelectMany(name => new[] { Path.Combine(GamePath, name), Path.Combine(GamePath, "bin", "x64_retail", name) })
+                .Where(File.Exists).ToArray();
+            if (replacements.Length > 0)
+                throw new Exception("Another mod replaced DirectX files, which breaks VR rendering. Remove these files and launch again:\n" + string.Join("\n", replacements));
+            Process.Start(CreateLaunchInfo(GamePath));
+        }
 
         // same key OriginSDK and Northstar use to start the EA app
         public static string EaAppPath() =>
