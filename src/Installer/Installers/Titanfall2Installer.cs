@@ -18,22 +18,6 @@ namespace BigWalkVRInstaller.Installers
         public string[] vrArguments;
     }
 
-    public sealed class OpenXrView
-    {
-        public int width;
-        public int height;
-    }
-
-    public sealed class OpenXrRuntimeManifest
-    {
-        public OpenXrRuntimeInfo runtime;
-    }
-
-    public sealed class OpenXrRuntimeInfo
-    {
-        public string name;
-    }
-
     public enum CampaignSaveStatus { Missing, Incomplete, Available }
 
     public sealed class Titanfall2Installer : IVrModInstaller
@@ -299,71 +283,19 @@ namespace BigWalkVRInstaller.Installers
             return info;
         }
 
-        public static ProcessStartInfo CreateLaunchInfo(string gamePath, OpenXrView[] views)
+        public static ProcessStartInfo CreateLaunchInfo(string gamePath)
         {
-            if (views.Length != 2 || views.Any(view => view.width <= 0 || view.height <= 0))
-                throw new Exception("OpenXR must provide two valid eye resolutions");
-            var height = views.Max(view => view.height);
-            // eye sized buffers, the mod lays out native UI in their 16:9 corner
-            var width = views.Max(view => view.width);
             var settings = JsonUtil.Deserialize<TitanfallLaunchSettings>(File.ReadAllText(Path.Combine(gamePath, ProfileName, "tools", "launch.json")));
             var info = VrProcess(gamePath, Path.Combine(gamePath, ProfileName, "tools", "crash_monitor.exe"));
+            // the mod replaces these dimensions before the engine initializes
             info.Arguments = "\"" + Path.Combine(gamePath, ProfileName) + "\" \"" + Path.Combine(gamePath, LauncherName) + "\" "
                 + string.Join(" ", settings.arguments.Concat(settings.vrArguments)
-                .Select(arg => arg.Replace("{profile}", ProfileName).Replace("{width}", width.ToString())
-                    .Replace("{height}", height.ToString()).Replace("{sound}", "1")));
+                .Select(arg => arg.Replace("{profile}", ProfileName).Replace("{width}", "1280")
+                    .Replace("{height}", "720").Replace("{sound}", "1")));
             return info;
         }
 
-        public void Play()
-        {
-            var tools = Path.Combine(GamePath, ProfileName, "tools");
-            var viewsPath = Path.Combine(tools, "xr_views.json");
-            var info = VrProcess(GamePath, Path.Combine(tools, "xr_probe.exe"));
-            info.Arguments = "--views \"" + viewsPath + "\"";
-            info.CreateNoWindow = true;
-            info.RedirectStandardError = true;
-            info.RedirectStandardOutput = true;
-            var output = new List<string>();
-            using (var probe = new Process { StartInfo = info })
-            {
-                probe.OutputDataReceived += (sender, line) => { if (line.Data != null) lock (output) output.Add(line.Data); };
-                probe.Start();
-                probe.BeginOutputReadLine();
-                // the probe's last line names the failing OpenXR call, after any loader errors
-                var error = probe.StandardError.ReadToEndAsync();
-                // SteamVR can take most of a minute to start its server and connect a streamed headset
-                if (!probe.WaitForExit(60000))
-                {
-                    probe.Kill();
-                    // the probe prints these after creating the OpenXR instance and finding the headset
-                    string stalled;
-                    lock (output)
-                        stalled = !output.Any(line => line.StartsWith("OpenXR runtime:")) ? "The OpenXR runtime didn't start within a minute."
-                            : !output.Any(line => line.StartsWith("Headset:")) ? "The OpenXR runtime started but didn't find a headset within a minute."
-                            : "The headset check stopped responding after finding the headset.";
-                    throw new Exception(stalled + " " + RuntimeHelp());
-                }
-                if (probe.ExitCode != 0)
-                    throw new Exception($"Couldn't reach your headset through OpenXR. {RuntimeHelp()}\nDetails: {error.Result.Trim().Split('\n').Last().Trim()} (exit 0x{probe.ExitCode:X8})");
-            }
-            var views = JsonUtil.Deserialize<OpenXrView[]>(File.ReadAllText(viewsPath));
-            Process.Start(CreateLaunchInfo(GamePath, views));
-        }
-
-        static string RuntimeHelp()
-        {
-            string state;
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(@"SOFTWARE\Khronos\OpenXR\1"))
-            {
-                var manifest = key?.GetValue("ActiveRuntime") as string;
-                if (manifest == null) state = "No OpenXR runtime is set.";
-                else if (!File.Exists(manifest)) state = $"Your OpenXR runtime is set to {manifest}, which no longer exists.";
-                // name is optional in runtime manifests
-                else state = $"Your active OpenXR runtime is {JsonUtil.Deserialize<OpenXrRuntimeManifest>(File.ReadAllText(manifest)).runtime.name ?? Path.GetFileName(manifest)}.";
-            }
-            return state + " Make sure your headset is connected and that runtime is running, or set the runtime you play with as active (for SteamVR: SteamVR Settings > OpenXR > Set SteamVR as OpenXR runtime).";
-        }
+        public void Play() => Process.Start(CreateLaunchInfo(GamePath));
 
         // same key OriginSDK and Northstar use to start the EA app
         public static string EaAppPath() =>

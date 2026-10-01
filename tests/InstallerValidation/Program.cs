@@ -16,13 +16,13 @@ namespace InstallerValidation
     {
 
         [STAThread]
-        static int Main(string[] args) => args.Length == 0 ? Validate() : args[0] == "--views" ? FakeProbe() : FakeAssetPatcher(args);
+        static int Main(string[] args) => args.Length == 0 ? Validate() : args[0] == "apply" ? FakeAssetPatcher(args) : FakeMonitor(args);
 
-        // the installer runs this exe as the package's headset probe, which fails like a runtime without a headset
-        static int FakeProbe()
+        static int FakeMonitor(string[] args)
         {
-            Console.Error.WriteLine("xrGetSystem(instance, &systemInfo, &system): XrResult -50");
-            return 1;
+            File.WriteAllLines(Path.Combine(args[0], "monitor-launch.txt"), args);
+            File.WriteAllText(Path.Combine(args[0], "monitor-started"), "");
+            return 0;
         }
 
         // the installer runs this exe as the package's asset patcher, a fail-assets file in the game folder makes it fail
@@ -114,30 +114,25 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(defaultProfile, "profile.cfg")) == "campaign-unlocks", "default profile changed");
 
                 Assert(installer.IsInstalled, "complete VR package was not recognized");
-                Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")), "resolution probe missing");
-                var probeError = "";
-                try { installer.Play(); }
-                catch (Exception ex) { probeError = ex.Message; }
-                Assert(probeError.Contains("OpenXR runtime") && probeError.Contains("Details: xrGetSystem(instance, &systemInfo, &system): XrResult -50 (exit 0x00000001)"), "probe failure hid its cause: " + probeError);
-                Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")) == "monitor", "crash monitor missing");
+                Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")), "diagnostic probe missing");
+                Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")), "crash monitor missing");
+                installer.Play();
+                Assert(System.Threading.SpinWait.SpinUntil(() => File.Exists(Path.Combine(profile, "monitor-started")), 5000), "Play did not launch the crash monitor");
+                var monitored = File.ReadAllLines(Path.Combine(profile, "monitor-launch.txt"));
+                Assert(monitored[0] == profile && monitored[1] == Path.Combine(root, "Titanfall2VRLauncher.exe"), "Play bypassed crash capture");
+                Assert(!File.Exists(Path.Combine(profile, "tools", "xr_views.json")), "Play still used probe dimensions");
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod.json")), "cockpit assets missing");
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt")) == "patched", "patched game assets missing");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "tools", "asset_patcher.exe")), "asset patcher was installed");
-                var launch = Titanfall2Installer.CreateLaunchInfo(root, new[] {
-                    new OpenXrView { width = 2100, height = 2200 }, new OpenXrView { width = 2000, height = 2160 }
-                });
+                var launch = Titanfall2Installer.CreateLaunchInfo(root);
                 Assert(launch.FileName == Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe"), "launch bypassed crash capture");
                 Assert(launch.Arguments == "\"" + profile + "\" \"" + Path.Combine(root, "Titanfall2VRLauncher.exe")
-                    + "\" -profile=TF2VR -windowed -w 2100 -h 2200 +sound_without_focus 1 +mat_vsync_mode 0", "wrong monitored launch arguments");
+                    + "\" -profile=TF2VR -windowed -w 1280 -h 720 +sound_without_focus 1 +mat_vsync_mode 0", "wrong monitored launch arguments");
                 Assert(launch.EnvironmentVariables["TF2VR_OPENXR"] == "1", "OpenXR was not enabled");
                 Assert(!launch.EnvironmentVariables.ContainsKey("TF2VR_DEV_SESSION"), "development session inherited");
                 Assert(!launch.EnvironmentVariables.ContainsKey("XR_RUNTIME_JSON"), "runtime override inherited");
                 Assert(!launch.UseShellExecute, "VR environment cannot reach launcher");
                 Assert(launch.WorkingDirectory == root, "wrong working directory");
-                var wide = Titanfall2Installer.CreateLaunchInfo(root, new[] {
-                    new OpenXrView { width = 4000, height = 1000 }, new OpenXrView { width = 4100, height = 900 }
-                });
-                Assert(wide.Arguments.Contains("-w 4100 -h 1000"), "wide eye resolution was cropped");
 
                 var failFlag = Path.Combine(root, "fail-assets");
                 File.WriteAllText(failFlag, "");
@@ -339,8 +334,8 @@ namespace InstallerValidation
                 {
                     Add(archive, "Titanfall2VR.dll", plugin);
                     Add(archive, "release.json", "{\n  \"version\": \"" + version + "\",\n  \"description\": \"test\"\n}\n");
-                    Add(archive, "xr_probe.exe", File.ReadAllBytes(Assembly.GetExecutingAssembly().Location));
-                    Add(archive, "crash_monitor.exe", "monitor");
+                    Add(archive, "xr_probe.exe", "diagnostic-probe");
+                    Add(archive, "crash_monitor.exe", File.ReadAllBytes(Assembly.GetExecutingAssembly().Location));
                     Add(archive, "launch.json", JsonUtil.Serialize(new TitanfallLaunchSettings {
                         arguments = new[] { "-profile={profile}", "-windowed", "-w", "{width}", "-h", "{height}", "+sound_without_focus", "{sound}" },
                         vrArguments = new[] { "+mat_vsync_mode", "0" }
