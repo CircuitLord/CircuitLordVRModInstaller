@@ -57,7 +57,7 @@ namespace BigWalkVRInstaller.Services
             string capturedHash = null;
             if (session != null)
             {
-                var names = new HashSet<string> { "session.json", "monitor.txt", "incident.txt", "capture.txt", "stacks.txt", "stderr.txt", "engine.txt", "events.txt", "runtime.txt", "frames.csv", "northstar.txt" };
+                var names = new HashSet<string> { "session.json", "monitor.txt", "incident.txt", "capture.txt", "stacks.txt", "stderr.txt", "diagnostics.txt", "exceptions.txt", "launcher.txt", "memory.txt", "engine.txt", "events.txt", "runtime.txt", "frames.csv", "northstar.txt" };
                 foreach (var file in session.EnumerateFiles("*", SearchOption.AllDirectories).Where(file => names.Contains(file.Name)))
                     files["Capture/" + file.FullName.Substring(session.FullName.Length + 1).Replace('\\', '/')] = file.FullName;
                 var identity = Path.Combine(session.FullName, "session.json");
@@ -73,8 +73,15 @@ namespace BigWalkVRInstaller.Services
                     if (File.Exists(path)) files["Titanfall2VR/" + name] = path;
                 }
                 var latest = sessions.OrderByDescending(candidate => candidate.Name, StringComparer.Ordinal).FirstOrDefault();
-                if (latest != null) files["Capture/monitor.txt"] = Path.Combine(latest.FullName, "monitor.txt");
+                if (latest != null)
+                    foreach (var name in new[] { "monitor.txt", "diagnostics.txt", "session.json", "launcher.txt", "memory.txt" })
+                    {
+                        var path = Path.Combine(latest.FullName, name);
+                        if (File.Exists(path)) files["Capture/" + name] = path;
+                    }
             }
+            var launcherLog = Path.Combine(profile, "launcher.txt");
+            if (File.Exists(launcherLog)) files["Launcher/launcher.txt"] = launcherLog;
             if (files.Count == 0) throw new Exception("No Titanfall 2 VR crash files were found.");
 
             var record = OwnedFileStore.Read(gamePath, "Titanfall2VR");

@@ -300,11 +300,33 @@ namespace BigWalkVRInstaller.Installers
 
         public void Play()
         {
-            var replacements = DirectXReplacements.SelectMany(name => new[] { Path.Combine(GamePath, name), Path.Combine(GamePath, "bin", "x64_retail", name) })
-                .Where(File.Exists).ToArray();
-            if (replacements.Length > 0)
-                throw new Exception("Another mod replaced DirectX files, which breaks VR rendering. Remove these files and launch again:\n" + string.Join("\n", replacements));
-            Process.Start(CreateLaunchInfo(GamePath));
+            var profile = Path.Combine(GamePath, ProfileName);
+            using (var log = new StreamWriter(Path.Combine(profile, "launcher.txt")) { AutoFlush = true })
+            {
+                log.WriteLine("utc=" + DateTime.UtcNow.ToString("O"));
+                log.WriteLine("installer_version=" + typeof(Titanfall2Installer).Assembly.GetName().Version);
+                log.WriteLine("windows=" + Environment.OSVersion.VersionString + " process_64bit=" + Environment.Is64BitProcess);
+                foreach (var relative in new[] { LauncherName, ProfileName + "/Northstar.dll", ProfileName + "/plugins/Titanfall2VR.dll", ProfileName + "/tools/crash_monitor.exe" })
+                {
+                    var file = new FileInfo(Path.Combine(GamePath, relative));
+                    log.WriteLine("binary=" + relative + " exists=" + file.Exists + (file.Exists ? " bytes=" + file.Length : ""));
+                }
+                try
+                {
+                    var replacements = DirectXReplacements.SelectMany(name => new[] { Path.Combine(GamePath, name), Path.Combine(GamePath, "bin", "x64_retail", name) })
+                        .Where(File.Exists).ToArray();
+                    if (replacements.Length > 0)
+                        throw new Exception("Another mod replaced DirectX files, which breaks VR rendering. Remove these files and launch again:\n" + string.Join("\n", replacements));
+                    using (var monitor = Process.Start(CreateLaunchInfo(GamePath)))
+                        log.WriteLine("monitor_started pid=" + monitor.Id);
+                }
+                catch (Exception error)
+                {
+                    log.WriteLine("launch_error=" + error.GetType().Name + " message=" + error.Message);
+                    if (error is Win32Exception win32) log.WriteLine("win32_error=" + win32.NativeErrorCode);
+                    throw;
+                }
+            }
         }
 
         // same key OriginSDK and Northstar use to start the EA app

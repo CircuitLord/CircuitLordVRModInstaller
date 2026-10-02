@@ -123,8 +123,18 @@ namespace InstallerValidation
                 try { installer.Play(); }
                 catch (Exception ex) { replacementError = ex.Message; }
                 Assert(replacementError.Contains(replacedDirectX) && !File.Exists(Path.Combine(profile, "monitor-started")), "launch ignored a replaced DirectX file: " + replacementError);
+                var launcherLog = Path.Combine(profile, "launcher.txt");
+                Assert(File.ReadAllText(launcherLog).Contains("launch_error=Exception"), "blocked launch error was not logged");
                 File.Delete(replacedDirectX);
+                var monitorPath = Path.Combine(profile, "tools", "crash_monitor.exe");
+                File.Move(monitorPath, monitorPath + ".disabled");
+                try { installer.Play(); }
+                catch (System.ComponentModel.Win32Exception) { }
+                Assert(File.ReadAllText(launcherLog).Contains("win32_error=2"), "Windows launch error was not logged");
+                File.Move(monitorPath + ".disabled", monitorPath);
                 installer.Play();
+                var launchLog = File.ReadAllText(launcherLog);
+                Assert(launchLog.Contains("monitor_started pid=") && launchLog.Contains("binary=TF2VR/Northstar.dll exists=True") && !launchLog.Contains("launch_error="), "launch diagnostics missing or stale");
                 Assert(System.Threading.SpinWait.SpinUntil(() => File.Exists(Path.Combine(profile, "monitor-started")), 5000), "Play did not launch the crash monitor");
                 var monitored = File.ReadAllLines(Path.Combine(profile, "monitor-launch.txt"));
                 Assert(monitored[0] == profile && monitored[1] == Path.Combine(root, "Titanfall2VRLauncher.exe"), "Play bypassed crash capture");
@@ -175,6 +185,7 @@ namespace InstallerValidation
                     Assert(archive.GetEntry("Northstar/nsdump-test.dmp") == null, "Northstar memory dump was packaged");
                     Assert(archive.GetEntry("Titanfall2VR/engine.txt") != null, "engine log missing from crash report");
                     Assert(archive.GetEntry("report.json") != null, "crash metadata missing from report");
+                    Assert(archive.GetEntry("Launcher/launcher.txt") != null, "launcher log missing from report");
                 }
 
                 ValidateCrashCaptureReport(root, profile);
@@ -289,6 +300,14 @@ namespace InstallerValidation
             File.WriteAllText(Path.Combine(session, "incident.txt"), "exception");
             File.WriteAllText(Path.Combine(session, "monitor.txt"), "process_exit code=3221225477");
             File.WriteAllText(Path.Combine(session, "session.json"), "{\"modSha256\":\"captured-plugin\"}");
+            File.WriteAllText(Path.Combine(session, "diagnostics.txt"), "commit_limit_bytes=100");
+            File.WriteAllText(Path.Combine(session, "memory.txt"), "process_private_bytes=10");
+            File.WriteAllText(Path.Combine(session, "launcher.txt"), "monitor_started pid=11");
+            var firstChance = Path.Combine(session, "first-chance-11-1");
+            Directory.CreateDirectory(firstChance);
+            File.WriteAllText(Path.Combine(firstChance, "exceptions.txt"), "exception=0xc0000005 parameter1=0x48");
+            File.WriteAllText(Path.Combine(firstChance, "stacks.txt"), "ntdll.dll+0x11");
+            File.WriteAllText(Path.Combine(firstChance, "process.dmp"), "handled-memory");
             File.WriteAllText(Path.Combine(session, "stderr.txt"), "Titanfall2VR: positional head tracking is required\n");
             File.WriteAllText(Path.Combine(incident, "capture.txt"), "dump_written=1");
             File.WriteAllText(Path.Combine(incident, "engine.txt"), "frozen-log");
@@ -303,6 +322,11 @@ namespace InstallerValidation
             {
                 Assert(archive.GetEntry("Capture/exception-11/stacks.txt") != null, "captured stacks missing");
                 Assert(archive.GetEntry("Capture/stderr.txt") != null, "game stderr missing");
+                Assert(archive.GetEntry("Capture/diagnostics.txt") != null, "system diagnostics missing");
+                Assert(archive.GetEntry("Capture/memory.txt") != null, "memory samples missing");
+                Assert(archive.GetEntry("Capture/launcher.txt") != null, "captured launcher log missing");
+                Assert(archive.GetEntry("Capture/first-chance-11-1/exceptions.txt") != null, "first exception missing");
+                Assert(archive.GetEntry("Capture/first-chance-11-1/stacks.txt") != null, "first exception stacks missing");
                 Assert(!archive.Entries.Any(entry => entry.Name.StartsWith("process.")), "memory dump was packaged");
                 Assert(archive.GetEntry("Northstar/nsdump-test.dmp") == null, "unrelated Northstar dump was mixed into capture");
                 using (var reader = new StreamReader(archive.GetEntry("Capture/exception-11/engine.txt").Open()))
