@@ -397,6 +397,15 @@ namespace InstallerValidation
             var later = Path.Combine(profile, "crashes", "20260920T010000000Z-12");
             Directory.CreateDirectory(later);
             File.WriteAllText(Path.Combine(later, "monitor.txt"), "normal exit");
+            File.WriteAllText(Path.Combine(later, "stderr.txt"), "latest stderr");
+            File.WriteAllText(Path.Combine(later, "session.json"), "{\"modSha256\":\"later-plugin\"}");
+            var logs = Path.Combine(profile, "logs");
+            File.SetLastWriteTimeUtc(Path.Combine(logs, "nslog-test.txt"), new DateTime(2026, 9, 20, 0, 0, 0, DateTimeKind.Utc));
+            File.WriteAllText(Path.Combine(logs, "nslog-latest.txt"), "latest connection error");
+            File.SetLastWriteTimeUtc(Path.Combine(logs, "nslog-latest.txt"), new DateTime(2026, 9, 20, 1, 0, 0, DateTimeKind.Utc));
+            var data = Path.Combine(profile, "plugins", "Titanfall2VR-data");
+            foreach (var name in new[] { "engine.txt", "events.txt", "runtime.txt", "frames.csv" })
+                File.WriteAllText(Path.Combine(data, name), "latest " + name);
             var report = CrashReportService.CreateTitanfall(root, root);
             using (var archive = ZipFile.OpenRead(report))
             {
@@ -409,19 +418,37 @@ namespace InstallerValidation
                 Assert(archive.GetEntry("Capture/first-chance-11-1/stacks.txt") != null, "first exception stacks missing");
                 Assert(!archive.Entries.Any(entry => entry.Name.StartsWith("process.")), "memory dump was packaged");
                 Assert(archive.GetEntry("Northstar/nsdump-test.dmp") == null, "unrelated Northstar dump was mixed into capture");
+                Assert(archive.GetEntry("Northstar/nslog-test.txt") == null, "older live Northstar log was selected");
+                using (var reader = new StreamReader(archive.GetEntry("Northstar/nslog-latest.txt").Open()))
+                    Assert(reader.ReadToEnd() == "latest connection error", "latest Northstar log missing with an older crash");
+                foreach (var name in new[] { "engine.txt", "events.txt", "runtime.txt", "frames.csv" })
+                    using (var reader = new StreamReader(archive.GetEntry("Titanfall2VR/" + name).Open()))
+                        Assert(reader.ReadToEnd() == "latest " + name, "latest plugin diagnostic missing: " + name);
+                using (var reader = new StreamReader(archive.GetEntry("LatestSession/monitor.txt").Open()))
+                    Assert(reader.ReadToEnd() == "normal exit", "latest session monitor missing");
+                using (var reader = new StreamReader(archive.GetEntry("LatestSession/stderr.txt").Open()))
+                    Assert(reader.ReadToEnd() == "latest stderr", "latest session stderr missing");
+                using (var reader = new StreamReader(archive.GetEntry("Capture/monitor.txt").Open()))
+                    Assert(reader.ReadToEnd() == "process_exit code=3221225477", "latest session replaced crash monitor");
                 using (var reader = new StreamReader(archive.GetEntry("Capture/exception-11/engine.txt").Open()))
                     Assert(reader.ReadToEnd() == "frozen-log", "live logs replaced incident logs");
                 using (var reader = new StreamReader(archive.GetEntry("report.json").Open()))
                 {
                     var metadata = JsonUtil.Deserialize<TitanfallCrashMetadata>(reader.ReadToEnd());
                     Assert(metadata.capturedModSha256 == "captured-plugin", "installed binary replaced capture identity");
+                    Assert(metadata.captureSession == Path.GetFileName(session), "crash session date missing");
+                    Assert(metadata.latestSession == Path.GetFileName(later), "latest session date missing");
                 }
             }
             File.WriteAllText(Path.Combine(later, "incident.txt"), "monitor_error");
             File.WriteAllText(Path.Combine(later, "session.json"), "{\"modSha256\":\"later-plugin\"}");
             var missing = CrashReportService.CreateTitanfall(root, root);
             using (var archive = ZipFile.OpenRead(missing))
+            {
                 Assert(!archive.Entries.Any(entry => entry.Name == "stacks.txt"), "capture failure borrowed older stacks");
+                Assert(archive.GetEntry("Northstar/nslog-latest.txt") != null, "latest log missing when latest session has an incident");
+                Assert(archive.GetEntry("LatestSession/monitor.txt") != null, "latest session missing when it is also the crash session");
+            }
         }
 
         static byte[] NorthstarPackage(string launcher, bool includeRanim)

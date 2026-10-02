@@ -17,6 +17,7 @@ namespace BigWalkVRInstaller.Services
         public bool is64BitOperatingSystem;
         public string captureSession;
         public string capturedModSha256;
+        public string latestSession;
     }
 
     public sealed class TitanfallCaptureIdentity
@@ -63,23 +64,20 @@ namespace BigWalkVRInstaller.Services
                 var identity = Path.Combine(session.FullName, "session.json");
                 if (File.Exists(identity)) capturedHash = JsonUtil.Deserialize<TitanfallCaptureIdentity>(File.ReadAllText(identity)).modSha256;
             }
-            else
+            AddNewest(files, Path.Combine(profile, "logs"), "nslog*.txt", "Northstar");
+            var data = Path.Combine(profile, "plugins", "Titanfall2VR-data");
+            foreach (var name in new[] { "engine.txt", "events.txt", "runtime.txt", "frames.csv" })
             {
-                AddNewest(files, Path.Combine(profile, "logs"), "nslog*.txt", "Northstar");
-                var data = Path.Combine(profile, "plugins", "Titanfall2VR-data");
-                foreach (var name in new[] { "engine.txt", "events.txt", "runtime.txt", "frames.csv" })
-                {
-                    var path = Path.Combine(data, name);
-                    if (File.Exists(path)) files["Titanfall2VR/" + name] = path;
-                }
-                var latest = sessions.OrderByDescending(candidate => candidate.Name, StringComparer.Ordinal).FirstOrDefault();
-                if (latest != null)
-                    foreach (var name in new[] { "monitor.txt", "diagnostics.txt", "session.json", "launcher.txt", "memory.txt" })
-                    {
-                        var path = Path.Combine(latest.FullName, name);
-                        if (File.Exists(path)) files["Capture/" + name] = path;
-                    }
+                var path = Path.Combine(data, name);
+                if (File.Exists(path)) files["Titanfall2VR/" + name] = path;
             }
+            var latest = sessions.OrderByDescending(candidate => candidate.Name, StringComparer.Ordinal).FirstOrDefault();
+            if (latest != null)
+                foreach (var name in new[] { "monitor.txt", "diagnostics.txt", "session.json", "launcher.txt", "memory.txt", "stderr.txt" })
+                {
+                    var path = Path.Combine(latest.FullName, name);
+                    if (File.Exists(path)) files["LatestSession/" + name] = path;
+                }
             var launcherLog = Path.Combine(profile, "launcher.txt");
             if (File.Exists(launcherLog)) files["Launcher/launcher.txt"] = launcherLog;
             if (files.Count == 0) throw new Exception("No Titanfall 2 VR crash files were found.");
@@ -96,7 +94,8 @@ namespace BigWalkVRInstaller.Services
                 osVersion = Environment.OSVersion.VersionString,
                 is64BitOperatingSystem = Environment.Is64BitOperatingSystem,
                 captureSession = session?.Name,
-                capturedModSha256 = capturedHash
+                capturedModSha256 = capturedHash,
+                latestSession = latest?.Name
             };
 
             var directory = outputDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);

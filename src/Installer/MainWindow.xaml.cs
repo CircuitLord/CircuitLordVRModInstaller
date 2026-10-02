@@ -885,7 +885,7 @@ namespace BigWalkVRInstaller
         async void CreateCrashReport_Click(object sender, RoutedEventArgs e)
         {
             if (_selectedGame == SelectedGame.Titanfall2)
-                await PromptCrashReport("Create crash report", "saved crash or freeze logs", () => CrashReportService.CreateTitanfall(_titanfall.GamePath));
+                await PromptCrashReport("Create crash report", "latest session logs and saved crash diagnostics", () => CrashReportService.CreateTitanfall(_titanfall.GamePath));
             else await PromptCrashReport("Create crash report");
         }
 
