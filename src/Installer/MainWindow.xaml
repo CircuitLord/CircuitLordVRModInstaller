@@ -436,8 +436,8 @@
                                                         Click="TitanfallInstall_Click" />
                                                 <Border x:Name="TitanfallInstalledChip" Style="{StaticResource StatusChip}" Visibility="Collapsed">
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource Green}" Margin="0,1,7,0" />
-                                                        <TextBlock Text="Installed" Foreground="{StaticResource Green}" FontSize="12" FontWeight="SemiBold" />
+                                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource Green}" VerticalAlignment="Center" Margin="0,1,7,0" />
+                                                        <TextBlock Text="Installed" Foreground="{StaticResource Green}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
                                                     </StackPanel>
                                                 </Border>
                                                 <Button x:Name="TitanfallChannelsButton" Style="{StaticResource ChannelsButton}" Click="TitanfallChannels_Click" />

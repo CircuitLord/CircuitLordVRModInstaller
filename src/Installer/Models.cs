@@ -92,6 +92,7 @@ namespace BigWalkVRInstaller
         public string runtime;
         public string northstarVersion;
         public bool beta;
+        public bool custom;
         public List<string> files = new List<string>();
     }
 

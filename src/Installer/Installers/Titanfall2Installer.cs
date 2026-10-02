@@ -77,7 +77,7 @@ namespace BigWalkVRInstaller.Installers
             _settings.Save();
         }
 
-        public bool CanUpdate(ManifestMod modRelease, bool beta) => IsInstalled &&
+        public bool CanUpdate(ManifestMod modRelease, bool beta) => IsInstalled && !Record.custom &&
             (Record.beta != beta
              || VersionUtil.IsNewer(modRelease.version, Record.version)
              || !string.Equals(Record.northstarVersion, NorthstarVersion, StringComparison.OrdinalIgnoreCase));
@@ -85,14 +85,14 @@ namespace BigWalkVRInstaller.Installers
         // building game assets takes most of the install, extracting files the rest
         const double AssetShare = 0.8;
 
-        public void Install(byte[] northstarPackage, byte[] modPackage, bool beta, IProgress<double> progress)
+        public void Install(byte[] northstarPackage, byte[] modPackage, bool beta, IProgress<double> progress, bool custom = false)
         {
             var work = Path.Combine(Path.GetTempPath(), "Titanfall2VR-install-" + Guid.NewGuid().ToString("N"));
-            try { Install(northstarPackage, modPackage, beta, work, progress); }
+            try { Install(northstarPackage, modPackage, beta, work, progress, custom); }
             finally { if (Directory.Exists(work)) Directory.Delete(work, true); }
         }
 
-        void Install(byte[] northstarPackage, byte[] modPackage, bool beta, string work, IProgress<double> progress)
+        void Install(byte[] northstarPackage, byte[] modPackage, bool beta, string work, IProgress<double> progress, bool custom)
         {
             var previous = Record;
             var written = new List<string>();
@@ -158,6 +158,7 @@ namespace BigWalkVRInstaller.Installers
                 northstarVersion = NorthstarVersion,
                 runtime = "Northstar",
                 beta = beta,
+                custom = custom,
                 files = written.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
             });
         }

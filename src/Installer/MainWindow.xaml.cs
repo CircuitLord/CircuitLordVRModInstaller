@@ -269,20 +269,20 @@ namespace BigWalkVRInstaller
             TitanfallEaButton.IsEnabled = eaApp || hasGame;
 
             TitanfallVersionText.Text = installed
-                ? $"Installed v{_titanfall.Record.version}{(_titanfall.Record.beta ? " beta" : "")}  •  Northstar v{_titanfall.Record.northstarVersion}"
+                ? $"Installed v{_titanfall.Record.version}{(_titanfall.Record.custom ? " custom" : _titanfall.Record.beta ? " beta" : "")}  •  Northstar v{_titanfall.Record.northstarVersion}"
                 : _titanfallRelease != null
                     ? $"v{_titanfallRelease.version}{(_titanfallIsBeta ? " beta" : "")}  •  Northstar v{Titanfall2Installer.NorthstarVersion}"
                     : "Download list unavailable";
             TitanfallUninstallButton.Visibility = installed && !_titanfallBusy ? Visibility.Visible : Visibility.Collapsed;
             TitanfallInstallButton.Visibility = (!installed || update) && !_titanfallBusy ? Visibility.Visible : Visibility.Collapsed;
             TitanfallInstalledChip.Visibility = installed && !update && !_titanfallBusy ? Visibility.Visible : Visibility.Collapsed;
-            var channels = _titanfallAvailable?.HasNewerBeta == true && !_titanfallBusy;
+            var channels = !_titanfallBusy;
             var corners = channels ? new CornerRadius(6, 0, 0, 6) : new CornerRadius(6);
             Corners.SetRadius(TitanfallInstallButton, corners);
             TitanfallInstalledChip.CornerRadius = corners;
             TitanfallChannelsButton.Visibility = channels ? Visibility.Visible : Visibility.Collapsed;
             TitanfallChannelsButton.Style = (Style)FindResource(!installed ? "ChannelsButton" : update ? "ChannelsUpdate" : "ChannelsInstalled");
-            TitanfallBetaTag.Visibility = _titanfallIsBeta ? Visibility.Visible : Visibility.Collapsed;
+            TitanfallBetaTag.Visibility = _titanfallIsBeta && !(installed && _titanfall.Record.custom) ? Visibility.Visible : Visibility.Collapsed;
             var channelMismatch = installed && _titanfallRelease != null && _titanfall.Record.beta != _titanfallIsBeta;
             TitanfallInstallButton.Content = channelMismatch
                 ? $"Switch to {(_titanfallIsBeta ? "beta" : "stable")} v{_titanfallRelease.version}"
@@ -463,13 +463,15 @@ namespace BigWalkVRInstaller
             return installed;
         }
 
-        async void TitanfallInstall_Click(object sender, RoutedEventArgs e)
+        async void TitanfallInstall_Click(object sender, RoutedEventArgs e) => await InstallTitanfallPackage();
+
+        async Task InstallTitanfallPackage(string packagePath = null)
         {
-            if (!Ready() || _titanfallRelease == null) return;
+            if (!Ready() || (packagePath == null && _titanfallRelease == null)) return;
             SetTitanfallBusy(true);
             try
             {
-                await InstallTitanfall();
+                await InstallTitanfall(packagePath);
             }
             catch (Exception ex)
             {
@@ -491,14 +493,15 @@ namespace BigWalkVRInstaller
         // downloads fill the first half of the bar by size, installing the rest
         const double TitanfallDownloadShare = 0.5;
 
-        async Task InstallTitanfall()
+        async Task InstallTitanfall(string packagePath = null)
         {
             TitanfallProgressPanel.Visibility = Visibility.Visible;
             TitanfallProgress.Value = 0;
             try
             {
                 await EnsureTitanfallFolderAccess();
-                var northstarShare = TitanfallDownloadShare * Titanfall2Installer.NorthstarSize / (Titanfall2Installer.NorthstarSize + _titanfallRelease.size);
+                var northstarShare = packagePath != null ? TitanfallDownloadShare
+                    : TitanfallDownloadShare * Titanfall2Installer.NorthstarSize / (Titanfall2Installer.NorthstarSize + _titanfallRelease.size);
                 Status("Downloading Northstar...");
                 var northstarProgress = new Progress<double>(value =>
                 {
@@ -508,13 +511,22 @@ namespace BigWalkVRInstaller
                 var northstar = await RepoClient.CachedDownload(Titanfall2Installer.NorthstarUrl, Titanfall2Installer.NorthstarSha256,
                     Titanfall2Installer.NorthstarCache(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)), northstarProgress);
 
-                Status("Downloading Titanfall 2 VR...");
-                var modProgress = new Progress<double>(value =>
+                byte[] mod;
+                if (packagePath != null)
                 {
-                    TitanfallProgress.Value = northstarShare + (TitanfallDownloadShare - northstarShare) * value;
-                    TitanfallProgressText.Text = $"Downloading Titanfall 2 VR  {value * 100:0}%";
-                });
-                var mod = await RepoClient.Download(_titanfallRelease.url, _titanfallRelease.sha256, modProgress);
+                    Status("Reading ZIP...");
+                    mod = await Task.Run(() => File.ReadAllBytes(packagePath));
+                }
+                else
+                {
+                    Status("Downloading Titanfall 2 VR...");
+                    var modProgress = new Progress<double>(value =>
+                    {
+                        TitanfallProgress.Value = northstarShare + (TitanfallDownloadShare - northstarShare) * value;
+                        TitanfallProgressText.Text = $"Downloading Titanfall 2 VR  {value * 100:0}%";
+                    });
+                    mod = await RepoClient.Download(_titanfallRelease.url, _titanfallRelease.sha256, modProgress);
+                }
 
                 Status("Installing Titanfall 2 VR...");
                 TitanfallProgressText.Text = "Installing  0%";
@@ -523,7 +535,7 @@ namespace BigWalkVRInstaller
                     TitanfallProgress.Value = TitanfallDownloadShare + (1 - TitanfallDownloadShare) * value;
                     TitanfallProgressText.Text = $"Installing  {value * 100:0}%";
                 });
-                await Task.Run(() => _titanfall.Install(northstar, mod, _titanfallIsBeta, installProgress));
+                await Task.Run(() => _titanfall.Install(northstar, mod, packagePath == null && _titanfallIsBeta, installProgress, custom: packagePath != null));
                 Status($"Titanfall 2 VR v{_titanfall.Record.version} installed");
             }
             finally
@@ -599,7 +611,7 @@ namespace BigWalkVRInstaller
                 SetTitanfallBusy(true);
                 try
                 {
-                    // launching plays the latest release on the chosen channel
+                    // custom installs stay pinned, published installs update before launch
                     await Refresh();
                     if (_titanfallRelease != null && _titanfall.CanUpdate(_titanfallRelease, _titanfallIsBeta))
                     {
@@ -716,41 +728,85 @@ namespace BigWalkVRInstaller
         void Channels_Click(object sender, RoutedEventArgs e)
         {
             var mod = (ModEntry)((FrameworkElement)sender).DataContext;
-            ShowChannels((Button)sender, mod.Available, mod.IsBeta, beta => _settings.BigWalkBetaUpdates = beta);
+            ShowChannels((Button)sender, mod.Available, mod.IsBeta,
+                beta => SelectChannel(beta, value => _settings.BigWalkBetaUpdates = value));
         }
 
-        void TitanfallChannels_Click(object sender, RoutedEventArgs e) => ShowChannels(
-            (Button)sender, _titanfallAvailable, _titanfallIsBeta, beta => _settings.Titanfall2BetaUpdates = beta);
-
-        void ShowChannels(Button button, ManifestMod available, bool beta, Action<bool> select)
+        void TitanfallChannels_Click(object sender, RoutedEventArgs e)
         {
-            // right aligned under the chevron
-            var menu = new ContextMenu
+            var custom = _titanfall.Record?.custom == true;
+            ShowChannels((Button)sender, _titanfallAvailable, custom ? (bool?)null : _titanfallIsBeta, async beta =>
             {
-                Style = (Style)FindResource("ChannelMenu"),
-                PlacementTarget = button,
-                Placement = PlacementMode.Custom,
-                CustomPopupPlacementCallback = (popup, target, offset) =>
-                    new[] { new CustomPopupPlacement(new Point(target.Width - popup.Width, target.Height), PopupPrimaryAxis.Horizontal) }
-            };
-            menu.Items.Add(ChannelItem($"Stable v{available.version}", "Recommended", false, beta, select));
-            menu.Items.Add(ChannelItem($"Beta v{available.beta.version}", "New features, may be unstable", true, beta, select));
+                await SelectChannel(beta, value => _settings.Titanfall2BetaUpdates = value);
+                if (custom) await InstallTitanfallPackage();
+            }, InstallTitanfallZip);
+        }
+
+        async Task SelectChannel(bool beta, Action<bool> select)
+        {
+            select(beta);
+            _settings.Save();
+            Status(beta ? "Beta selected. Beta builds are unstable." : "Stable selected");
+            await Refresh();
+        }
+
+        async Task InstallTitanfallZip()
+        {
+            if (!Ready()) return;
+            var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Install from ZIP", Filter = "Mod package (*.zip)|*.zip" };
+            if (dialog.ShowDialog(this) != true) return;
+            if (!await Confirm("Install custom build", "Only install from sources you trust.\n\nAutomatic updates stay off until you select Stable or Beta.", "Install", danger: false)) return;
+            await InstallTitanfallPackage(dialog.FileName);
+        }
+
+        void ShowChannels(Button button, ManifestMod available, bool? beta, Func<bool, Task> select, Func<Task> installZip = null)
+        {
+            var menu = CreateChannelMenu(available, beta, select, installZip);
+            // right aligned under the chevron
+            menu.PlacementTarget = button;
+            menu.Placement = PlacementMode.Custom;
+            menu.CustomPopupPlacementCallback = (popup, target, offset) =>
+                new[] { new CustomPopupPlacement(new Point(target.Width - popup.Width, target.Height), PopupPrimaryAxis.Horizontal) };
             menu.IsOpen = true;
         }
 
-        MenuItem ChannelItem(string title, string detail, bool beta, bool current, Action<bool> select)
+        ContextMenu CreateChannelMenu(ManifestMod available, bool? beta, Func<bool, Task> select, Func<Task> installZip)
+        {
+            var menu = new ContextMenu
+            {
+                Style = (Style)FindResource("ChannelMenu")
+            };
+            if (available != null)
+            {
+                menu.Items.Add(ChannelItem($"Stable v{available.version}", "Recommended", false, beta, select));
+                if (available.HasNewerBeta)
+                    menu.Items.Add(ChannelItem($"Beta v{available.beta.version}", "New features, may be unstable", true, beta, select));
+            }
+            if (installZip != null)
+            {
+                var zip = PackageItem("Install from ZIP…", "Choose a custom build");
+                zip.Click += async (sender, e) => await installZip();
+                menu.Items.Add(zip);
+            }
+            return menu;
+        }
+
+        MenuItem PackageItem(string title, string detail)
         {
             var header = new StackPanel();
             header.Children.Add(new TextBlock { Text = title, FontSize = 12.5, FontWeight = FontWeights.SemiBold });
             header.Children.Add(new TextBlock { Text = detail, FontSize = 11, Foreground = Brush("TextDim"), Margin = new Thickness(0, 1, 0, 0) });
-            var item = new MenuItem { Header = header, IsChecked = beta == current };
+            return new MenuItem { Header = header };
+        }
+
+        MenuItem ChannelItem(string title, string detail, bool beta, bool? current, Func<bool, Task> select)
+        {
+            var item = PackageItem(title, detail);
+            item.IsChecked = beta == current;
             item.Click += async (sender, e) =>
             {
                 if (beta == current) return;
-                select(beta);
-                _settings.Save();
-                Status(beta ? "Beta selected. Beta builds are unstable." : "Stable selected");
-                await Refresh();
+                await select(beta);
             };
             return item;
         }
