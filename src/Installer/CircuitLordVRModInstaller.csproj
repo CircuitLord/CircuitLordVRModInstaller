@@ -11,7 +11,7 @@
     <AssemblyTitle>CircuitLord's VR Mod Installer</AssemblyTitle>
     <Product>CircuitLord's VR Mod Installer</Product>
     <RootNamespace>BigWalkVRInstaller</RootNamespace>
-    <Version>1.2.6</Version>
+    <Version>1.2.7</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
   </PropertyGroup>
