@@ -85,7 +85,9 @@ Every install records the exact list of files it wrote to `<game>\UserData\BigWa
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Third-party software details are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+The installer source code is MIT, see [LICENSE](LICENSE). Third-party software details are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+The mods are closed source and not covered by the MIT license. All rights reserved. Do not redistribute them without permission.
 
 ## Supporting
 

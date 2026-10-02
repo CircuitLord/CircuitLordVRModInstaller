@@ -135,7 +135,7 @@ namespace BigWalkVRInstaller.Installers
                 files.Add((probe.Length, () => Extract(probe, ProfileName + "/tools/xr_probe.exe", written)));
                 files.Add((monitor.Length, () => Extract(monitor, ProfileName + "/tools/crash_monitor.exe", written)));
                 files.Add((launch.Length, () => Extract(launch, ProfileName + "/tools/launch.json", written)));
-                foreach (var entry in modArchive.Entries.Where(entry => entry.Name.Length > 0 && entry.FullName.StartsWith("mods/", StringComparison.Ordinal)))
+                foreach (var entry in modArchive.Entries.Where(entry => entry.Name.Length > 0 && IsProfileEntry(entry.FullName)))
                     files.Add((entry.Length, () => Extract(entry, ProfileName + "/" + entry.FullName, written)));
                 foreach (var file in Directory.GetFiles(assets, "*", SearchOption.AllDirectories))
                     files.Add((new FileInfo(file).Length, () => Copy(file, ProfileName + "/" + file.Substring(assets.Length + 1).Replace('\\', '/'), written)));
@@ -197,6 +197,9 @@ namespace BigWalkVRInstaller.Installers
             }
             return assets;
         }
+
+        static bool IsProfileEntry(string path) => path.StartsWith("mods/", StringComparison.Ordinal) || path.StartsWith("licenses/", StringComparison.Ordinal)
+            || path == "LICENSE.txt" || path == "THIRD_PARTY_NOTICES.md";
 
         void Extract(ZipArchiveEntry entry, string relativePath, ICollection<string> written) =>
             entry.ExtractToFile(Destination(relativePath, written), true);

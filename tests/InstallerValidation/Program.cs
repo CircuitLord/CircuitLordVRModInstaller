@@ -143,6 +143,8 @@ namespace InstallerValidation
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod.json")), "cockpit assets missing");
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt")) == "patched", "patched game assets missing");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "tools", "asset_patcher.exe")), "asset patcher was installed");
+                foreach (var license in new[] { "LICENSE.txt", "THIRD_PARTY_NOTICES.md", Path.Combine("licenses", "OpenXR.txt") })
+                    Assert(File.Exists(Path.Combine(root, "TF2VR", license)), license + " missing");
                 var launch = Titanfall2Installer.CreateLaunchInfo(root);
                 Assert(launch.FileName == Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe"), "launch bypassed crash capture");
                 Assert(launch.Arguments == "\"" + profile + "\" \"" + Path.Combine(root, "Titanfall2VRLauncher.exe")
@@ -200,6 +202,7 @@ namespace InstallerValidation
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")), "monitor survived uninstall");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod.json")), "cockpit survived uninstall");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt")), "patched game assets survived uninstall");
+                Assert(!File.Exists(Path.Combine(root, "TF2VR", "licenses", "OpenXR.txt")), "licenses survived uninstall");
                 Assert(File.ReadAllText(userFile) == "user-data", "user file changed during uninstall");
                 Assert(File.ReadAllText(Path.Combine(vrProfile, "savegames", "savegame.sav")) == "vr-progress", "uninstall changed VR progress");
                 Assert(File.ReadAllText(Path.Combine(root, "NorthstarLauncher.exe")) == "standard-launcher", "standard launcher changed after uninstall");
@@ -450,6 +453,9 @@ namespace InstallerValidation
                         vrArguments = new[] { "+mat_vsync_mode", "0" }
                     }));
                     Add(archive, "mods/Titanfall2VR.Cockpit/mod.json", "{}");
+                    Add(archive, "LICENSE.txt", "license");
+                    Add(archive, "THIRD_PARTY_NOTICES.md", "notices");
+                    Add(archive, "licenses/OpenXR.txt", "openxr");
                     Add(archive, "asset_patcher.exe", File.ReadAllBytes(Assembly.GetExecutingAssembly().Location));
                     Add(archive, "patches/manifest.json", "{}");
                 }
