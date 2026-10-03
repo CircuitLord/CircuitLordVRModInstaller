@@ -9,9 +9,9 @@ namespace BigWalkVRInstaller.Services
         public string GamePath;
         public string BigWalkPath;
         public string Titanfall2Path;
-        public bool EnableBetaUpdates;
-        public bool? BigWalkBetaUpdates;
-        public bool? Titanfall2BetaUpdates;
+        // selected channel ids, null is stable
+        public string BigWalkChannel;
+        public string Titanfall2Channel;
         public bool Titanfall2EaSignedIn;
 
         static string Dir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BigWalkVRInstaller");

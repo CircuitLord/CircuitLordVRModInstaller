@@ -1,0 +1,10 @@
+<UserControl x:Class="BigWalkVRInstaller.InstallAction"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- install or update button, or the Installed chip, joined to the release channel dropdown -->
+    <StackPanel Orientation="Horizontal">
+        <Button x:Name="ActionButton" Style="{StaticResource Primary}" Padding="18,7" Click="Action_Click" />
+        <ContentControl x:Name="InstalledChip" Style="{StaticResource InstalledChip}" />
+        <Button x:Name="ChannelsButton" Style="{StaticResource ChannelsButton}" Click="Channels_Click" />
+    </StackPanel>
+</UserControl>

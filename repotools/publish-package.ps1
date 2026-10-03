@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory = $true)][string]$PackageScript,
     [Parameter(Mandatory = $true)][string]$ManifestProperty,
     [Parameter(Mandatory = $true)][string]$OutputDir,
-    [switch]$Beta,
+    # channel id, omit for stable
+    [string]$Channel,
     [switch]$SkipBuild,
     [switch]$NoPush
 )
@@ -24,7 +25,7 @@ if (!(Test-Path $metadataPath)) { throw "package metadata is missing" }
 $metadata = Get-Content $metadataPath -Raw | ConvertFrom-Json
 Remove-Item $metadataPath -Force
 
-$fileName = if ($Beta) { "$($metadata.id)-beta-$($metadata.version).zip" } else { "$($metadata.id)-$($metadata.version).zip" }
+$fileName = if ($Channel) { "$($metadata.id)-$Channel-$($metadata.version).zip" } else { "$($metadata.id)-$($metadata.version).zip" }
 $packagePath = Join-Path $OutputDir $fileName
 Remove-Item $packagePath -Force -ErrorAction SilentlyContinue
 Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $packagePath -CompressionLevel Optimal
@@ -61,21 +62,22 @@ Set-Prop $entry description $metadata.description
 foreach ($name in @("core", "preserve", "tokenize")) {
     if ($metadata.PSObject.Properties[$name]) { Set-Prop $entry $name $metadata.$name }
 }
-if ($Beta) {
-    Set-Prop $entry beta $release
+# channels hide in the installer once stable catches up
+$target = $entry
+if ($Channel) {
+    $channels = @($entry.channels | Where-Object { $_ })
+    $target = $channels | Where-Object { $_.id -eq $Channel }
+    if (!$target) {
+        $target = [pscustomobject]@{ id = $Channel }
+        Set-Prop $entry channels ($channels + $target)
+    }
 }
-else {
-    Set-Prop $entry version $release.version
-    Set-Prop $entry url $release.url
-    Set-Prop $entry sha256 $release.sha256
-    Set-Prop $entry size $release.size
-    if (!$entry.beta -or (Is-VersionNotNewer $entry.beta.version $release.version)) { Set-Prop $entry beta $release }
-}
+foreach ($name in @("version", "url", "sha256", "size")) { Set-Prop $target $name $release.$name }
 Write-Manifest $manifest
 
-$channel = if ($Beta) { "beta" } else { "stable" }
+$label = if ($Channel) { $Channel } else { "stable" }
 if ($NoPush) {
-    Write-Host "prepared $channel $($metadata.id) $($metadata.version)"
+    Write-Host "prepared $label $($metadata.id) $($metadata.version)"
     Write-Host "package: $packagePath"
     if ($metadata.symbols) { Write-Host "symbols: $($metadata.symbols)" }
     return
@@ -83,4 +85,4 @@ if ($NoPush) {
 
 Publish-ReleaseAsset -Path $packagePath -Tag $releaseTag -Title "Mod packages" -Notes "Versioned packages used by CircuitLord's VR Mod Installer."
 Commit-Manifest "update mod package $($metadata.version)"
-Write-Host "published $channel $($metadata.id) $($metadata.version)"
+Write-Host "published $label $($metadata.id) $($metadata.version)"

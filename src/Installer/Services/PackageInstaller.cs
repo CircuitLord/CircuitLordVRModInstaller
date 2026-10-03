@@ -53,7 +53,7 @@ namespace BigWalkVRInstaller.Services
                 .ToList();
         }
 
-        public static void Install(string gamePath, ManifestMod mod, byte[] zipBytes, bool beta)
+        public static void Install(string gamePath, ManifestMod mod, byte[] zipBytes, string channel)
         {
             ValidateId(mod.id);
             var previous = ReadRecord(gamePath, mod.id);
@@ -92,7 +92,7 @@ namespace BigWalkVRInstaller.Services
                     DeleteRelative(gamePath, stale);
             }
 
-            WriteRecord(gamePath, new InstallRecord { id = mod.id, version = mod.version, runtime = "BepInEx", beta = beta, files = written });
+            WriteRecord(gamePath, new InstallRecord { id = mod.id, version = mod.version, runtime = "BepInEx", channel = channel, files = written });
         }
 
         public static void Uninstall(string gamePath, string id)

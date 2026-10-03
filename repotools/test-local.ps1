@@ -36,8 +36,8 @@ $release = [pscustomobject]@{
 $manifest = Read-Manifest
 $entry = if ($ManifestProperty -eq "mods") { $manifest.mods | Where-Object { $_.id -eq $metadata.id } } else { $manifest.$ManifestProperty }
 foreach ($name in @("version", "url", "sha256", "size")) { Set-Prop $entry $name $release.$name }
-# both channels offer the local package
-Set-Prop $entry beta $release
+# only stable offers the local package
+Set-Prop $entry channels @()
 $manifestPath = Join-Path $local "manifest.json"
 Write-Utf8 $manifestPath (($manifest | ConvertTo-Json -Depth 10) + "`n")
 

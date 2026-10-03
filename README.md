@@ -29,7 +29,7 @@ Launching Titanfall 2 normally stays unmodded. To play in VR, start SteamVR/your
 
 ### Campaign saves
 
-VR launches keep their own saves and settings in `Documents\Respawn\Titanfall2_VR`, so your regular campaign stays untouched. During install you can copy your existing campaign progress over or start fresh. Use the installer's Campaign saves button to check your saves or copy your progress later.
+VR launches keep their own saves and settings in `%LOCALAPPDATA%\Respawn\Titanfall2_VR`, so your regular campaign stays untouched. Use the installer's Campaign saves button to check your VR save or open its folder.
 
 ## Big Walk VR
 
@@ -61,27 +61,30 @@ Output is a single `src/Installer/bin/Release/net48/CircuitLordVRModInstaller.ex
 
 ## How it works
 
-`manifest-v2.json` lists the installer version, BepInEx build, and available BepInEx mods with their download URLs and SHA-256 hashes. The app requires schema version 2, compares it against what is installed, and shows Install or Update accordingly. The legacy `manifest.json` exists only to provide an upgrade path from the old MelonLoader version to the new installer with manifest-v2.
+`manifest-v3.json` lists the installer version and each mod release with its download URL and SHA-256 hash. The app compares it against what is installed and shows Install or Update. Older manifests stay frozen so older installers can still update themselves.
 
-A mod package is a zip that mirrors the Big Walk folder, so installing is extract-in-place. Thunderstore metadata at the archive root is ignored. Each entry can declare:
+Each mod entry can declare:
 
-- `core`: the headline mod. Everything else lists under Optional add-ons.
 - `preserve`: files left alone if they already exist, so your calibration and configs survive updates.
-- `tokenize`: files where `{{GAMEDIR}}` and `{{GAMEDIR_JSON}}` are replaced with your game folder on install, used for the SteamVR app manifest.
-- `beta`: an optional unstable release selected when the user enables Beta updates. The mod's top-level release fields stay stable, while `beta` has its own `version`, `url`, `sha256`, and `size`.
+- `tokenize`: files where `{{GAMEDIR}}` and `{{GAMEDIR_JSON}}` are replaced with your game folder on install.
+- `channels`: optional releases users can pick in the version dropdown alongside stable. Each has an `id`, an optional `description`, and its own `version`, `url`, `sha256`, and `size`.
 
 ```json
-"beta": {
-  "version": "1.1.0-beta.1",
-  "url": "https://example.com/BigWalkVR-1.1.0-beta.1.zip",
-  "sha256": "...",
-  "size": 20214466
-}
+"channels": [
+  {
+    "id": "beta",
+    "description": "New features, may be unstable",
+    "version": "1.1.0-beta.1",
+    "url": "https://example.com/BigWalkVR-1.1.0-beta.1.zip",
+    "sha256": "...",
+    "size": 20214466
+  }
+]
 ```
 
-Mods without a `beta` entry continue to use their stable release when Beta updates are enabled.
+A channel shows only while its version is newer than stable. Removing a channel moves its users back to stable.
 
-Every install records the exact list of files it wrote to `<game>\UserData\BigWalkVRInstaller\<id>.json`, including runtime payload destinations deployed by the preloader. Updates delete files the previous version shipped that the new one no longer does, and uninstall removes exactly what was recorded, nothing else.
+Every install records the files it wrote inside the game folder. Updates delete files the previous version shipped that the new one no longer does, and uninstall removes exactly what was recorded.
 
 ## License
 

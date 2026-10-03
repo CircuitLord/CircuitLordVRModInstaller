@@ -1,0 +1,57 @@
+<UserControl x:Class="BigWalkVRInstaller.SupportFooter"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel HorizontalAlignment="Center">
+        <TextBlock Text="Made for the love of VR by CircuitLord" FontSize="11.5" FontStyle="Italic"
+                   Foreground="{StaticResource TextDim}" HorizontalAlignment="Center" />
+        <Grid HorizontalAlignment="Center" Margin="0,10,0,0">
+            <Button Style="{StaticResource SupportButton}" Click="Support_Click">
+                <Button.RenderTransform>
+                    <TranslateTransform x:Name="hop" />
+                </Button.RenderTransform>
+                <Button.Triggers>
+                    <!-- heart wobbles and button hops once on enter, on top of the style's 1px lift -->
+                    <EventTrigger RoutedEvent="MouseEnter">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetName="hop" Storyboard.TargetProperty="Y">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.16" Value="-3" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.27" Value="1" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.45" Value="0" />
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetName="wiggle" Storyboard.TargetProperty="Angle">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.12" Value="-18" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.27" Value="14" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.42" Value="-7" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="0" />
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetName="squish" Storyboard.TargetProperty="ScaleX">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.12" Value="1.15" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.27" Value="1.1" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.42" Value="1" />
+                                </DoubleAnimationUsingKeyFrames>
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetName="squish" Storyboard.TargetProperty="ScaleY">
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.12" Value="1.15" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.27" Value="1.1" />
+                                    <EasingDoubleKeyFrame KeyTime="0:0:0.42" Value="1" />
+                                </DoubleAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Button.Triggers>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="♥" Margin="0,0,7,0" RenderTransformOrigin="0.5,0.5">
+                        <TextBlock.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="squish" />
+                                <RotateTransform x:Name="wiggle" />
+                            </TransformGroup>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+                    <TextBlock Text="Support my work" />
+                </StackPanel>
+            </Button>
+            <Canvas x:Name="Confetti" IsHitTestVisible="False" />
+        </Grid>
+    </StackPanel>
+</UserControl>

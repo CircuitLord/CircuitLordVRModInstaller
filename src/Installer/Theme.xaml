@@ -366,7 +366,7 @@
         </Setter>
     </Style>
 
-    <!-- right segment of a split install action, opens the stable and beta choice, colors follow the action -->
+    <!-- right segment of a split install action, opens the release channel choice, colors follow the action -->
     <Style x:Key="ChannelsButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource Accent}" />
         <Setter Property="Foreground" Value="{StaticResource TextOnFill}" />
@@ -374,7 +374,7 @@
         <Setter Property="BorderThickness" Value="1,0,0,0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocus}" />
-        <Setter Property="ToolTip" Value="Choose stable or beta" />
+        <Setter Property="ToolTip" Value="Choose a release channel" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -554,11 +554,32 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- green state chip, sized to match the Primary button box -->
-    <Style x:Key="StatusChip" TargetType="Border" BasedOn="{StaticResource Tag}">
-        <Setter Property="Background" Value="{StaticResource GreenFill}" />
-        <Setter Property="BorderBrush" Value="{StaticResource GreenFillBorder}" />
+    <!-- green Installed chip sized to match the Primary button box, content is an optional trailing version -->
+    <Style x:Key="InstalledChip" TargetType="ContentControl">
+        <Setter Property="Foreground" Value="{StaticResource Green}" />
+        <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="13,6" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border Background="{StaticResource GreenFill}" BorderBrush="{StaticResource GreenFillBorder}" BorderThickness="1"
+                            CornerRadius="{TemplateBinding local:Corners.Radius}" Padding="{TemplateBinding Padding}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Margin="0,1,7,0" />
+                            <TextBlock Text="Installed" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <ContentPresenter x:Name="version" Opacity="0.85" VerticalAlignment="Center" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Content" Value="{x:Null}">
+                            <Setter TargetName="version" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- tinted info panel, the semantic color comes from the call site -->

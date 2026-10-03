@@ -30,7 +30,7 @@ namespace BigWalkVRInstaller.Installers
             _settings.Save();
         }
 
-        public void InstallMod(ManifestMod mod, byte[] package, bool beta) => PackageInstaller.Install(GamePath, mod, package, beta);
+        public void InstallMod(ManifestMod mod, byte[] package, string channel) => PackageInstaller.Install(GamePath, mod, package, channel);
 
         public void UninstallMod(string id) => PackageInstaller.Uninstall(GamePath, id);
 

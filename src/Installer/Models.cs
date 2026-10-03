@@ -49,39 +49,44 @@ namespace BigWalkVRInstaller
         public string url;
         public string sha256;
         public long size;
-        public ModRelease beta;
+        // optional release channels, a channel shows only while newer than stable
+        public List<ModChannel> channels;
         // files kept if they already exist, user calibration and configs
         public List<string> preserve = new List<string>();
         // files with {{GAMEDIR}} / {{GAMEDIR_JSON}} placeholders filled in on install
         public List<string> tokenize = new List<string>();
 
-        public bool HasNewerBeta => beta != null && VersionUtil.IsNewer(beta.version, version);
+        public List<ModChannel> AvailableChannels =>
+            channels?.Where(channel => VersionUtil.IsNewer(channel.version, version)).ToList() ?? new List<ModChannel>();
 
-        public ManifestMod SelectRelease(bool betaUpdates)
+        public ModChannel FindChannel(string id) => AvailableChannels.FirstOrDefault(channel => channel.id == id);
+
+        // null channel is stable
+        public ManifestMod SelectRelease(ModChannel channel)
         {
-            if (!betaUpdates || !HasNewerBeta) return this;
+            if (channel == null) return this;
             return new ManifestMod
             {
                 id = id,
                 name = name,
                 author = author,
-                version = beta.version,
+                version = channel.version,
                 description = description,
-                url = beta.url,
-                sha256 = beta.sha256,
-                size = beta.size,
+                url = channel.url,
+                sha256 = channel.sha256,
+                size = channel.size,
                 preserve = preserve,
                 tokenize = tokenize
             };
         }
     }
 
-    public class ModRelease
+    public class ModChannel : ReleaseInfo
     {
-        public string version;
-        public string url;
-        public string sha256;
-        public long size;
+        public string id;
+        public string description;
+
+        public string Title => char.ToUpperInvariant(id[0]) + id.Substring(1);
     }
 
     // written into the game folder so installs are tracked per game install
@@ -91,10 +96,13 @@ namespace BigWalkVRInstaller
         public string version;
         public string runtime;
         public string northstarVersion;
-        public bool beta;
+        // null is stable
+        public string channel;
         public bool custom;
         public List<string> files = new List<string>();
     }
+
+    public enum InstallState { Install, Update, Installed }
 
     public class ModEntry : ObservableObject
     {
@@ -107,7 +115,10 @@ namespace BigWalkVRInstaller
         public string Description => Remote.description;
         public bool HasDescription => !string.IsNullOrEmpty(Remote.description);
 
-        public bool IsBeta { get; set; }
+        // null is stable
+        public ModChannel Channel { get; set; }
+        public bool HasChannel => Channel != null;
+        public string ChannelTag => Channel?.id.ToUpperInvariant();
 
         string _installedVersion;
         public string InstalledVersion
@@ -116,11 +127,11 @@ namespace BigWalkVRInstaller
             set { Set(ref _installedVersion, value); NotifyState(); }
         }
 
-        bool _installedBeta;
-        public bool InstalledBeta
+        string _installedChannel;
+        public string InstalledChannel
         {
-            get => _installedBeta;
-            set { Set(ref _installedBeta, value); NotifyState(); }
+            get => _installedChannel;
+            set { Set(ref _installedChannel, value); NotifyState(); }
         }
 
         bool _busy;
@@ -133,15 +144,14 @@ namespace BigWalkVRInstaller
         public string BusyText { get => _busyText; set => Set(ref _busyText, value); }
 
         public bool IsInstalled => InstalledVersion != null;
-        public bool ChannelMismatch => IsInstalled && InstalledBeta != IsBeta;
+        public bool ChannelMismatch => IsInstalled && InstalledChannel != Channel?.id;
         public bool CanUpdate => IsInstalled && (ChannelMismatch || VersionUtil.IsNewer(Remote.version, InstalledVersion));
         public bool IsCurrent => IsInstalled && !CanUpdate;
 
-        public bool ShowInstall => !Busy && !IsInstalled;
+        public InstallState State => !IsInstalled ? InstallState.Install : CanUpdate ? InstallState.Update : InstallState.Installed;
         public bool ShowUpdate => !Busy && CanUpdate;
-        public bool ShowCurrent => !Busy && IsCurrent;
         public bool ShowUninstall => !Busy && IsInstalled;
-        public bool ShowChannels => !Busy && Available.HasNewerBeta;
+        public bool ShowChannels => Available.AvailableChannels.Count > 0;
 
         public string Subtitle
         {
@@ -157,16 +167,15 @@ namespace BigWalkVRInstaller
         static string FormatSize(long bytes) =>
             bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:0.#} MB" : $"{Math.Max(1, bytes / 1024)} KB";
 
-        public string InstallLabel => IsBeta ? $"Install beta v{Remote.version}" : $"Install v{Remote.version}";
+        public string ActionLabel => CanUpdate ? UpdateLabel : HasChannel ? $"Install {Channel.id} v{Remote.version}" : $"Install v{Remote.version}";
         public string UpdateLabel => ChannelMismatch
-            ? $"Switch to {(IsBeta ? "beta" : "stable")} v{Remote.version}"
+            ? $"Switch to {Channel?.id ?? "stable"} v{Remote.version}"
             : $"Update to v{Remote.version}";
 
         void NotifyState()
         {
             foreach (var name in new[] { nameof(IsInstalled), nameof(ChannelMismatch), nameof(CanUpdate), nameof(IsCurrent),
-                nameof(ShowInstall), nameof(ShowUpdate), nameof(ShowCurrent), nameof(ShowUninstall), nameof(ShowChannels), nameof(Subtitle),
-                nameof(UpdateLabel) })
+                nameof(State), nameof(ShowUpdate), nameof(ShowUninstall), nameof(Subtitle), nameof(ActionLabel), nameof(UpdateLabel) })
                 Notify(name);
         }
     }

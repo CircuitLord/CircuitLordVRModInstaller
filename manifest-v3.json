@@ -27,12 +27,16 @@
         "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
       ],
       "tokenize": [],
-      "beta": {
-        "version": "1.1.1",
-        "url": "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-beta-1.1.1.zip",
-        "sha256": "33fe998da0525fb2a97356ee76437aa085047ea7155769c90cfef414d513ec13",
-        "size": 21210594
-      }
+      "channels": [
+        {
+          "id": "beta",
+          "description": "New features, may be unstable",
+          "version": "1.1.1",
+          "url": "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-beta-1.1.1.zip",
+          "sha256": "33fe998da0525fb2a97356ee76437aa085047ea7155769c90cfef414d513ec13",
+          "size": 21210594
+        }
+      ]
     }
   ],
   "titanfall2vr": {
@@ -44,11 +48,15 @@
     "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.12.zip",
     "sha256": "3841efd97ae4f600fdb143335461c28cedf02e98da034f9648dd52060551fc2c",
     "size": 73905797,
-    "beta": {
-      "version": "1.0.12",
-      "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.12.zip",
-      "sha256": "3841efd97ae4f600fdb143335461c28cedf02e98da034f9648dd52060551fc2c",
-      "size": 73905797
-    }
+    "channels": [
+      {
+        "id": "beta",
+        "description": "New features, may be unstable",
+        "version": "1.0.12",
+        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.12.zip",
+        "sha256": "3841efd97ae4f600fdb143335461c28cedf02e98da034f9648dd52060551fc2c",
+        "size": 73905797
+      }
+    ]
   }
 }

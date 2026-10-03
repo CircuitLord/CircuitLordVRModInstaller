@@ -62,10 +62,7 @@ namespace InstallerValidation
                 File.WriteAllText(Path.Combine(root, "NorthstarLauncher.exe"), "standard-launcher");
                 File.WriteAllText(Path.Combine(root, "R2Northstar", "Northstar.dll"), "standard-profile");
 
-                var sameBeta = new ManifestMod { version = "0.1.0", beta = new ModRelease { version = "0.1.0" } };
-                var newerBeta = new ManifestMod { version = "0.1.0", beta = new ModRelease { version = "0.2.0" } };
-                Assert(!sameBeta.HasNewerBeta, "stable-equivalent beta was available");
-                Assert(newerBeta.HasNewerBeta, "newer beta was unavailable");
+                ValidateManifestChannels();
 
                 var profile = Path.Combine(root, "TF2VR");
                 var userFile = Path.Combine(profile, "save_data", "user.json");
@@ -96,7 +93,7 @@ namespace InstallerValidation
                 Assert(installer.CanWriteGameFolder(), "unlocked game folder was reported read only");
                 File.AppendAllText(Path.Combine(root, "R2Northstar", "Northstar.dll"), "");
                 var progress = new ProgressLog();
-                installer.Install(NorthstarPackage("vr-launcher-v1", true), ModPackage("vr-plugin-v1", "0.1.0"), false, progress);
+                installer.Install(NorthstarPackage("vr-launcher-v1", true), ModPackage("vr-plugin-v1", "0.1.0"), null, progress);
                 Assert(installer.Record.version == "0.1.0", "package version not recorded");
                 Assert(progress.Values.Contains(0.2) && progress.Values.Last() == 1, "install progress missed asset building or completion: " + string.Join(", ", progress.Values));
                 Assert(progress.Values.Zip(progress.Values.Skip(1), (previous, next) => next >= previous).All(rising => rising), "install progress went backwards");
@@ -158,7 +155,7 @@ namespace InstallerValidation
                 var failFlag = Path.Combine(root, "fail-assets");
                 File.WriteAllText(failFlag, "");
                 var patchFailed = false;
-                try { installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), true, new ProgressLog()); }
+                try { installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), "beta", new ProgressLog()); }
                 catch (Exception ex) { patchFailed = ex.Message.Contains("game file differs"); }
                 Assert(patchFailed, "asset patch failure did not stop the install");
                 Assert(installer.Record.version == "0.1.0", "failed install recorded a version");
@@ -166,11 +163,11 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Titanfall2VR.dll")) == "vr-plugin-v1", "failed install changed the plugin");
                 File.Delete(failFlag);
 
-                installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), true, new ProgressLog());
+                installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), "beta", new ProgressLog());
                 Assert(installer.Record.version == "0.2.0", "updated package version not recorded");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "plugins", "ranim.dll")), "stale owned file survived update");
                 Assert(File.ReadAllText(userFile) == "user-data", "user file changed during update");
-                Assert(installer.Record.beta, "beta channel was not recorded");
+                Assert(installer.Record.channel == "beta", "beta channel was not recorded");
                 Assert(File.ReadAllText(Path.Combine(vrProfile, "savegames", "savegame.sav")) == "vr-progress", "update changed VR progress");
 
                 ValidateCustomInstall(root, installer);
@@ -208,7 +205,7 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(root, "NorthstarLauncher.exe")) == "standard-launcher", "standard launcher changed after uninstall");
                 Assert(File.ReadAllText(Path.Combine(root, "R2Northstar", "Northstar.dll")) == "standard-profile", "standard profile changed after uninstall");
 
-                installer.Install(NorthstarPackage("vr-launcher-v3", false), ModPackage("vr-plugin-v3", "0.3.0"), false, new ProgressLog());
+                installer.Install(NorthstarPackage("vr-launcher-v3", false), ModPackage("vr-plugin-v3", "0.3.0"), null, new ProgressLog());
                 Assert(installer.IsInstalled, "VR package was not recognized after reinstall");
                 Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Titanfall2VR.dll")) == "vr-plugin-v3", "reinstalled VR plugin missing");
                 Assert(File.ReadAllText(userFile) == "user-data", "user file changed during reinstall");
@@ -267,24 +264,43 @@ namespace InstallerValidation
             Directory.Delete(cache, true);
         }
 
+        // channels come from the manifest and show only while newer than stable
+        static void ValidateManifestChannels()
+        {
+            var manifest = JsonUtil.Deserialize<Manifest>("{\"mods\":[{\"id\":\"BigWalkVR\",\"version\":\"1.0.0\",\"url\":\"stable.zip\",\"channels\":["
+                + "{\"id\":\"beta\",\"description\":\"unstable\",\"version\":\"1.1.0\",\"url\":\"beta.zip\",\"sha256\":\"abc\",\"size\":11},"
+                + "{\"id\":\"multiplayer\",\"version\":\"1.2.0-mp.1\",\"url\":\"mp.zip\"},"
+                + "{\"id\":\"stale\",\"version\":\"1.0.0\",\"url\":\"stale.zip\"}]}],"
+                + "\"titanfall2vr\":{\"id\":\"Titanfall2VR\",\"version\":\"1.0.0\"}}");
+            var mod = manifest.mods[0];
+            Assert(mod.AvailableChannels.Select(channel => channel.id).SequenceEqual(new[] { "beta", "multiplayer" }), "manifest channels were not listed in order without stale ones");
+            var beta = mod.FindChannel("beta");
+            Assert(beta.description == "unstable" && beta.sha256 == "abc" && beta.size == 11 && beta.Title == "Beta", "channel fields were not read");
+            var release = mod.SelectRelease(mod.FindChannel("multiplayer"));
+            Assert(release.version == "1.2.0-mp.1" && release.url == "mp.zip" && release.id == "BigWalkVR", "channel release was not selected");
+            Assert(mod.SelectRelease(mod.FindChannel(null)) == mod && mod.FindChannel("stale") == null, "stable or stale channel selected a channel");
+            Assert(manifest.titanfall2vr.AvailableChannels.Count == 0, "manifest without channels offered one");
+        }
+
         static void ValidateChannelMenu()
         {
             var window = new MainWindow();
             var create = typeof(MainWindow).GetMethod("CreateChannelMenu", BindingFlags.Instance | BindingFlags.NonPublic);
             var selected = "";
-            Func<bool, Task> select = beta => { selected = beta ? "beta" : "stable"; return Task.CompletedTask; };
+            Func<ModChannel, Task> select = channel => { selected = channel?.id ?? "stable"; return Task.CompletedTask; };
             Func<Task> zip = () => { selected = "zip"; return Task.CompletedTask; };
             var stable = new ManifestMod { version = "1.0.0" };
-            var menu = (ContextMenu)create.Invoke(window, new object[] { stable, false, select, zip });
+            var menu = (ContextMenu)create.Invoke(window, new object[] { stable, null, false, select, zip });
             Assert(menu.Items.Count == 2 && menu.Items.Cast<object>().All(item => item is MenuItem), "stable menu contains a separator or is missing ZIP action");
             Assert(((MenuItem)menu.Items[0]).IsChecked, "stable selection missing");
             var zipHeader = (StackPanel)((MenuItem)menu.Items[1]).Header;
             Assert(((TextBlock)zipHeader.Children[0]).Text == "Install from ZIP…", "ZIP action label changed");
             ((MenuItem)menu.Items[1]).RaiseEvent(new System.Windows.RoutedEventArgs(MenuItem.ClickEvent));
             Assert(selected == "zip", "ZIP action did not run");
-            stable.beta = new ModRelease { version = "1.1.0" };
-            menu = (ContextMenu)create.Invoke(window, new object[] { stable, null, select, zip });
+            stable.channels = new System.Collections.Generic.List<ModChannel> { new ModChannel { id = "beta", description = "New features, may be unstable", version = "1.1.0" } };
+            menu = (ContextMenu)create.Invoke(window, new object[] { stable, null, true, select, zip });
             Assert(menu.Items.Count == 3, "beta menu missing a release or ZIP action");
+            Assert(((TextBlock)((StackPanel)((MenuItem)menu.Items[1]).Header).Children[0]).Text == "Beta v1.1.0", "beta channel label changed");
             var betaHeader = (StackPanel)((MenuItem)menu.Items[1]).Header;
             zipHeader = (StackPanel)((MenuItem)menu.Items[2]).Header;
             for (var i = 0; i < 2; i++)
@@ -299,10 +315,17 @@ namespace InstallerValidation
             Assert(selected == "stable", "custom install could not select stable");
             ((MenuItem)menu.Items[1]).RaiseEvent(new System.Windows.RoutedEventArgs(MenuItem.ClickEvent));
             Assert(selected == "beta", "custom install could not select beta");
-            menu = (ContextMenu)create.Invoke(window, new object[] { null, false, select, zip });
+            menu = (ContextMenu)create.Invoke(window, new object[] { null, null, false, select, zip });
             Assert(menu.Items.Count == 1, "offline menu did not retain ZIP installation");
-            menu = (ContextMenu)create.Invoke(window, new object[] { stable, true, select, null });
+            menu = (ContextMenu)create.Invoke(window, new object[] { stable, "beta", false, select, null });
             Assert(menu.Items.Count == 2 && ((MenuItem)menu.Items[1]).IsChecked, "Big Walk channel selection changed");
+            stable.channels.Add(new ModChannel { id = "multiplayer", version = "1.2.0" });
+            menu = (ContextMenu)create.Invoke(window, new object[] { stable, "multiplayer", false, select, null });
+            var multiplayer = (MenuItem)menu.Items[2];
+            Assert(menu.Items.Count == 3 && multiplayer.IsChecked && !((MenuItem)menu.Items[1]).IsChecked, "added channel missing or unselected");
+            Assert(((StackPanel)multiplayer.Header).Children.Count == 1, "channel without description showed an empty detail");
+            ((MenuItem)menu.Items[1]).RaiseEvent(new System.Windows.RoutedEventArgs(MenuItem.ClickEvent));
+            Assert(selected == "beta", "could not switch between channels");
             window.Close();
             Console.WriteLine("validated version menus and ZIP action");
         }
@@ -311,13 +334,13 @@ namespace InstallerValidation
         {
             var package = Path.Combine(root, "custom.zip");
             File.WriteAllBytes(package, ModPackage("custom-plugin", "0.2.0"));
-            installer.Install(NorthstarPackage("custom-launcher", false), File.ReadAllBytes(package), false, new ProgressLog(), custom: true);
-            Assert(installer.Record.custom && !installer.Record.beta, "custom install was not recorded");
+            installer.Install(NorthstarPackage("custom-launcher", false), File.ReadAllBytes(package), null, new ProgressLog(), custom: true);
+            Assert(installer.Record.custom && installer.Record.channel == null, "custom install was not recorded");
             Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Titanfall2VR.dll")) == "custom-plugin", "ZIP plugin was not installed");
             var settings = new AppSettings { Titanfall2Path = root };
             var reopened = new Titanfall2Installer(settings);
             var release = new ManifestMod { version = "9.0.0" };
-            Assert(!reopened.CanUpdate(release, false) && !reopened.CanUpdate(release, true), "published release would replace custom build on launch");
+            Assert(!reopened.CanUpdate(release, null) && !reopened.CanUpdate(release, "beta"), "published release would replace custom build on launch");
             var window = new MainWindow();
             var flags = BindingFlags.Instance | BindingFlags.NonPublic;
             typeof(MainWindow).GetField("_settings", flags).SetValue(window, settings);
@@ -325,19 +348,23 @@ namespace InstallerValidation
             typeof(MainWindow).GetField("_titanfallAvailable", flags).SetValue(window, release);
             typeof(MainWindow).GetField("_titanfallRelease", flags).SetValue(window, release);
             typeof(MainWindow).GetMethod("RefreshTitanfallState", flags).Invoke(window, null);
-            Assert(((Button)window.FindName("TitanfallChannelsButton")).Visibility == System.Windows.Visibility.Visible, "dropdown hidden without beta");
+            var action = (InstallAction)window.FindName("TitanfallAction");
+            Assert(((Button)action.FindName("ChannelsButton")).Visibility == System.Windows.Visibility.Visible, "dropdown hidden without beta");
             Assert(((TextBlock)window.FindName("TitanfallVersionText")).Text.Contains("custom"), "custom version label missing");
-            var installedContent = (StackPanel)((Border)window.FindName("TitanfallInstalledChip")).Child;
-            Assert(installedContent.Children.Cast<TextBlock>().All(text => text.VerticalAlignment == System.Windows.VerticalAlignment.Center), "installed checkmark and label are not centered");
+            var chip = (ContentControl)action.FindName("InstalledChip");
+            Assert(chip.Visibility == System.Windows.Visibility.Visible, "custom install did not show the Installed chip");
+            chip.ApplyTemplate();
+            var installedContent = (StackPanel)((Border)System.Windows.Media.VisualTreeHelper.GetChild(chip, 0)).Child;
+            Assert(installedContent.Children.OfType<TextBlock>().All(text => text.VerticalAlignment == System.Windows.VerticalAlignment.Center), "installed checkmark and label are not centered");
             Assert((string)((Button)window.FindName("LaunchButton")).Content == "Launch in VR", "custom launch offered a public update");
             window.Close();
             var rejected = false;
-            try { reopened.Install(NorthstarPackage("bad-launcher", false), new byte[] { 1, 2, 3 }, false, new ProgressLog(), custom: true); }
+            try { reopened.Install(NorthstarPackage("bad-launcher", false), new byte[] { 1, 2, 3 }, null, new ProgressLog(), custom: true); }
             catch (InvalidDataException) { rejected = true; }
             Assert(rejected && reopened.Record.custom, "invalid ZIP changed custom install state");
             Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Titanfall2VR.dll")) == "custom-plugin", "invalid ZIP replaced custom plugin");
-            reopened.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), false, new ProgressLog());
-            Assert(!reopened.Record.custom && reopened.CanUpdate(release, false), "selecting stable did not restore published updates");
+            reopened.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), null, new ProgressLog());
+            Assert(!reopened.Record.custom && reopened.CanUpdate(release, null), "selecting stable did not restore published updates");
             Console.WriteLine("validated custom ZIP install, persistence, launch pinning, invalid ZIP rejection, and return to stable");
         }
 

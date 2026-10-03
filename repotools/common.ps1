@@ -66,14 +66,3 @@ function Commit-Manifest([string]$Message) {
     if ((Invoke-Native git @("-C", $PublicDir, "commit", "-m", $Message)) -ne 0) { throw "git commit failed" }
     if ((Invoke-Native git @("-C", $PublicDir, "push")) -ne 0) { throw "git push failed" }
 }
-
-function Normalized-Version([string]$Value) {
-    $parts = @(($Value.TrimStart('v', 'V') -replace '-.*$', '').Split('.'))
-    while ($parts.Count -lt 4) { $parts += "0" }
-    return [version](($parts[0..3]) -join '.')
-}
-
-function Is-VersionNotNewer([string]$Current, [string]$Candidate) {
-    if (!$Current) { return $true }
-    return (Normalized-Version $Current) -le (Normalized-Version $Candidate)
-}

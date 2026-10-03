@@ -77,22 +77,22 @@ namespace BigWalkVRInstaller.Installers
             _settings.Save();
         }
 
-        public bool CanUpdate(ManifestMod modRelease, bool beta) => IsInstalled && !Record.custom &&
-            (Record.beta != beta
+        public bool CanUpdate(ManifestMod modRelease, string channel) => IsInstalled && !Record.custom &&
+            (Record.channel != channel
              || VersionUtil.IsNewer(modRelease.version, Record.version)
              || !string.Equals(Record.northstarVersion, NorthstarVersion, StringComparison.OrdinalIgnoreCase));
 
         // building game assets takes most of the install, extracting files the rest
         const double AssetShare = 0.8;
 
-        public void Install(byte[] northstarPackage, byte[] modPackage, bool beta, IProgress<double> progress, bool custom = false)
+        public void Install(byte[] northstarPackage, byte[] modPackage, string channel, IProgress<double> progress, bool custom = false)
         {
             var work = Path.Combine(Path.GetTempPath(), "Titanfall2VR-install-" + Guid.NewGuid().ToString("N"));
-            try { Install(northstarPackage, modPackage, beta, work, progress, custom); }
+            try { Install(northstarPackage, modPackage, channel, work, progress, custom); }
             finally { if (Directory.Exists(work)) Directory.Delete(work, true); }
         }
 
-        void Install(byte[] northstarPackage, byte[] modPackage, bool beta, string work, IProgress<double> progress, bool custom)
+        void Install(byte[] northstarPackage, byte[] modPackage, string channel, string work, IProgress<double> progress, bool custom)
         {
             var previous = Record;
             var written = new List<string>();
@@ -157,7 +157,7 @@ namespace BigWalkVRInstaller.Installers
                 version = release.version,
                 northstarVersion = NorthstarVersion,
                 runtime = "Northstar",
-                beta = beta,
+                channel = channel,
                 custom = custom,
                 files = written.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
             });

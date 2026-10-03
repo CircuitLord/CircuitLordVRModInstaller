@@ -34,8 +34,8 @@
                                     <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" />
                                     <Border Style="{StaticResource Tag}" Padding="6,1" Margin="8,0,0,0"
                                             Background="{StaticResource AmberFill}" BorderBrush="{StaticResource AmberFillBorder}"
-                                            Visibility="{Binding IsBeta, Converter={StaticResource BoolToVis}}">
-                                        <TextBlock Text="BETA" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
+                                            Visibility="{Binding HasChannel, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding ChannelTag}" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
                                     </Border>
                                 </StackPanel>
                                 <TextBlock Text="{Binding Subtitle}" FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
@@ -47,21 +47,8 @@
                                 <Button Style="{StaticResource QuietDanger}" Content="Uninstall" FontSize="11.5" Padding="6,3"
                                         Margin="0,0,8,0" Click="Uninstall_Click"
                                         Visibility="{Binding ShowUninstall, Converter={StaticResource BoolToVis}}" />
-                                <Button x:Name="Install" Style="{StaticResource Primary}" Content="{Binding InstallLabel}" Padding="18,7"
-                                        Click="Install_Click" Visibility="{Binding ShowInstall, Converter={StaticResource BoolToVis}}" />
-                                <Button x:Name="Update" Style="{StaticResource Update}" Content="{Binding UpdateLabel}" Padding="18,7"
-                                        Click="Install_Click" Visibility="{Binding ShowUpdate, Converter={StaticResource BoolToVis}}" />
-                                <Border x:Name="Installed" Style="{StaticResource StatusChip}"
-                                        Visibility="{Binding ShowCurrent, Converter={StaticResource BoolToVis}}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10"
-                                                   Foreground="{StaticResource Green}" VerticalAlignment="Center" Margin="0,1,7,0" />
-                                        <TextBlock Text="Installed" Foreground="{StaticResource Green}" FontSize="12"
-                                                   FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Border>
-                                <Button x:Name="Channels" Style="{StaticResource ChannelsButton}" Click="Channels_Click"
-                                        Visibility="{Binding ShowChannels, Converter={StaticResource BoolToVis}}" />
+                                <local:InstallAction x:Name="Action" State="{Binding State}" Label="{Binding ActionLabel}"
+                                                     ShowChannels="{Binding ShowChannels}" Click="Install_Click" ChannelsClick="Channels_Click" />
                             </StackPanel>
                         </Grid>
                         <StackPanel Margin="0,12,0,2" Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}">
@@ -80,16 +67,8 @@
                 </Grid>
             </Border>
             <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding ShowChannels}" Value="True">
-                    <Setter TargetName="Install" Property="local:Corners.Radius" Value="6,0,0,6" />
-                    <Setter TargetName="Update" Property="local:Corners.Radius" Value="6,0,0,6" />
-                    <Setter TargetName="Installed" Property="CornerRadius" Value="6,0,0,6" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ShowUpdate}" Value="True">
-                    <Setter TargetName="Channels" Property="Style" Value="{StaticResource ChannelsUpdate}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ShowCurrent}" Value="True">
-                    <Setter TargetName="Channels" Property="Style" Value="{StaticResource ChannelsInstalled}" />
+                <DataTrigger Binding="{Binding Busy}" Value="True">
+                    <Setter TargetName="Action" Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -100,7 +79,6 @@
             <RowDefinition Height="46" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
@@ -172,16 +150,8 @@
                             <TextBlock x:Name="BigWalkCardStatus" Text="Checking game..." FontSize="11.5" TextTrimming="CharacterEllipsis"
                                        Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
                         </StackPanel>
-                        <Border x:Name="BigWalkInstalledChip" Grid.Column="2" Style="{StaticResource StatusChip}"
-                                Padding="9,4" Margin="0,0,12,0" VerticalAlignment="Center" Visibility="Collapsed">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10"
-                                           Foreground="{StaticResource Green}" VerticalAlignment="Center" Margin="0,1,6,0" />
-                                <TextBlock Text="Installed" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource Green}" />
-                                <TextBlock x:Name="BigWalkInstalledVersion" FontSize="11.5" Foreground="{StaticResource Green}"
-                                           Opacity="0.85" Margin="5,0,0,0" />
-                            </StackPanel>
-                        </Border>
+                        <ContentControl x:Name="BigWalkInstalledChip" Grid.Column="2" Style="{StaticResource InstalledChip}"
+                                        FontSize="11.5" Padding="9,4" Margin="0,0,12,0" Visibility="Collapsed" />
                         <TextBlock Grid.Column="3" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                    Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="0,0,16,0" />
                     </Grid>
@@ -209,31 +179,14 @@
                             <TextBlock x:Name="TitanfallCardStatus" Text="Checking game..." FontSize="11.5" TextTrimming="CharacterEllipsis"
                                        Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
                         </StackPanel>
-                        <Border x:Name="TitanfallCardInstalledChip" Grid.Column="2" Style="{StaticResource StatusChip}"
-                                Padding="9,4" Margin="0,0,12,0" VerticalAlignment="Center" Visibility="Collapsed">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10"
-                                           Foreground="{StaticResource Green}" VerticalAlignment="Center" Margin="0,1,6,0" />
-                                <TextBlock Text="Installed" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource Green}" />
-                                <TextBlock x:Name="TitanfallInstalledVersion" FontSize="11.5" Foreground="{StaticResource Green}"
-                                           Opacity="0.85" Margin="5,0,0,0" />
-                            </StackPanel>
-                        </Border>
+                        <ContentControl x:Name="TitanfallCardInstalledChip" Grid.Column="2" Style="{StaticResource InstalledChip}"
+                                        FontSize="11.5" Padding="9,4" Margin="0,0,12,0" Visibility="Collapsed" />
                         <TextBlock Grid.Column="3" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                    Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="0,0,16,0" />
                     </Grid>
                 </Button>
             </StackPanel>
-            <StackPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,16,0,12">
-                <TextBlock Text="Made for the love of VR by CircuitLord" FontSize="11.5" FontStyle="Italic"
-                           Foreground="{StaticResource TextDim}" HorizontalAlignment="Center" />
-                <Button Style="{StaticResource SupportButton}" HorizontalAlignment="Center" Click="OpenSupport_Click" Margin="0,12,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="♥" Margin="0,0,7,0" />
-                        <TextBlock Text="Support" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
+            <local:SupportFooter Grid.Row="2" Margin="0,16,0,18" Button.Click="OpenSupport_Click" />
           </Grid>
         </ScrollViewer>
 
@@ -356,14 +309,7 @@
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
                                         <Button x:Name="RestoreVanillaButton" Style="{StaticResource QuietDanger}" Content="Restore vanilla" FontSize="11.5" Padding="6,3" Click="RestoreVanilla_Click" />
                                     </StackPanel>
-                                    <TextBlock Text="Made for the love of VR by CircuitLord" FontSize="11.5" FontStyle="Italic"
-                                               Foreground="{StaticResource TextDim}" HorizontalAlignment="Center" Margin="0,26,0,5" />
-                                    <Button Style="{StaticResource SupportButton}" HorizontalAlignment="Center" Click="OpenSupport_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="♥" Margin="0,0,7,0" />
-                                            <TextBlock Text="Support" />
-                                        </StackPanel>
-                                    </Button>
+                                    <local:SupportFooter Margin="0,26,0,8" Button.Click="OpenSupport_Click" />
                                 </StackPanel>
                             </StackPanel>
 
@@ -422,9 +368,9 @@
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="Titanfall 2 VR" FontSize="14" FontWeight="SemiBold" />
-                                                    <Border x:Name="TitanfallBetaTag" Style="{StaticResource Tag}" Padding="6,1" Margin="8,0,0,0"
+                                                    <Border x:Name="TitanfallChannelTag" Style="{StaticResource Tag}" Padding="6,1" Margin="8,0,0,0"
                                                             Background="{StaticResource AmberFill}" BorderBrush="{StaticResource AmberFillBorder}" Visibility="Collapsed">
-                                                        <TextBlock Text="BETA" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
+                                                        <TextBlock x:Name="TitanfallChannelTagText" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
                                                     </Border>
                                                 </StackPanel>
                                                 <TextBlock x:Name="TitanfallVersionText" FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
@@ -432,15 +378,8 @@
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Button x:Name="TitanfallUninstallButton" Style="{StaticResource QuietDanger}" Content="Uninstall"
                                                         FontSize="11.5" Padding="6,3" Margin="0,0,8,0" Click="TitanfallUninstall_Click" Visibility="Collapsed" />
-                                                <Button x:Name="TitanfallInstallButton" Style="{StaticResource Primary}" Content="Install" Padding="18,7"
-                                                        Click="TitanfallInstall_Click" />
-                                                <Border x:Name="TitanfallInstalledChip" Style="{StaticResource StatusChip}" Visibility="Collapsed">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource Green}" VerticalAlignment="Center" Margin="0,1,7,0" />
-                                                        <TextBlock Text="Installed" Foreground="{StaticResource Green}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                                    </StackPanel>
-                                                </Border>
-                                                <Button x:Name="TitanfallChannelsButton" Style="{StaticResource ChannelsButton}" Click="TitanfallChannels_Click" />
+                                                <local:InstallAction x:Name="TitanfallAction" ShowChannels="True"
+                                                                     Click="TitanfallInstall_Click" ChannelsClick="TitanfallChannels_Click" />
                                             </StackPanel>
                                         </Grid>
                                         <StackPanel x:Name="TitanfallProgressPanel" Margin="0,12,0,2" Visibility="Collapsed">
@@ -462,14 +401,7 @@
                                         <Button x:Name="TitanfallSavesButton" Style="{StaticResource Quiet}" Content="Campaign saves"
                                                 FontSize="11.5" Padding="6,3" Click="TitanfallSaves_Click" />
                                     </StackPanel>
-                                    <TextBlock Text="Made for the love of VR by CircuitLord" FontSize="11.5" FontStyle="Italic"
-                                               Foreground="{StaticResource TextDim}" HorizontalAlignment="Center" Margin="0,26,0,5" />
-                                    <Button Style="{StaticResource SupportButton}" HorizontalAlignment="Center" Click="OpenSupport_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="♥" Margin="0,0,7,0" />
-                                            <TextBlock Text="Support" />
-                                        </StackPanel>
-                                    </Button>
+                                    <local:SupportFooter Margin="0,26,0,8" Button.Click="OpenSupport_Click" />
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -506,13 +438,7 @@
             </Grid>
         </Grid>
 
-        <Grid Grid.Row="3" Margin="18,12,18,14">
-            <TextBlock x:Name="StatusText" FontSize="11.5" Foreground="{StaticResource TextDim}"
-                       AutomationProperties.LiveSetting="Polite" VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis" Margin="2,0,10,0" />
-        </Grid>
-
-        <Border x:Name="LaunchOverlay" Grid.Row="0" Grid.RowSpan="4" Background="{StaticResource Scrim}" Visibility="Collapsed">
+        <Border x:Name="LaunchOverlay" Grid.Row="0" Grid.RowSpan="3" Background="{StaticResource Scrim}" Visibility="Collapsed">
             <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
                     CornerRadius="10" Padding="22,18" Width="420" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
@@ -548,7 +474,7 @@
             </Border>
         </Border>
 
-        <Border x:Name="TitanfallSavesOverlay" Grid.Row="0" Grid.RowSpan="4" Background="{StaticResource Scrim}" Visibility="Collapsed">
+        <Border x:Name="TitanfallSavesOverlay" Grid.Row="0" Grid.RowSpan="3" Background="{StaticResource Scrim}" Visibility="Collapsed">
             <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
                     CornerRadius="10" Padding="22,18" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
@@ -573,7 +499,7 @@
             </Border>
         </Border>
 
-        <Border x:Name="ConfirmOverlay" Grid.Row="0" Grid.RowSpan="4" Background="{StaticResource Scrim}" Visibility="Collapsed">
+        <Border x:Name="ConfirmOverlay" Grid.Row="0" Grid.RowSpan="3" Background="{StaticResource Scrim}" Visibility="Collapsed">
             <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
                     CornerRadius="10" Padding="22,18" Width="380" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
