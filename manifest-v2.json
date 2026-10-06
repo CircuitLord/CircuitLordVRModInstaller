@@ -1,38 +1,40 @@
 {
-  "schemaVersion": 2,
-  "name": "Big Walk Mods",
-  "installer": {
-    "version": "1.2.9",
-    "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.9/CircuitLordVRModInstaller.exe",
-    "sha256": "d3d7a03aa42e7877acb9cf61164101b1bc2883219eb4c6a855bf3071f430540c",
-    "commit": "5de41071a46c7df0294b127fc837e2b365ac4828"
-  },
-  "bepinex": {
-    "version": "6.0.755",
-    "url": "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
-    "sha256": "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
-  },
-  "mods": [
-    {
-      "id": "BigWalkVR",
-      "name": "Big Walk VR",
-      "author": "CircuitLord",
-      "version": "1.0.18",
-      "description": "Full multiplayer-compatible SteamVR support for Big Walk.",
-      "url": "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-1.0.18.zip",
-      "sha256": "1d74c1485428d536df1257d9e9e5ff8ff238f9322bfb39c634a74ba9ae067a32",
-      "size": 20216503,
-      "core": true,
-      "preserve": [
-        "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
-      ],
-      "tokenize": [],
-      "beta": {
-        "version": "1.1.1",
-        "url": "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-beta-1.1.1.zip",
-        "sha256": "33fe998da0525fb2a97356ee76437aa085047ea7155769c90cfef414d513ec13",
-        "size": 21210594
-      }
-    }
-  ]
+    "schemaVersion":  2,
+    "name":  "Big Walk Mods",
+    "installer":  {
+                      "version":  "1.2.9",
+                      "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.9/CircuitLordVRModInstaller.exe",
+                      "sha256":  "d3d7a03aa42e7877acb9cf61164101b1bc2883219eb4c6a855bf3071f430540c",
+                      "commit":  "5de41071a46c7df0294b127fc837e2b365ac4828"
+                  },
+    "bepinex":  {
+                    "version":  "6.0.755",
+                    "url":  "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
+                    "sha256":  "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
+                },
+    "mods":  [
+                 {
+                     "id":  "BigWalkVR",
+                     "name":  "Big Walk VR",
+                     "author":  "CircuitLord",
+                     "version":  "1.1.2",
+                     "description":  "Full multiplayer-compatible SteamVR support for Big Walk.",
+                     "url":  "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-1.1.2.zip",
+                     "sha256":  "448428ece845600986f68b8edbc5a66a24aa887f2e49cda758d7f2a3d0073569",
+                     "size":  20822175,
+                     "core":  true,
+                     "preserve":  [
+                                      "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
+                                  ],
+                     "tokenize":  [
+
+                                  ],
+                     "beta":  {
+                                  "version":  "1.1.2",
+                                  "url":  "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-1.1.2.zip",
+                                  "sha256":  "448428ece845600986f68b8edbc5a66a24aa887f2e49cda758d7f2a3d0073569",
+                                  "size":  20822175
+                              }
+                 }
+             ]
 }
