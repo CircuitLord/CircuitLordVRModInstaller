@@ -1,8 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace BigWalkVRInstaller.Services
@@ -34,6 +36,19 @@ namespace BigWalkVRInstaller.Services
             var manifest = JsonUtil.Deserialize<Manifest>(json);
             if (manifest?.schemaVersion != 3 || manifest.bepinex == null || manifest.mods == null) throw new Exception("invalid manifest schema");
             return manifest;
+        }
+
+        public static string DescribeError(Exception error)
+        {
+            var details = new StringBuilder();
+            for (var cause = error; cause != null; cause = cause.InnerException)
+            {
+                if (details.Length > 0) details.AppendLine();
+                details.Append($"{cause.GetType().Name} (0x{cause.HResult:X8}): {cause.Message}");
+                if (cause is WebException web) details.Append($" [network: {web.Status}]");
+                if (cause is Win32Exception windows) details.Append($" [Windows error: {windows.NativeErrorCode}]");
+            }
+            return details.ToString();
         }
 
         public static async Task<byte[]> Download(string url, string expectedSha256, IProgress<double> progress = null)

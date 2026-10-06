@@ -180,7 +180,7 @@ namespace BigWalkVRInstaller
             }
             catch (Exception ex)
             {
-                Status($"Couldn't reach the download list: {ex.Message}", true);
+                Status($"Couldn't load the download list from {AppSettings.ManifestUrl}:\n{RepoClient.DescribeError(ex)}", true);
             }
 
             OfflineNotice.Visibility = _mods.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -246,7 +246,7 @@ namespace BigWalkVRInstaller
             TitanfallGamePathText.Text = hasGame ? _titanfall.GamePath : "Not found. Press Change and pick your Titanfall 2 folder.";
             TitanfallOpenFolderButton.IsEnabled = hasGame;
             SetStep(TitanfallGameBadge, TitanfallGameBadgeText, hasGame);
-            SetStep(TitanfallInstallBadge, TitanfallInstallBadgeText, installed && !update);
+            SetStep(TitanfallInstallBadge, TitanfallInstallBadgeText, installed);
             var eaApp = File.Exists(Titanfall2Installer.EaAppPath());
             var signedIn = eaApp && _settings.Titanfall2EaSignedIn;
             SetStep(TitanfallEaBadge, TitanfallEaBadgeText, signedIn);
@@ -276,10 +276,10 @@ namespace BigWalkVRInstaller
             BackButton.IsEnabled = !_titanfallBusy;
             RefreshButton.IsEnabled = !_titanfallBusy;
             LaunchButton.IsEnabled = installed && !_titanfallBusy;
-            LaunchButton.Content = update ? "Update and launch" : "Launch in VR";
+            LaunchButton.Content = "Launch in VR";
             TitanfallCrashReportButton.IsEnabled = hasGame;
             TitanfallSavesButton.IsEnabled = !_titanfallBusy;
-            LaunchButton.ToolTip = installed ? update ? "Update Titanfall 2 VR, then launch it" : "Launch Titanfall 2 VR" : "Install Titanfall 2 VR first";
+            LaunchButton.ToolTip = installed ? "Launch Titanfall 2 VR" : "Install Titanfall 2 VR first";
             SelectedGameStatus.Text = installed ? update ? "Update available" : "Ready to play" : hasGame ? "Setup required" : "Game not found";
         }
 
@@ -594,14 +594,6 @@ namespace BigWalkVRInstaller
                 try
                 {
                     if (!await ConfirmLaunchPermissions(LaunchPermissions.GetElevatedApps())) return;
-                    // custom installs stay pinned, published installs update before launch
-                    await Refresh();
-                    if (_titanfallRelease != null && _titanfall.CanUpdate(_titanfallRelease, _titanfallChannel?.id))
-                    {
-                        if (!Ready()) return;
-                        Status($"Updating Titanfall 2 VR to v{_titanfallRelease.version} before launch");
-                        await InstallTitanfall();
-                    }
                     await EnsureTitanfallFolderAccess();
                     Status("Checking headset resolution...");
                     await Task.Run(() => _titanfall.Play());
@@ -746,7 +738,7 @@ namespace BigWalkVRInstaller
             if (!Ready()) return;
             var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Install from ZIP", Filter = "Mod package (*.zip)|*.zip" };
             if (dialog.ShowDialog(this) != true) return;
-            if (!await Confirm("Install custom build", "Only install from sources you trust.\n\nAutomatic updates stay off until you select a release.", "Install", danger: false)) return;
+            if (!await Confirm("Install custom build", "Only install from sources you trust.\n\nSelect a release to replace this custom build.", "Install", danger: false)) return;
             await InstallTitanfallPackage(dialog.FileName);
         }
 

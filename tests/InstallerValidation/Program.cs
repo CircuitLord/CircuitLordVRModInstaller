@@ -57,6 +57,7 @@ namespace InstallerValidation
                 ValidateSaveModal(root);
                 ValidateLaunchPermissions();
                 ValidateChannelMenu();
+                ValidateDownloadListErrors();
                 ValidateNorthstarCache(root);
                 Directory.CreateDirectory(Path.Combine(root, "R2Northstar"));
                 File.WriteAllText(Path.Combine(root, "Titanfall2.exe"), "game");
@@ -113,6 +114,7 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(defaultProfile, "profile.cfg")) == "campaign-unlocks", "default profile changed");
 
                 Assert(installer.IsInstalled, "complete VR package was not recognized");
+                ValidateOptionalTitanfallUpdate(root, installer);
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "xr_probe.exe")), "diagnostic probe missing");
                 Assert(File.Exists(Path.Combine(root, "TF2VR", "tools", "crash_monitor.exe")), "crash monitor missing");
                 var replacedDirectX = Path.Combine(root, "bin", "x64_retail", "dxgi.dll");
@@ -314,6 +316,30 @@ namespace InstallerValidation
             finally { Environment.SetEnvironmentVariable(LaunchPermissions.TestElevatedAppsEnvironment, previous); }
         }
 
+        static void ValidateDownloadListErrors()
+        {
+            var socket = new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.HostNotFound);
+            var dns = new System.Net.WebException("The remote name could not be resolved.", socket, System.Net.WebExceptionStatus.NameResolutionFailure, null);
+            var request = new System.Net.Http.HttpRequestException("An error occurred while sending the request.", dns);
+            var details = RepoClient.DescribeError(request);
+            Assert(details.Contains($"HttpRequestException (0x{request.HResult:X8})") && details.Contains(request.Message), "request error lost its type, code or message");
+            Assert(details.Contains("[network: NameResolutionFailure]"), "request error lost its DNS status");
+            Assert(details.Contains("SocketException") && details.Contains("[Windows error: 11001]"), "request error lost its underlying socket code");
+            Assert(details.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Length == 3, "request error lost part of its exception chain");
+
+            var certificate = new System.ComponentModel.Win32Exception(unchecked((int)0x80090325), "The certificate chain was issued by an authority that is not trusted.");
+            var tls = new System.Security.Authentication.AuthenticationException("Authentication failed.", certificate);
+            details = RepoClient.DescribeError(new System.Net.Http.HttpRequestException("An error occurred while sending the request.", tls));
+            Assert(details.Contains("AuthenticationException") && details.Contains(certificate.Message), "request error lost its TLS cause");
+            Assert(details.Contains($"[Windows error: {certificate.NativeErrorCode}]"), "request error lost its certificate code");
+
+            var schema = new Exception("invalid manifest schema");
+            Assert(RepoClient.DescribeError(schema) == $"Exception (0x{schema.HResult:X8}): invalid manifest schema", "manifest schema failure was mislabeled as a network error");
+            var timeout = new TaskCanceledException("The request timed out.");
+            Assert(RepoClient.DescribeError(timeout).Contains("TaskCanceledException") && RepoClient.DescribeError(timeout).Contains(timeout.Message), "request error lost its timeout details");
+            Console.WriteLine("validated download list errors with DNS, TLS, Windows codes, timeout and schema details");
+        }
+
         // channels come from the manifest and show only while newer than stable
         static void ValidateManifestChannels()
         {
@@ -378,6 +404,30 @@ namespace InstallerValidation
             Assert(selected == "beta", "could not switch between channels");
             window.Close();
             Console.WriteLine("validated version menus and ZIP action");
+        }
+
+        static void ValidateOptionalTitanfallUpdate(string root, Titanfall2Installer installer)
+        {
+            var window = new MainWindow();
+            var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            var release = new ManifestMod { version = "9.0.0" };
+            typeof(MainWindow).GetField("_settings", flags).SetValue(window, new AppSettings { Titanfall2Path = root });
+            typeof(MainWindow).GetField("_titanfall", flags).SetValue(window, installer);
+            typeof(MainWindow).GetField("_titanfallAvailable", flags).SetValue(window, release);
+            typeof(MainWindow).GetField("_titanfallRelease", flags).SetValue(window, release);
+            foreach (var channel in new[] { null, new ModChannel { id = "beta", version = "9.0.0" } })
+            {
+                typeof(MainWindow).GetField("_titanfallChannel", flags).SetValue(window, channel);
+                typeof(MainWindow).GetMethod("RefreshTitanfallState", flags).Invoke(window, null);
+                var action = (InstallAction)window.FindName("TitanfallAction");
+                Assert(action.State == InstallState.Update && action.ActionEnabled, "optional update action unavailable");
+                var launch = (Button)window.FindName("LaunchButton");
+                Assert(launch.IsEnabled && (string)launch.Content == "Launch in VR", "pending update changed the launch action");
+                Assert((string)launch.ToolTip == "Launch Titanfall 2 VR", "launch tooltip required an update");
+                Assert(((TextBlock)window.FindName("TitanfallInstallBadgeText")).Text == "✓", "pending update marked installation incomplete");
+            }
+            window.Close();
+            Console.WriteLine("validated optional Titanfall updates and launch availability");
         }
 
         static void ValidateCustomInstall(string root, Titanfall2Installer installer)
