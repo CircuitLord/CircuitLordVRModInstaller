@@ -593,6 +593,7 @@ namespace BigWalkVRInstaller
                 SetTitanfallBusy(true);
                 try
                 {
+                    if (!await ConfirmLaunchPermissions(LaunchPermissions.GetElevatedApps())) return;
                     // custom installs stay pinned, published installs update before launch
                     await Refresh();
                     if (_titanfallRelease != null && _titanfall.CanUpdate(_titanfallRelease, _titanfallChannel?.id))
@@ -618,6 +619,14 @@ namespace BigWalkVRInstaller
             }
 
             Launch(() => _bigWalk.Play(), "Launching Big Walk in VR", "Make sure SteamVR is running and your headset is connected.");
+        }
+
+        Task<bool> ConfirmLaunchPermissions(string[] elevatedApps)
+        {
+            if (elevatedApps.Length == 0) return Task.FromResult(true);
+            return Confirm("Detected apps running as admin", string.Join("\n", elevatedApps.Select(app => "• " + app))
+                + "\n\nVR may not start. Turn off \"Run this program as an administrator\" in Properties > Compatibility, then restart these apps.",
+                "Launch anyway", danger: false);
         }
 
         void Launch(Action launch, string title, string description)

@@ -55,6 +55,7 @@ namespace InstallerValidation
             try
             {
                 ValidateSaveModal(root);
+                ValidateLaunchPermissions();
                 ValidateChannelMenu();
                 ValidateNorthstarCache(root);
                 Directory.CreateDirectory(Path.Combine(root, "R2Northstar"));
@@ -262,6 +263,55 @@ namespace InstallerValidation
             catch (System.Net.Http.HttpRequestException) { downloaded = true; }
             Assert(downloaded, "corrupt cached Northstar was reused");
             Directory.Delete(cache, true);
+        }
+
+        static void ValidateLaunchPermissions()
+        {
+            var previous = Environment.GetEnvironmentVariable(LaunchPermissions.TestElevatedAppsEnvironment);
+            Environment.SetEnvironmentVariable(LaunchPermissions.TestElevatedAppsEnvironment, null);
+            try
+            {
+                using (var current = System.Diagnostics.Process.GetCurrentProcess())
+                using (var identity = System.Security.Principal.WindowsIdentity.GetCurrent())
+                {
+                    var principal = new System.Security.Principal.WindowsPrincipal(identity);
+                    var elevated = principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+                    Assert(LaunchPermissions.IsElevated(current.Id) == elevated, "process elevation differs from its Windows token");
+                    Assert(LaunchPermissions.GetElevatedApps().Contains("Installer") == elevated, "app check missed the installer's elevation");
+                }
+
+                Environment.SetEnvironmentVariable(LaunchPermissions.TestElevatedAppsEnvironment, "Steam, EA app");
+                Assert(LaunchPermissions.GetElevatedApps().SequenceEqual(new[] { "Steam", "EA app" }), "test elevation override was not applied");
+                Environment.SetEnvironmentVariable(LaunchPermissions.TestElevatedAppsEnvironment, null);
+
+                var window = new MainWindow();
+                var confirm = typeof(MainWindow).GetMethod("ConfirmLaunchPermissions", BindingFlags.Instance | BindingFlags.NonPublic);
+                var overlay = (Border)window.FindName("ConfirmOverlay");
+                var normal = (Task<bool>)confirm.Invoke(window, new object[] { Array.Empty<string>() });
+                Assert(normal.IsCompleted && normal.Result && overlay.Visibility == System.Windows.Visibility.Collapsed, "normal launch displayed a permissions warning");
+                var cancel = (Button)window.FindName("ConfirmCancel");
+                var launch = (Button)window.FindName("ConfirmOk");
+                var cases = new[] { new[] { "Installer" }, new[] { "Steam" }, new[] { "EA app" }, new[] { "Steam", "EA app" }, new[] { "Installer", "Steam", "EA app" } };
+                for (var i = 0; i < cases.Length; i++)
+                {
+                    var pending = (Task<bool>)confirm.Invoke(window, new object[] { cases[i] });
+                    Assert(!pending.IsCompleted && overlay.Visibility == System.Windows.Visibility.Visible, "elevated launch did not display a warning");
+                    Assert(((TextBlock)window.FindName("ConfirmTitle")).Text == "Detected apps running as admin", "permissions warning title changed");
+                    var text = ((TextBlock)window.FindName("ConfirmText")).Text;
+                    Assert(text.StartsWith(string.Join("\n", cases[i].Select(app => "• " + app)) + "\n\n"), "permissions warning did not list affected apps");
+                    Assert(text.Contains("Properties > Compatibility"), "permissions warning missed the fix");
+                    Assert(launch.Style == window.FindResource("Primary"), "permissions warning changed the standard confirm style");
+                    Assert((string)launch.Content == "Launch anyway" && (string)cancel.Content == "Cancel", "permissions warning changed its actions");
+                    cancel.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
+                    Assert(!pending.Result && overlay.Visibility == System.Windows.Visibility.Collapsed, "cancel did not stop the elevated launch");
+                    pending = (Task<bool>)confirm.Invoke(window, new object[] { cases[i] });
+                    launch.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
+                    Assert(pending.Result && overlay.Visibility == System.Windows.Visibility.Collapsed, "launch anyway did not allow the elevated launch");
+                }
+                window.Close();
+                Console.WriteLine("validated Windows process elevation, test override, silent normal launches, permissions warnings, cancel and launch anyway");
+            }
+            finally { Environment.SetEnvironmentVariable(LaunchPermissions.TestElevatedAppsEnvironment, previous); }
         }
 
         // channels come from the manifest and show only while newer than stable
