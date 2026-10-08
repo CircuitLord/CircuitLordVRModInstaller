@@ -1,62 +1,64 @@
 {
-  "schemaVersion": 3,
-  "name": "Big Walk Mods",
-  "installer": {
-    "version": "1.2.9",
-    "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.9/CircuitLordVRModInstaller.exe",
-    "sha256": "d3d7a03aa42e7877acb9cf61164101b1bc2883219eb4c6a855bf3071f430540c",
-    "commit": "5de41071a46c7df0294b127fc837e2b365ac4828"
-  },
-  "bepinex": {
-    "version": "6.0.755",
-    "url": "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
-    "sha256": "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
-  },
-  "mods": [
-    {
-      "id": "BigWalkVR",
-      "name": "Big Walk VR",
-      "author": "CircuitLord",
-      "version": "1.1.2",
-      "description": "Full multiplayer-compatible SteamVR support for Big Walk.",
-      "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-1.1.2.zip",
-      "sha256": "448428ece845600986f68b8edbc5a66a24aa887f2e49cda758d7f2a3d0073569",
-      "size": 20822175,
-      "core": true,
-      "preserve": [
-        "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
-      ],
-      "tokenize": [],
-      "channels": [
-        {
-          "id": "beta",
-          "description": "New features, may be unstable",
-          "version": "1.1.1",
-          "url": "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-beta-1.1.1.zip",
-          "sha256": "33fe998da0525fb2a97356ee76437aa085047ea7155769c90cfef414d513ec13",
-          "size": 21210594
-        }
-      ]
-    }
-  ],
-  "titanfall2vr": {
-    "id": "Titanfall2VR",
-    "name": "Titanfall 2 VR",
-    "author": "CircuitLord",
-    "description": "OpenXR campaign VR support for Titanfall 2.",
-    "version": "1.0.15",
-    "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-1.0.15.zip",
-    "sha256": "a459fa5e8b1377a36b3e3b74a31f46d27bdf18588cd422174d40bdf07de07b1e",
-    "size": 73911292,
-    "channels": [
-      {
-        "id": "beta",
-        "description": "New features, may be unstable",
-        "version": "1.0.12",
-        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.12.zip",
-        "sha256": "3841efd97ae4f600fdb143335461c28cedf02e98da034f9648dd52060551fc2c",
-        "size": 73905797
-      }
-    ]
-  }
+    "schemaVersion":  3,
+    "name":  "Big Walk Mods",
+    "installer":  {
+                      "version":  "1.2.9",
+                      "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.9/CircuitLordVRModInstaller.exe",
+                      "sha256":  "d3d7a03aa42e7877acb9cf61164101b1bc2883219eb4c6a855bf3071f430540c",
+                      "commit":  "5de41071a46c7df0294b127fc837e2b365ac4828"
+                  },
+    "bepinex":  {
+                    "version":  "6.0.755",
+                    "url":  "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
+                    "sha256":  "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
+                },
+    "mods":  [
+                 {
+                     "id":  "BigWalkVR",
+                     "name":  "Big Walk VR",
+                     "author":  "CircuitLord",
+                     "version":  "1.1.3",
+                     "description":  "Full multiplayer-compatible SteamVR support for Big Walk.",
+                     "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-1.1.3.zip",
+                     "sha256":  "bf97d122d02b812d2201e08917196028a4c0420a5630cfc54d8f537556e97afd",
+                     "size":  20823039,
+                     "core":  true,
+                     "preserve":  [
+                                      "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
+                                  ],
+                     "tokenize":  [
+
+                                  ],
+                     "channels":  [
+                                      {
+                                          "id":  "beta",
+                                          "description":  "New features, may be unstable",
+                                          "version":  "1.1.1",
+                                          "url":  "https://github.com/CircuitLord/BigWalkVRInstaller/releases/download/mod-packages/BigWalkVR-beta-1.1.1.zip",
+                                          "sha256":  "33fe998da0525fb2a97356ee76437aa085047ea7155769c90cfef414d513ec13",
+                                          "size":  21210594
+                                      }
+                                  ]
+                 }
+             ],
+    "titanfall2vr":  {
+                         "id":  "Titanfall2VR",
+                         "name":  "Titanfall 2 VR",
+                         "author":  "CircuitLord",
+                         "description":  "OpenXR campaign VR support for Titanfall 2.",
+                         "version":  "1.0.15",
+                         "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-1.0.15.zip",
+                         "sha256":  "a459fa5e8b1377a36b3e3b74a31f46d27bdf18588cd422174d40bdf07de07b1e",
+                         "size":  73911292,
+                         "channels":  [
+                                          {
+                                              "id":  "beta",
+                                              "description":  "New features, may be unstable",
+                                              "version":  "1.0.12",
+                                              "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.12.zip",
+                                              "sha256":  "3841efd97ae4f600fdb143335461c28cedf02e98da034f9648dd52060551fc2c",
+                                              "size":  73905797
+                                          }
+                                      ]
+                     }
 }
