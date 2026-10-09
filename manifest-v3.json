@@ -1,64 +1,62 @@
 {
-    "schemaVersion":  3,
-    "name":  "Big Walk Mods",
-    "installer":  {
-                      "version":  "1.2.9",
-                      "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.9/CircuitLordVRModInstaller.exe",
-                      "sha256":  "d3d7a03aa42e7877acb9cf61164101b1bc2883219eb4c6a855bf3071f430540c",
-                      "commit":  "5de41071a46c7df0294b127fc837e2b365ac4828"
-                  },
-    "bepinex":  {
-                    "version":  "6.0.755",
-                    "url":  "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
-                    "sha256":  "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
-                },
-    "mods":  [
-                 {
-                     "id":  "BigWalkVR",
-                     "name":  "Big Walk VR",
-                     "author":  "CircuitLord",
-                     "version":  "1.1.4",
-                     "description":  "Full multiplayer-compatible SteamVR support for Big Walk.",
-                     "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-1.1.4.zip",
-                     "sha256":  "2ef2ade0b3685efa36593b420d5a17de9094aec4c73238771d9c950c08545ed2",
-                     "size":  20823630,
-                     "core":  true,
-                     "preserve":  [
-                                      "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
-                                  ],
-                     "tokenize":  [
-
-                                  ],
-                     "channels":  [
-                                      {
-                                          "id":  "beta",
-                                          "description":  "New features, may be unstable",
-                                          "version":  "1.1.4",
-                                          "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.1.4.zip",
-                                          "sha256":  "b8bef6c20fff3642a4b35f2e45e3650e58259ee7747eda958f6f77c2495dc9a0",
-                                          "size":  20823630
-                                      }
-                                  ]
-                 }
-             ],
-    "titanfall2vr":  {
-                         "id":  "Titanfall2VR",
-                         "name":  "Titanfall 2 VR",
-                         "author":  "CircuitLord",
-                         "description":  "OpenXR campaign VR support for Titanfall 2.",
-                         "version":  "1.0.15",
-                         "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-1.0.15.zip",
-                         "sha256":  "a459fa5e8b1377a36b3e3b74a31f46d27bdf18588cd422174d40bdf07de07b1e",
-                         "size":  73911292,
-                         "channels":  [
-                                          {
-                                              "id":  "beta",
-                                              "description":  "New features, may be unstable",
-                                              "version":  "1.0.12",
-                                              "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.12.zip",
-                                              "sha256":  "3841efd97ae4f600fdb143335461c28cedf02e98da034f9648dd52060551fc2c",
-                                              "size":  73905797
-                                          }
-                                      ]
-                     }
+  "schemaVersion": 3,
+  "name": "Big Walk Mods",
+  "installer": {
+    "version": "1.2.9",
+    "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.9/CircuitLordVRModInstaller.exe",
+    "sha256": "d3d7a03aa42e7877acb9cf61164101b1bc2883219eb4c6a855bf3071f430540c",
+    "commit": "5de41071a46c7df0294b127fc837e2b365ac4828"
+  },
+  "bepinex": {
+    "version": "6.0.755",
+    "url": "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
+    "sha256": "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
+  },
+  "mods": [
+    {
+      "id": "BigWalkVR",
+      "name": "Big Walk VR",
+      "author": "CircuitLord",
+      "version": "1.1.4",
+      "description": "Full multiplayer-compatible SteamVR support for Big Walk.",
+      "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-1.1.4.zip",
+      "sha256": "2ef2ade0b3685efa36593b420d5a17de9094aec4c73238771d9c950c08545ed2",
+      "size": 20823630,
+      "core": true,
+      "preserve": [
+        "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
+      ],
+      "tokenize": [],
+      "channels": [
+        {
+          "id": "beta",
+          "description": "New features, may be unstable",
+          "version": "1.1.4",
+          "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.1.4.zip",
+          "sha256": "b8bef6c20fff3642a4b35f2e45e3650e58259ee7747eda958f6f77c2495dc9a0",
+          "size": 20823630
+        }
+      ]
+    }
+  ],
+  "titanfall2vr": {
+    "id": "Titanfall2VR",
+    "name": "Titanfall 2 VR",
+    "author": "CircuitLord",
+    "description": "OpenXR campaign VR support for Titanfall 2.",
+    "version": "1.0.15",
+    "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-1.0.15.zip",
+    "sha256": "a459fa5e8b1377a36b3e3b74a31f46d27bdf18588cd422174d40bdf07de07b1e",
+    "size": 73911292,
+    "channels": [
+      {
+        "id": "beta",
+        "description": "New features, may be unstable",
+        "version": "1.0.16",
+        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.16.zip",
+        "sha256": "17ae49b57500da59874476b69f78d46756ac4fc3a89d25c47252b84ea3760d4f",
+        "size": 73912700
+      }
+    ]
+  }
 }
