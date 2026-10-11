@@ -29,7 +29,7 @@ Launching Titanfall 2 normally stays unmodded. To play in VR, start SteamVR/your
 
 ### Campaign saves
 
-VR launches keep their own saves and settings in `%LOCALAPPDATA%\Respawn\Titanfall2_VR`, so your regular campaign stays untouched. Use the installer's Campaign saves button to check your VR save or open its folder.
+VR campaign save files are stored in `%LOCALAPPDATA%\Respawn\Titanfall2_VR`
 
 ## Big Walk VR
 
