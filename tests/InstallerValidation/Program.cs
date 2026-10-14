@@ -65,6 +65,7 @@ namespace InstallerValidation
                 File.WriteAllText(Path.Combine(root, "R2Northstar", "Northstar.dll"), "standard-profile");
 
                 ValidateManifestChannels();
+                ValidateChangelog();
 
                 var profile = Path.Combine(root, "TF2VR");
                 var userFile = Path.Combine(profile, "save_data", "user.json");
@@ -356,6 +357,21 @@ namespace InstallerValidation
             Assert(release.version == "1.2.0-mp.1" && release.url == "mp.zip" && release.id == "BigWalkVR", "channel release was not selected");
             Assert(mod.SelectRelease(mod.FindChannel(null)) == mod && mod.FindChannel("stale") == null, "stable or stale channel selected a channel");
             Assert(manifest.titanfall2vr.AvailableChannels.Count == 0, "manifest without channels offered one");
+        }
+
+        // versions newer than the install are marked new, notes pass through untouched
+        static void ValidateChangelog()
+        {
+            var manifest = JsonUtil.Deserialize<Manifest>("{\"mods\":[{\"id\":\"BigWalkVR\",\"version\":\"1.1.4\",\"changes\":["
+                + "{\"version\":\"1.1.4\",\"date\":\"2026-10-09\",\"notes\":\"- snap turn\\n- fixed drift\"},"
+                + "{\"version\":\"1.1.3\",\"date\":\"2026-10-02\",\"notes\":\"fixes\"}]}],"
+                + "\"titanfall2vr\":{\"id\":\"Titanfall2VR\",\"version\":\"1.0.0\"}}");
+            var mod = manifest.mods[0];
+            var items = mod.Changelog("1.1.3");
+            Assert(mod.HasChanges && !manifest.titanfall2vr.HasChanges, "changelog presence was wrong");
+            Assert(items[0].Notes == "- snap turn\n- fixed drift" && items[0].Date == "Oct 9, 2026", "changelog entry was not read");
+            Assert(items[0].IsNew && !items[0].IsInstalled && !items[1].IsNew && items[1].IsInstalled, "installed or new versions were not marked");
+            Assert(mod.Changelog(null).All(item => !item.IsNew && !item.IsInstalled), "uninstalled mod marked versions");
         }
 
         static void ValidateChannelMenu()

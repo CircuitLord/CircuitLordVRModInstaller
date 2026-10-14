@@ -192,6 +192,17 @@
         </Setter>
     </Style>
 
+    <!-- dim underlined link at the end of a mod's version line, opens its changelog -->
+    <Style x:Key="ChangelogLink" TargetType="Hyperlink">
+        <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource Text}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- text-only button, for low weight links -->
     <Style x:Key="Quiet" TargetType="Button" BasedOn="{StaticResource Primary}">
         <Setter Property="Background" Value="Transparent" />

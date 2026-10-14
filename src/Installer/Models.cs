@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -55,6 +56,19 @@ namespace BigWalkVRInstaller
         public List<string> preserve = new List<string>();
         // files with {{GAMEDIR}} / {{GAMEDIR_JSON}} placeholders filled in on install
         public List<string> tokenize = new List<string>();
+        // newest first, covers every channel, missing for mods published without notes
+        public List<ChangelogEntry> changes;
+
+        public bool HasChanges => changes != null;
+
+        public List<ChangelogItem> Changelog(string installedVersion) => changes.Select(change => new ChangelogItem
+        {
+            Version = change.version,
+            Date = DateTime.ParseExact(change.date, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("MMM d, yyyy", CultureInfo.InvariantCulture),
+            Notes = change.notes,
+            IsInstalled = change.version == installedVersion,
+            IsNew = installedVersion != null && VersionUtil.IsNewer(change.version, installedVersion)
+        }).ToList();
 
         public List<ModChannel> AvailableChannels =>
             channels?.Where(channel => VersionUtil.IsNewer(channel.version, version)).ToList() ?? new List<ModChannel>();
@@ -79,6 +93,23 @@ namespace BigWalkVRInstaller
                 tokenize = tokenize
             };
         }
+    }
+
+    public class ChangelogEntry
+    {
+        public string version;
+        public string date;
+        public string notes;
+    }
+
+    public class ChangelogItem
+    {
+        public string Version { get; set; }
+        public string Date { get; set; }
+        public string Notes { get; set; }
+        public bool IsInstalled { get; set; }
+        // newer than the installed version
+        public bool IsNew { get; set; }
     }
 
     public class ModChannel : ReleaseInfo
@@ -114,6 +145,7 @@ namespace BigWalkVRInstaller
         public string Name => string.IsNullOrEmpty(Remote.name) ? Remote.id : Remote.name;
         public string Description => Remote.description;
         public bool HasDescription => !string.IsNullOrEmpty(Remote.description);
+        public bool HasChanges => Available.HasChanges;
 
         // null is stable
         public ModChannel Channel { get; set; }

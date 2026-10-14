@@ -38,7 +38,13 @@
                                         <TextBlock Text="{Binding ChannelTag}" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
                                     </Border>
                                 </StackPanel>
-                                <TextBlock Text="{Binding Subtitle}" FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding Subtitle}" FontSize="11.5" Foreground="{StaticResource TextDim}" />
+                                    <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}"
+                                               Visibility="{Binding HasChanges, Converter={StaticResource BoolToVis}}">
+                                        <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="Changelog_Click">Changelog</Hyperlink>
+                                    </TextBlock>
+                                </StackPanel>
                                 <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource TextDim}"
                                            TextWrapping="Wrap" Margin="0,7,0,0"
                                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
@@ -373,7 +379,12 @@
                                                         <TextBlock x:Name="TitanfallChannelTagText" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
                                                     </Border>
                                                 </StackPanel>
-                                                <TextBlock x:Name="TitanfallVersionText" FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                    <TextBlock x:Name="TitanfallVersionText" FontSize="11.5" Foreground="{StaticResource TextDim}" />
+                                                    <TextBlock x:Name="TitanfallChangelog" FontSize="11.5" Foreground="{StaticResource TextDim}" Visibility="Collapsed">
+                                                        <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="TitanfallChangelog_Click">Changelog</Hyperlink>
+                                                    </TextBlock>
+                                                </StackPanel>
                                             </StackPanel>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Button x:Name="TitanfallUninstallButton" Style="{StaticResource QuietDanger}" Content="Uninstall"
@@ -495,6 +506,53 @@
                         <Button x:Name="TitanfallSavesCloseButton" Style="{StaticResource Ghost}" Content="Close" Padding="16,7"
                                 HorizontalAlignment="Right" Click="CloseTitanfallSaves_Click" />
                     </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <Border x:Name="ChangelogOverlay" Grid.Row="0" Grid.RowSpan="3" Background="{StaticResource Scrim}" Visibility="Collapsed">
+            <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
+                    CornerRadius="10" Padding="22,18" Width="480" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock x:Name="ChangelogTitle" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock x:Name="ChangelogSubtitle" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
+                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                        <ItemsControl x:Name="ChangelogList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border x:Name="Entry" CornerRadius="8" Padding="12,10" Margin="0,0,0,4">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Version, StringFormat=v{0}}" FontSize="14" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Date}" FontSize="11.5" Foreground="{StaticResource TextDim}"
+                                                           VerticalAlignment="Bottom" Margin="8,0,0,1" />
+                                                <Border Grid.Column="2" Style="{StaticResource Tag}" Padding="6,1"
+                                                        Background="{StaticResource GreenFill}" BorderBrush="{StaticResource GreenFillBorder}"
+                                                        Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock Text="Installed" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Green}" />
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Notes}" FontSize="12.5" TextWrapping="Wrap" LineHeight="19" Margin="0,5,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsNew}" Value="True">
+                                            <Setter TargetName="Entry" Property="Background" Value="{StaticResource AmberFill}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button x:Name="ChangelogCloseButton" Style="{StaticResource Ghost}" Content="Close" Padding="16,7" Click="CloseChangelog_Click" />
+                        <Button x:Name="ChangelogUpdateButton" Style="{StaticResource Update}" Padding="16,7" Margin="8,0,0,0" Click="ChangelogUpdate_Click" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Border>

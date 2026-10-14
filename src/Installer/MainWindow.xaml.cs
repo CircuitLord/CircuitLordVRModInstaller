@@ -42,6 +42,8 @@ namespace BigWalkVRInstaller
         bool _bepInExBusy;
         bool _titanfallBusy;
         GameStartupWatcher _watcher;
+        IInputElement _changelogLink;
+        Func<Task> _changelogUpdate;
 
         public MainWindow()
         {
@@ -52,6 +54,7 @@ namespace BigWalkVRInstaller
         }
 
         bool HasGame => _bigWalk?.HasGame == true;
+        bool TitanfallCanUpdate => _titanfall.IsInstalled && _titanfallRelease != null && _titanfall.CanUpdate(_titanfallRelease, _titanfallChannel?.id);
 
         void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -241,7 +244,7 @@ namespace BigWalkVRInstaller
         {
             var hasGame = _titanfall.HasGame;
             var installed = _titanfall.IsInstalled;
-            var update = installed && _titanfallRelease != null && _titanfall.CanUpdate(_titanfallRelease, _titanfallChannel?.id);
+            var update = TitanfallCanUpdate;
 
             TitanfallGamePathText.Text = hasGame ? _titanfall.GamePath : "Not found. Press Change and pick your Titanfall 2 folder.";
             TitanfallOpenFolderButton.IsEnabled = hasGame;
@@ -262,6 +265,7 @@ namespace BigWalkVRInstaller
                     ? $"v{_titanfallRelease.version}{(_titanfallChannel != null ? " " + _titanfallChannel.id : "")}  •  Northstar v{Titanfall2Installer.NorthstarVersion}"
                     : "Download list unavailable";
             TitanfallUninstallButton.Visibility = installed && !_titanfallBusy ? Visibility.Visible : Visibility.Collapsed;
+            TitanfallChangelog.Visibility = _titanfallAvailable?.HasChanges == true ? Visibility.Visible : Visibility.Collapsed;
             TitanfallAction.Visibility = _titanfallBusy ? Visibility.Collapsed : Visibility.Visible;
             TitanfallAction.State = !installed ? InstallState.Install : update ? InstallState.Update : InstallState.Installed;
             TitanfallChannelTag.Visibility = _titanfallChannel != null && !(installed && _titanfall.Record.custom) ? Visibility.Visible : Visibility.Collapsed;
@@ -847,6 +851,48 @@ namespace BigWalkVRInstaller
             TitanfallSavesButton.Focus();
         }
 
+        void Changelog_Click(object sender, RoutedEventArgs e)
+        {
+            var mod = (ModEntry)((FrameworkContentElement)sender).DataContext;
+            ShowChangelog((IInputElement)sender, mod.Available, mod.Name, mod.InstalledVersion, mod.Remote.version,
+                mod.CanUpdate && !mod.Busy ? mod.UpdateLabel : null, () => InstallMod(mod));
+        }
+
+        void TitanfallChangelog_Click(object sender, RoutedEventArgs e) =>
+            ShowChangelog((IInputElement)sender, _titanfallAvailable, "Titanfall 2 VR", _titanfall.IsInstalled ? _titanfall.Record.version : null, _titanfallRelease.version,
+                TitanfallCanUpdate && !_titanfallBusy ? TitanfallAction.Label : null, () => InstallTitanfallPackage());
+
+        // null updateLabel hides the update action
+        void ShowChangelog(IInputElement source, ManifestMod available, string name, string installedVersion, string latestVersion, string updateLabel, Func<Task> update)
+        {
+            _changelogLink = source;
+            _changelogUpdate = update;
+            ChangelogTitle.Text = $"{name} changelog";
+            ChangelogSubtitle.Text = installedVersion == null ? $"Latest v{latestVersion}"
+                : updateLabel != null ? $"v{installedVersion} → v{latestVersion}" : $"Installed v{installedVersion}";
+            ChangelogList.ItemsSource = available.Changelog(installedVersion);
+            ChangelogUpdateButton.Content = updateLabel;
+            ChangelogUpdateButton.Visibility = updateLabel != null ? Visibility.Visible : Visibility.Collapsed;
+            InstallerView.IsEnabled = false;
+            ChangelogOverlay.Visibility = Visibility.Visible;
+            ChangelogCloseButton.Focus();
+        }
+
+        void CloseChangelog()
+        {
+            ChangelogOverlay.Visibility = Visibility.Collapsed;
+            InstallerView.IsEnabled = true;
+            _changelogLink.Focus();
+        }
+
+        void CloseChangelog_Click(object sender, RoutedEventArgs e) => CloseChangelog();
+
+        async void ChangelogUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            CloseChangelog();
+            await _changelogUpdate();
+        }
+
         static string SaveStatusText(CampaignSaveStatus status) =>
             status == CampaignSaveStatus.Available ? "Save found" : status == CampaignSaveStatus.Missing ? "No save" : "Incomplete save";
 
@@ -971,6 +1017,12 @@ namespace BigWalkVRInstaller
             if (TitanfallSavesOverlay.Visibility == Visibility.Visible)
             {
                 CloseTitanfallSaves_Click(sender, e);
+                e.Handled = true;
+                return;
+            }
+            if (ChangelogOverlay.Visibility == Visibility.Visible)
+            {
+                CloseChangelog();
                 e.Handled = true;
                 return;
             }
