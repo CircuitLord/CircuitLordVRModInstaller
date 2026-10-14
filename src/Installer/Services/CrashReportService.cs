@@ -58,9 +58,7 @@ namespace BigWalkVRInstaller.Services
             string capturedHash = null;
             if (session != null)
             {
-                var names = new HashSet<string> { "session.json", "monitor.txt", "incident.txt", "capture.txt", "stacks.txt", "stderr.txt", "diagnostics.txt", "exceptions.txt", "launcher.txt", "memory.txt", "engine.txt", "events.txt", "runtime.txt", "frames.csv", "northstar.txt" };
-                foreach (var file in session.EnumerateFiles("*", SearchOption.AllDirectories).Where(file => names.Contains(file.Name)))
-                    files["Capture/" + file.FullName.Substring(session.FullName.Length + 1).Replace('\\', '/')] = file.FullName;
+                AddSessionFiles(files, session, "Capture");
                 var identity = Path.Combine(session.FullName, "session.json");
                 if (File.Exists(identity)) capturedHash = JsonUtil.Deserialize<TitanfallCaptureIdentity>(File.ReadAllText(identity)).modSha256;
             }
@@ -72,12 +70,7 @@ namespace BigWalkVRInstaller.Services
                 if (File.Exists(path)) files["Titanfall2VR/" + name] = path;
             }
             var latest = sessions.OrderByDescending(candidate => candidate.Name, StringComparer.Ordinal).FirstOrDefault();
-            if (latest != null)
-                foreach (var name in new[] { "monitor.txt", "diagnostics.txt", "session.json", "launcher.txt", "memory.txt", "stderr.txt" })
-                {
-                    var path = Path.Combine(latest.FullName, name);
-                    if (File.Exists(path)) files["LatestSession/" + name] = path;
-                }
+            if (latest != null) AddSessionFiles(files, latest, "LatestSession");
             var launcherLog = Path.Combine(profile, "launcher.txt");
             if (File.Exists(launcherLog)) files["Launcher/launcher.txt"] = launcherLog;
             if (files.Count == 0) throw new Exception("No Titanfall 2 VR crash files were found.");
@@ -113,6 +106,13 @@ namespace BigWalkVRInstaller.Services
         static string DesktopReportPath(string name) => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
             $"{name}-CrashReport-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
+
+        static void AddSessionFiles(IDictionary<string, string> files, DirectoryInfo session, string entryDirectory)
+        {
+            var names = new HashSet<string> { "session.json", "monitor.txt", "incident.txt", "capture.txt", "stacks.txt", "stderr.txt", "diagnostics.txt", "exceptions.txt", "launcher.txt", "memory.txt", "engine.txt", "events.txt", "runtime.txt", "frames.csv", "northstar.txt" };
+            foreach (var file in session.EnumerateFiles("*", SearchOption.AllDirectories).Where(file => names.Contains(file.Name)))
+                files[entryDirectory + "/" + file.FullName.Substring(session.FullName.Length + 1).Replace('\\', '/')] = file.FullName;
+        }
 
         static void AddNewest(IDictionary<string, string> files, string directory, string pattern, string entryDirectory)
         {

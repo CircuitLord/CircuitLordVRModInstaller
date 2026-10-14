@@ -504,7 +504,6 @@ namespace InstallerValidation
             var session = Path.Combine(profile, "crashes", "20260920T000000000Z-11");
             var incident = Path.Combine(session, "exception-11");
             Directory.CreateDirectory(incident);
-            File.WriteAllText(Path.Combine(session, "incident.txt"), "exception");
             File.WriteAllText(Path.Combine(session, "monitor.txt"), "process_exit code=3221225477");
             File.WriteAllText(Path.Combine(session, "session.json"), "{\"modSha256\":\"captured-plugin\"}");
             File.WriteAllText(Path.Combine(session, "diagnostics.txt"), "commit_limit_bytes=100");
@@ -515,6 +514,28 @@ namespace InstallerValidation
             File.WriteAllText(Path.Combine(firstChance, "exceptions.txt"), "exception=0xc0000005 parameter1=0x48");
             File.WriteAllText(Path.Combine(firstChance, "stacks.txt"), "ntdll.dll+0x11");
             File.WriteAllText(Path.Combine(firstChance, "process.dmp"), "handled-memory");
+            File.WriteAllText(Path.Combine(firstChance, "process.partial"), "incomplete-memory");
+            File.WriteAllText(Path.Combine(firstChance, "unrelated.txt"), "unrelated");
+            File.WriteAllText(Path.Combine(session, "monitor.txt"), "first_chance=first-chance-11-1\nprocess_exit code=0");
+            var handled = CrashReportService.CreateTitanfall(root, root);
+            using (var archive = ZipFile.OpenRead(handled))
+            {
+                using (var reader = new StreamReader(archive.GetEntry("LatestSession/first-chance-11-1/exceptions.txt").Open()))
+                    Assert(reader.ReadToEnd() == "exception=0xc0000005 parameter1=0x48", "handled exception missing without an incident");
+                using (var reader = new StreamReader(archive.GetEntry("LatestSession/first-chance-11-1/stacks.txt").Open()))
+                    Assert(reader.ReadToEnd() == "ntdll.dll+0x11", "handled exception stacks missing without an incident");
+                Assert(!archive.Entries.Any(entry => entry.FullName.StartsWith("Capture/")), "handled exception was marked as a fatal capture");
+                Assert(!archive.Entries.Any(entry => entry.Name.StartsWith("process.") || entry.Name == "unrelated.txt"), "unapproved first exception file was packaged");
+                using (var reader = new StreamReader(archive.GetEntry("report.json").Open()))
+                {
+                    var metadata = JsonUtil.Deserialize<TitanfallCrashMetadata>(reader.ReadToEnd());
+                    Assert(metadata.captureSession == null && metadata.capturedModSha256 == null, "handled exception acquired a fatal capture identity");
+                    Assert(metadata.latestSession == Path.GetFileName(session), "handled exception session date missing");
+                }
+            }
+            Console.WriteLine("validated first exception reports without an incident or fatal exit");
+            File.WriteAllText(Path.Combine(session, "incident.txt"), "exception");
+            File.WriteAllText(Path.Combine(session, "monitor.txt"), "process_exit code=3221225477");
             File.WriteAllText(Path.Combine(session, "stderr.txt"), "Titanfall2VR: positional head tracking is required\n");
             File.WriteAllText(Path.Combine(incident, "capture.txt"), "dump_written=1");
             File.WriteAllText(Path.Combine(incident, "engine.txt"), "frozen-log");
