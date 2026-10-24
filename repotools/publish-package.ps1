@@ -4,8 +4,6 @@ param(
     [Parameter(Mandatory = $true)][string]$OutputDir,
     # channel id, omit for stable
     [string]$Channel,
-    # changelog text shown as is in the installer, omit to publish without an entry
-    [string]$Notes,
     [switch]$SkipBuild,
     [switch]$NoPush
 )
@@ -75,11 +73,6 @@ if ($Channel) {
     }
 }
 foreach ($name in @("version", "url", "sha256", "size")) { Set-Prop $target $name $release.$name }
-# one changelog per mod across channels, newest first, republishing a version replaces its entry
-if ($Notes) {
-    $change = [pscustomobject]@{ version = $metadata.version; date = (Get-Date).ToString("yyyy-MM-dd"); notes = $Notes }
-    Set-Prop $entry changes (@($change) + @($entry.changes | Where-Object { $_ -and $_.version -ne $metadata.version }))
-}
 Write-Manifest $manifest
 
 $label = if ($Channel) { $Channel } else { "stable" }
