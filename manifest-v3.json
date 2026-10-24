@@ -60,6 +60,11 @@
     ],
     "changes": [
       {
+        "version": "1.0.25",
+        "date": "2026-10-24",
+        "notes": "Changes:\n- added support for ticks and satchels\n- fixed offset when two-handing archer, thunderbolt, or arc gun\n- fixed Ronin sword core preventing ability use\n- fixed grab pose for EPG mag"
+      },
+      {
         "version": "1.0.24",
         "date": "2026-10-23",
         "notes": "The biggest update for TF2VR by far!\n\nHighlights:\n- Brand new head-based Titan control scheme\n- Improved and standardized mag grab poses on all guns\n- \"Shimmer Reduction\" graphics setting, massively reduces jagged edges for very little perf cost!\n- Tons of other polish and bug-fixes!\n\nJoin the Discord to see the full changelog!"
