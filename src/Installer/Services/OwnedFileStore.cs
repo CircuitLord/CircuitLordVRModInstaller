@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace BigWalkVRInstaller.Services
 {
@@ -14,6 +15,12 @@ namespace BigWalkVRInstaller.Services
         {
             var path = RecordPath(gamePath, id);
             return File.Exists(path) ? JsonUtil.Deserialize<InstallRecord>(File.ReadAllText(path)) : null;
+        }
+
+        public static IEnumerable<string> Ids(string gamePath)
+        {
+            var directory = DirectoryPath(gamePath);
+            return Directory.Exists(directory) ? Directory.GetFiles(directory, "*.json").Select(Path.GetFileNameWithoutExtension) : Enumerable.Empty<string>();
         }
 
         public static void Write(string gamePath, InstallRecord record)

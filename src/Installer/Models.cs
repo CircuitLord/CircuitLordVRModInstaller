@@ -29,6 +29,8 @@ namespace BigWalkVRInstaller
         public ReleaseInfo installer;
         public ReleaseInfo bepinex;
         public ManifestMod titanfall2vr;
+        // third party packages unpacked into the TF2VR profile, each release reviewed before listing
+        public List<ManifestMod> titanfall2addons;
         public List<ManifestMod> mods = new List<ManifestMod>();
     }
 
@@ -50,6 +52,8 @@ namespace BigWalkVRInstaller
         public string url;
         public string sha256;
         public long size;
+        // optional source page linked from the mod card
+        public string repository;
         // optional release channels, a channel shows only while newer than stable
         public List<ModChannel> channels;
         // files kept if they already exist, user calibration and configs
@@ -89,6 +93,7 @@ namespace BigWalkVRInstaller
                 url = channel.url,
                 sha256 = channel.sha256,
                 size = channel.size,
+                repository = repository,
                 preserve = preserve,
                 tokenize = tokenize
             };
@@ -146,6 +151,7 @@ namespace BigWalkVRInstaller
         public string Description => Remote.description;
         public bool HasDescription => !string.IsNullOrEmpty(Remote.description);
         public bool HasChanges => Available.HasChanges;
+        public bool HasRepository => !string.IsNullOrEmpty(Remote.repository);
 
         // null is stable
         public ModChannel Channel { get; set; }

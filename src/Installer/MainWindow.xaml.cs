@@ -29,6 +29,7 @@ namespace BigWalkVRInstaller
         const string SupportUrl = "https://ko-fi.com/circuitlord";
 
         readonly ObservableCollection<ModEntry> _mods = new ObservableCollection<ModEntry>();
+        readonly ObservableCollection<ModEntry> _titanfallAddons = new ObservableCollection<ModEntry>();
         readonly ObservableCollection<LogEntry> _logs = new ObservableCollection<LogEntry>();
         AppSettings _settings;
         BigWalkInstaller _bigWalk;
@@ -49,6 +50,7 @@ namespace BigWalkVRInstaller
         {
             InitializeComponent();
             ModsList.ItemsSource = _mods;
+            TitanfallAddonsList.ItemsSource = _titanfallAddons;
             LogsList.ItemsSource = _logs;
             VersionText.Text = "v" + SelfUpdater.CurrentVersion;
         }
@@ -135,6 +137,11 @@ namespace BigWalkVRInstaller
         async Task Refresh()
         {
             await FetchManifest();
+            RefreshSelectedState();
+        }
+
+        void RefreshSelectedState()
+        {
             if (_selectedGame == SelectedGame.BigWalk) RefreshBigWalkState();
             else if (_selectedGame == SelectedGame.Titanfall2) RefreshTitanfallState();
             UpdateGameCards();
@@ -142,8 +149,9 @@ namespace BigWalkVRInstaller
 
         async Task FetchManifest()
         {
-            var previous = _mods.ToDictionary(mod => mod.Id, mod => mod);
+            var previous = _mods.Concat(_titanfallAddons).ToDictionary(mod => mod.Id, mod => mod);
             _mods.Clear();
+            _titanfallAddons.Clear();
             _selfUpdate = null;
             _bepInExSource = null;
             _titanfallAvailable = null;
@@ -167,14 +175,11 @@ namespace BigWalkVRInstaller
                 }
                 if (settingsChanged) _settings.Save();
 
-                foreach (var available in manifest.mods)
-                {
-                    var channel = available.FindChannel(_settings.BigWalkChannel);
-                    var entry = previous.TryGetValue(available.id, out var live) && live.Busy
-                        ? live
-                        : new ModEntry { Available = available, Remote = available.SelectRelease(channel), Channel = channel };
-                    _mods.Add(entry);
-                }
+                ModEntry Entry(ManifestMod available, ModChannel channel) => previous.TryGetValue(available.id, out var live) && live.Busy
+                    ? live
+                    : new ModEntry { Available = available, Remote = available.SelectRelease(channel), Channel = channel };
+                foreach (var available in manifest.mods) _mods.Add(Entry(available, available.FindChannel(_settings.BigWalkChannel)));
+                foreach (var available in manifest.titanfall2addons) _titanfallAddons.Add(Entry(available, null));
                 _bepInExSource = manifest.bepinex;
                 _titanfallAvailable = manifest.titanfall2vr;
                 _titanfallChannel = _titanfallAvailable?.FindChannel(_settings.Titanfall2Channel);
@@ -277,6 +282,12 @@ namespace BigWalkVRInstaller
                     ? $"Update to v{_titanfallRelease.version}"
                     : $"Install{(_titanfallRelease == null ? "" : $" v{_titanfallRelease.version}")}";
             TitanfallAction.ActionEnabled = hasGame && _titanfallRelease != null;
+            foreach (var addon in _titanfallAddons)
+                addon.InstalledVersion = hasGame ? OwnedFileStore.Read(_titanfall.GamePath, addon.Id)?.version : null;
+            TitanfallAddons.Visibility = _titanfallAddons.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            var addonsReady = installed && !_titanfallBusy;
+            TitanfallAddonsPanel.IsEnabled = addonsReady;
+            TitanfallAddonsPanel.Opacity = addonsReady ? 1 : 0.4;
             BackButton.IsEnabled = !_titanfallBusy;
             RefreshButton.IsEnabled = !_titanfallBusy;
             LaunchButton.IsEnabled = installed && !_titanfallBusy;
@@ -306,6 +317,8 @@ namespace BigWalkVRInstaller
         async Task InstallMod(ModEntry mod)
         {
             if (!Ready()) return;
+            // the selected game can change during the download
+            var titanfall = _selectedGame == SelectedGame.Titanfall2;
 
             mod.Busy = true;
             mod.Progress = 0;
@@ -321,7 +334,8 @@ namespace BigWalkVRInstaller
 
                 mod.BusyText = "Installing...";
                 mod.Progress = 1;
-                await Task.Run(() => _bigWalk.InstallMod(mod.Remote, bytes, mod.Channel?.id));
+                if (titanfall) await Task.Run(() => _titanfall.InstallAddon(mod.Remote, bytes));
+                else await Task.Run(() => _bigWalk.InstallMod(mod.Remote, bytes, mod.Channel?.id));
                 Status($"{mod.Name} v{mod.Remote.version} installed");
             }
             catch (Exception ex)
@@ -331,8 +345,7 @@ namespace BigWalkVRInstaller
             finally
             {
                 mod.Busy = false;
-                RefreshBigWalkState();
-                UpdateGameCards();
+                RefreshSelectedState();
             }
         }
 
@@ -340,11 +353,14 @@ namespace BigWalkVRInstaller
         {
             var mod = (ModEntry)((FrameworkElement)sender).DataContext;
             if (!Ready()) return;
-            if (!await Confirm("Uninstall " + mod.Name, "All mod files and configuration will be removed.", "Uninstall")) return;
+            var titanfall = _selectedGame == SelectedGame.Titanfall2;
+            var removes = titanfall ? "Removes the add-on's files." : "All mod files and configuration will be removed.";
+            if (!await Confirm("Uninstall " + mod.Name, removes, "Uninstall")) return;
 
             try
             {
-                _bigWalk.UninstallMod(mod.Id);
+                if (titanfall) _titanfall.UninstallAddon(mod.Id);
+                else _bigWalk.UninstallMod(mod.Id);
                 Status($"{mod.Name} removed");
             }
             catch (Exception ex)
@@ -856,6 +872,12 @@ namespace BigWalkVRInstaller
             var mod = (ModEntry)((FrameworkContentElement)sender).DataContext;
             ShowChangelog((IInputElement)sender, mod.Available, mod.Name, mod.InstalledVersion, mod.Remote.version,
                 mod.CanUpdate && !mod.Busy ? mod.UpdateLabel : null, () => InstallMod(mod));
+        }
+
+        void Repository_Click(object sender, RoutedEventArgs e)
+        {
+            var mod = (ModEntry)((FrameworkContentElement)sender).DataContext;
+            Open(() => GameLauncher.OpenUrl(mod.Remote.repository));
         }
 
         void TitanfallChangelog_Click(object sender, RoutedEventArgs e) =>

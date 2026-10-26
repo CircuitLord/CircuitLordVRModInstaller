@@ -175,6 +175,7 @@ namespace InstallerValidation
                 Assert(File.ReadAllText(Path.Combine(vrProfile, "savegames", "savegame.sav")) == "vr-progress", "update changed VR progress");
 
                 ValidateCustomInstall(root, installer);
+                ValidateTitanfallAddon(root, installer);
 
                 var logs = Path.Combine(root, "TF2VR", "logs");
                 var diagnostics = Path.Combine(root, "TF2VR", "plugins", "Titanfall2VR-data");
@@ -204,6 +205,7 @@ namespace InstallerValidation
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod.json")), "cockpit survived uninstall");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "mods", "Titanfall2VR.Cockpit", "mod", "patched.txt")), "patched game assets survived uninstall");
                 Assert(!File.Exists(Path.Combine(root, "TF2VR", "licenses", "OpenXR.txt")), "licenses survived uninstall");
+                Assert(!File.Exists(Path.Combine(root, "TF2VR", "plugins", "Addon.dll")) && OwnedFileStore.Read(root, "Addon") == null, "addon survived uninstall");
                 Assert(File.ReadAllText(userFile) == "user-data", "user file changed during uninstall");
                 Assert(File.ReadAllText(Path.Combine(vrProfile, "savegames", "savegame.sav")) == "vr-progress", "uninstall changed VR progress");
                 Assert(File.ReadAllText(Path.Combine(root, "NorthstarLauncher.exe")) == "standard-launcher", "standard launcher changed after uninstall");
@@ -348,8 +350,11 @@ namespace InstallerValidation
                 + "{\"id\":\"beta\",\"description\":\"unstable\",\"version\":\"1.1.0\",\"url\":\"beta.zip\",\"sha256\":\"abc\",\"size\":11},"
                 + "{\"id\":\"multiplayer\",\"version\":\"1.2.0-mp.1\",\"url\":\"mp.zip\"},"
                 + "{\"id\":\"stale\",\"version\":\"1.0.0\",\"url\":\"stale.zip\"}]}],"
-                + "\"titanfall2vr\":{\"id\":\"Titanfall2VR\",\"version\":\"1.0.0\"}}");
+                + "\"titanfall2vr\":{\"id\":\"Titanfall2VR\",\"version\":\"1.0.0\"},"
+                + "\"titanfall2addons\":[{\"id\":\"Addon\",\"version\":\"1.0.0\",\"repository\":\"https://example.com/addon\"}]}");
             var mod = manifest.mods[0];
+            var addon = new ModEntry { Available = manifest.titanfall2addons[0], Remote = manifest.titanfall2addons[0].SelectRelease(null) };
+            Assert(addon.HasRepository && addon.Remote.repository == "https://example.com/addon" && !addon.ShowChannels, "addon fields were not read");
             Assert(mod.AvailableChannels.Select(channel => channel.id).SequenceEqual(new[] { "beta", "multiplayer" }), "manifest channels were not listed in order without stale ones");
             var beta = mod.FindChannel("beta");
             Assert(beta.description == "unstable" && beta.sha256 == "abc" && beta.size == 11 && beta.Title == "Beta", "channel fields were not read");
@@ -482,6 +487,41 @@ namespace InstallerValidation
             reopened.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), null, new ProgressLog());
             Assert(!reopened.Record.custom && reopened.CanUpdate(release, null), "selecting stable did not restore published updates");
             Console.WriteLine("validated custom ZIP install, persistence, launch pinning, invalid ZIP rejection, and return to stable");
+        }
+
+        static void ValidateTitanfallAddon(string root, Titanfall2Installer installer)
+        {
+            var addon = new ManifestMod { id = "Addon", version = "1.0.0" };
+            installer.InstallAddon(addon, AddonPackage("addon-v1", true));
+            Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Addon.dll")) == "addon-v1", "addon plugin missing");
+            Assert(File.Exists(Path.Combine(root, "TF2VR", "plugins", "lib", "old.dll")) && File.Exists(Path.Combine(root, "TF2VR", "mods", "Addon", "mod.json")), "addon files missing");
+            Assert(OwnedFileStore.Read(root, "Addon").version == "1.0.0", "addon version not recorded");
+            installer.Install(NorthstarPackage("vr-launcher-v2", false), ModPackage("vr-plugin-v2", "0.2.0"), null, new ProgressLog());
+            Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Addon.dll")) == "addon-v1", "VR update changed the addon");
+            addon.version = "1.1.0";
+            installer.InstallAddon(addon, AddonPackage("addon-v2", false));
+            Assert(File.ReadAllText(Path.Combine(root, "TF2VR", "plugins", "Addon.dll")) == "addon-v2", "addon update missing");
+            Assert(!Directory.Exists(Path.Combine(root, "TF2VR", "plugins", "lib")), "stale addon file survived update");
+            Assert(OwnedFileStore.Read(root, "Addon").version == "1.1.0" && installer.Record.version == "0.2.0", "addon update changed the wrong record");
+            installer.UninstallAddon("Addon");
+            Assert(!Directory.Exists(Path.Combine(root, "TF2VR", "mods", "Addon")) && OwnedFileStore.Read(root, "Addon") == null, "addon survived its uninstall");
+            Assert(installer.IsInstalled, "addon uninstall removed Titanfall 2 VR");
+            installer.InstallAddon(addon, AddonPackage("addon-v2", false));
+            Console.WriteLine("validated addon install, update, isolation from VR updates, and uninstall");
+        }
+
+        static byte[] AddonPackage(string plugin, bool includeOld)
+        {
+            using (var stream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true))
+                {
+                    Add(archive, "plugins/Addon.dll", plugin);
+                    if (includeOld) Add(archive, "plugins/lib/old.dll", "old");
+                    Add(archive, "mods/Addon/mod.json", "{}");
+                }
+                return stream.ToArray();
+            }
         }
 
         static void ValidateSaveModal(string root)

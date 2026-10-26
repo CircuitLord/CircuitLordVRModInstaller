@@ -226,7 +226,33 @@ namespace BigWalkVRInstaller.Installers
             return count == 0 ? CampaignSaveStatus.Missing : count == CampaignFiles.Length ? CampaignSaveStatus.Available : CampaignSaveStatus.Incomplete;
         }
 
-        public void Uninstall() => OwnedFileStore.Remove(GamePath, InstallerId);
+        // addons load from the profile, so they go with it
+        public void Uninstall()
+        {
+            foreach (var id in OwnedFileStore.Ids(GamePath)) OwnedFileStore.Remove(GamePath, id);
+        }
+
+        // addon packages mirror the TF2VR profile layout
+        public void InstallAddon(ManifestMod addon, byte[] package)
+        {
+            var previous = OwnedFileStore.Read(GamePath, addon.id);
+            var written = new List<string>();
+            using (var stream = new MemoryStream(package))
+            using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
+                foreach (var entry in archive.Entries.Where(entry => entry.Name.Length > 0))
+                    Extract(entry, ProfileName + "/" + entry.FullName, written);
+
+            if (previous?.files != null) InstallerFileSystem.RemoveStaleFiles(GamePath, previous.files, written);
+            OwnedFileStore.Write(GamePath, new InstallRecord
+            {
+                id = addon.id,
+                version = addon.version,
+                runtime = "Northstar",
+                files = written.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+            });
+        }
+
+        public void UninstallAddon(string id) => OwnedFileStore.Remove(GamePath, id);
 
         // the EA app installs under Program Files, where only admins can write
         public bool CanWriteGameFolder()
