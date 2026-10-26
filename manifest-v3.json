@@ -56,6 +56,13 @@
         "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.23.zip",
         "sha256": "19cd4ba627650d084ed990435bfd9a33549cf92f78c2d6b5c83f0a8e8108d035",
         "size": 73996456
+      },
+      {
+        "id": "crashreport-fix",
+        "version": "1.0.26",
+        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-crashreport-fix-1.0.26.zip",
+        "sha256": "f8973a91a4e0cab22867b93e9f13516c29e75af576f43f8a35690a32f67ae8c6",
+        "size": 74038614
       }
     ],
     "changes": [
