@@ -97,6 +97,8 @@ namespace BigWalkVRInstaller
             GameSelectionView.Visibility = Visibility.Collapsed;
             InstallerView.Visibility = Visibility.Visible;
             NavInstall.IsChecked = true;
+            NavAddons.Visibility = Visibility.Collapsed;
+            AddonsView.Visibility = Visibility.Collapsed;
             LogsView.Visibility = Visibility.Collapsed;
             InstallView.Visibility = Visibility.Visible;
 
@@ -105,6 +107,7 @@ namespace BigWalkVRInstaller
             TitanfallContent.Visibility = bigWalk ? Visibility.Collapsed : Visibility.Visible;
             LaunchNonVrButton.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
             LaunchButton.Content = "Launch in VR";
+            PulseLaunch(false);
             SelectedGameName.Text = bigWalk ? "Big Walk VR" : "Titanfall 2 VR";
             SelectedGameImage.Source = new BitmapImage(new Uri(bigWalk ? "Assets/big-walk.jpg" : "Assets/titanfall-2.jpg", UriKind.Relative));
 
@@ -284,7 +287,11 @@ namespace BigWalkVRInstaller
             TitanfallAction.ActionEnabled = hasGame && _titanfallRelease != null;
             foreach (var addon in _titanfallAddons)
                 addon.InstalledVersion = hasGame ? OwnedFileStore.Read(_titanfall.GamePath, addon.Id)?.version : null;
-            TitanfallAddons.Visibility = _titanfallAddons.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            NavAddons.Visibility = _titanfallAddons.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            // a failed manifest refresh hides the tab while it may be open
+            if (_titanfallAddons.Count == 0 && NavAddons.IsChecked == true) NavInstall.IsChecked = true;
+            AddonsIntro.Visibility = _settings.AddonsAcknowledged ? Visibility.Collapsed : Visibility.Visible;
+            AddonsContent.Visibility = _settings.AddonsAcknowledged ? Visibility.Visible : Visibility.Collapsed;
             var addonsReady = installed && !_titanfallBusy;
             TitanfallAddonsPanel.IsEnabled = addonsReady;
             TitanfallAddonsPanel.Opacity = addonsReady ? 1 : 0.4;
@@ -337,6 +344,7 @@ namespace BigWalkVRInstaller
                 if (titanfall) await Task.Run(() => _titanfall.InstallAddon(mod.Remote, bytes));
                 else await Task.Run(() => _bigWalk.InstallMod(mod.Remote, bytes, mod.Channel?.id));
                 Status($"{mod.Name} v{mod.Remote.version} installed");
+                if (!titanfall) PulseLaunch(true);
             }
             catch (Exception ex)
             {
@@ -354,7 +362,7 @@ namespace BigWalkVRInstaller
             var mod = (ModEntry)((FrameworkElement)sender).DataContext;
             if (!Ready()) return;
             var titanfall = _selectedGame == SelectedGame.Titanfall2;
-            var removes = titanfall ? "Removes the add-on's files." : "All mod files and configuration will be removed.";
+            var removes = titanfall ? "Removes the addon's files." : "All mod files and configuration will be removed.";
             if (!await Confirm("Uninstall " + mod.Name, removes, "Uninstall")) return;
 
             try
@@ -539,6 +547,7 @@ namespace BigWalkVRInstaller
                 });
                 await Task.Run(() => _titanfall.Install(northstar, mod, packagePath == null ? _titanfallChannel?.id : null, installProgress, custom: packagePath != null));
                 Status($"Titanfall 2 VR v{_titanfall.Record.version} installed");
+                PulseLaunch(true);
             }
             finally
             {
@@ -603,11 +612,18 @@ namespace BigWalkVRInstaller
             RefreshTitanfallState();
         }
 
-        void LaunchNonVr_Click(object sender, RoutedEventArgs e) => Launch(
-            () => _bigWalk.PlayNonVr(), "Launching Big Walk in Non-VR mode", "");
+        // the Launch style glows while Tag is pulse and the button is enabled
+        void PulseLaunch(bool pulse) => LaunchButton.Tag = pulse ? "pulse" : null;
+
+        void LaunchNonVr_Click(object sender, RoutedEventArgs e)
+        {
+            PulseLaunch(false);
+            Launch(() => _bigWalk.PlayNonVr(), "Launching Big Walk in Non-VR mode", "");
+        }
 
         async void Launch_Click(object sender, RoutedEventArgs e)
         {
+            PulseLaunch(false);
             if (_selectedGame == SelectedGame.Titanfall2)
             {
                 SetTitanfallBusy(true);
@@ -998,7 +1014,15 @@ namespace BigWalkVRInstaller
         {
             if (InstallView == null) return;
             InstallView.Visibility = NavInstall.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            AddonsView.Visibility = NavAddons.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             LogsView.Visibility = NavLogs.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        void AcknowledgeAddons_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.AddonsAcknowledged = true;
+            _settings.Save();
+            RefreshTitanfallState();
         }
 
         TaskCompletionSource<bool> _confirm;

@@ -100,6 +100,62 @@
         </Setter>
     </Style>
 
+    <!-- primary that pulses a glow and an expanding ring while enabled with Tag pulse, points people at launching right after an install -->
+    <Style x:Key="Launch" TargetType="Button" BasedOn="{StaticResource Primary}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="ring" BorderBrush="{StaticResource Accent}" BorderThickness="2" CornerRadius="8" Opacity="0" />
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding local:Corners.Radius}" Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect x:Name="glow" Color="{StaticResource AccentColor}" BlurRadius="22" ShadowDepth="0" Opacity="0" />
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentHover}" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsEnabled" Value="True" />
+                                <Condition Property="Tag" Value="pulse" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.EnterActions>
+                                <BeginStoryboard x:Name="pulse">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity" From="0.3" To="1"
+                                                         Duration="0:0:0.6" AutoReverse="True" RepeatBehavior="Forever">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <ThicknessAnimation Storyboard.TargetName="ring" Storyboard.TargetProperty="Margin" From="0" To="-9"
+                                                            Duration="0:0:1.2" RepeatBehavior="Forever">
+                                            <ThicknessAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </ThicknessAnimation.EasingFunction>
+                                        </ThicknessAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="ring" Storyboard.TargetProperty="Opacity" From="1" To="0"
+                                                         Duration="0:0:1.2" RepeatBehavior="Forever" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </MultiTrigger.EnterActions>
+                            <MultiTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="pulse" />
+                            </MultiTrigger.ExitActions>
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- neutral solid, an action of the same weight as Primary but not the one we push -->
     <Style x:Key="Secondary" TargetType="Button" BasedOn="{StaticResource Primary}">
         <Setter Property="Background" Value="{StaticResource Hover}" />

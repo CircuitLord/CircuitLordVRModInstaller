@@ -13,6 +13,7 @@ namespace BigWalkVRInstaller.Services
         public string BigWalkChannel;
         public string Titanfall2Channel;
         public bool Titanfall2EaSignedIn;
+        public bool AddonsAcknowledged;
 
         static string Dir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BigWalkVRInstaller");
         static string FilePath => Path.Combine(Dir, "settings.json");

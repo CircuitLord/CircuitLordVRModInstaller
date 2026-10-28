@@ -79,7 +79,7 @@
             </DataTemplate.Triggers>
         </DataTemplate>
 
-        <!-- slim row inside the shared add-ons panel, rows after the first get a divider -->
+        <!-- slim row inside the shared addons panel, rows after the first get a divider -->
         <DataTemplate x:Key="AddonRow">
             <Border x:Name="Row" BorderBrush="{StaticResource Stroke}" BorderThickness="0,1,0,0" Padding="14,10">
                 <StackPanel>
@@ -273,7 +273,7 @@
                     <Button x:Name="RefreshButton" Style="{StaticResource Ghost}" Content="Refresh" Click="Refresh_Click" />
                     <Button x:Name="LaunchNonVrButton" Style="{StaticResource Secondary}" Content="Launch in Non-VR"
                             Padding="16,7" Margin="8,0,0,0" Click="LaunchNonVr_Click" />
-                    <Button x:Name="LaunchButton" Style="{StaticResource Primary}" Content="Launch in VR"
+                    <Button x:Name="LaunchButton" Style="{StaticResource Launch}" Content="Launch in VR"
                             Padding="16,7" Margin="8,0,0,0" Click="Launch_Click" />
                 </StackPanel>
             </Grid>
@@ -288,6 +288,8 @@
                     <StackPanel Orientation="Horizontal">
                         <RadioButton x:Name="NavInstall" Style="{StaticResource NavPill}" Content="Setup"
                                      IsChecked="True" Checked="Nav_Checked" />
+                        <RadioButton x:Name="NavAddons" Style="{StaticResource NavPill}" Content="Addons" Margin="3,0,0,0"
+                                     Checked="Nav_Checked" Visibility="Collapsed" />
                         <RadioButton x:Name="NavLogs" Style="{StaticResource NavPill}" Content="Logs" Margin="3,0,0,0"
                                      Checked="Nav_Checked" />
                     </StackPanel>
@@ -452,16 +454,6 @@
                                     </StackPanel>
                                 </Border>
 
-                                <StackPanel x:Name="TitanfallAddons" Visibility="Collapsed">
-                                    <!-- runs share a baseline -->
-                                    <TextBlock Margin="2,14,0,10">
-                                        <Run Text="Add-ons" FontSize="13.5" FontWeight="SemiBold" /><Run Text="   Community made, not supported by CircuitLord" FontSize="11.5" Foreground="{StaticResource TextDim}" />
-                                    </TextBlock>
-                                    <Border x:Name="TitanfallAddonsPanel" Style="{StaticResource CardStatic}" Padding="0">
-                                        <ItemsControl x:Name="TitanfallAddonsList" ItemTemplate="{StaticResource AddonRow}" />
-                                    </Border>
-                                </StackPanel>
-
                                 <StackPanel HorizontalAlignment="Center" Margin="0,28,0,10">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Button Style="{StaticResource Quiet}" Content="Discord" FontSize="11.5" Padding="6,3" Click="OpenDiscord_Click" />
@@ -476,6 +468,32 @@
                                     </StackPanel>
                                     <local:SupportFooter Margin="0,26,0,8" Button.Click="OpenSupport_Click" />
                                 </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <ScrollViewer x:Name="AddonsView" VerticalScrollBarVisibility="Auto" Visibility="Collapsed" Margin="0,0,-10,0">
+                        <Grid Margin="0,0,10,0">
+                            <!-- shown until the player acknowledges addons once -->
+                            <StackPanel x:Name="AddonsIntro" MaxWidth="440" HorizontalAlignment="Center" Margin="0,18,0,10">
+                                <Border Width="54" Height="54" CornerRadius="14" Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1">
+                                    <TextBlock Text="&#xEA86;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource Accent}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="Community addons" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,14,0,6" />
+                                <TextBlock Text="Addons are optional extras made by community members, not CircuitLord."
+                                           FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" TextAlignment="Center" />
+                                <TextBlock Text="They aren't officially supported and may cause bugs or crashes."
+                                           FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,18" />
+                                <Button Style="{StaticResource Primary}" Content="I understand, show addons" Padding="16,7" HorizontalAlignment="Center"
+                                        Click="AcknowledgeAddons_Click" />
+                            </StackPanel>
+
+                            <StackPanel x:Name="AddonsContent" Visibility="Collapsed">
+                                <TextBlock Text="Made by other modders. Uninstall addons before reporting a crash." FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="2,0,0,10" />
+                                <Border x:Name="TitanfallAddonsPanel" Style="{StaticResource CardStatic}" Padding="0">
+                                    <ItemsControl x:Name="TitanfallAddonsList" ItemTemplate="{StaticResource AddonRow}" />
+                                </Border>
                             </StackPanel>
                         </Grid>
                     </ScrollViewer>
