@@ -2,12 +2,14 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using BigWalkVRInstaller.Installers;
 using BigWalkVRInstaller.Services;
 
@@ -45,6 +47,9 @@ namespace BigWalkVRInstaller
         GameStartupWatcher _watcher;
         IInputElement _changelogLink;
         Func<Task> _changelogUpdate;
+        readonly DispatcherTimer _populationTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        CancellationTokenSource _populationSession;
+        long? _populationPlayers;
 
         public MainWindow()
         {
@@ -53,6 +58,8 @@ namespace BigWalkVRInstaller
             TitanfallAddonsList.ItemsSource = _titanfallAddons;
             LogsList.ItemsSource = _logs;
             VersionText.Text = "v" + SelfUpdater.CurrentVersion;
+            _populationTimer.Tick += async (sender, e) => await RefreshServerPopulation();
+            Closed += (sender, e) => StopPopulationUpdates();
         }
 
         bool HasGame => _bigWalk?.HasGame == true;
@@ -105,11 +112,20 @@ namespace BigWalkVRInstaller
             var bigWalk = game == SelectedGame.BigWalk;
             BigWalkContent.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
             TitanfallContent.Visibility = bigWalk ? Visibility.Collapsed : Visibility.Visible;
+            PlayersButton.Visibility = bigWalk ? Visibility.Collapsed : Visibility.Visible;
             LaunchNonVrButton.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
             LaunchButton.Content = "Launch in VR";
             PulseLaunch(false);
             SelectedGameName.Text = bigWalk ? "Big Walk VR" : "Titanfall 2 VR";
             SelectedGameImage.Source = new BitmapImage(new Uri(bigWalk ? "Assets/big-walk.jpg" : "Assets/titanfall-2.jpg", UriKind.Relative));
+
+            StopPopulationUpdates();
+            if (!bigWalk)
+            {
+                _populationSession = new CancellationTokenSource();
+                _populationTimer.Start();
+                _ = RefreshServerPopulation();
+            }
 
             Status($"Loading {SelectedGameName.Text}...");
             await Refresh();
@@ -128,6 +144,7 @@ namespace BigWalkVRInstaller
 
         void ShowGameSelection()
         {
+            StopPopulationUpdates();
             StopWatcher();
             LaunchOverlay.Visibility = Visibility.Collapsed;
             _selectedGame = SelectedGame.None;
@@ -135,6 +152,71 @@ namespace BigWalkVRInstaller
             GameSelectionView.Visibility = Visibility.Visible;
             UpdateGameCards();
             Status("Choose a game to continue");
+        }
+
+        void StopPopulationUpdates()
+        {
+            ClosePopulation(false);
+            _populationTimer.Stop();
+            var session = _populationSession;
+            _populationSession = null;
+            session?.Cancel();
+            session?.Dispose();
+            RefreshPopulationButton.IsEnabled = true;
+        }
+
+        async void RefreshPopulation_Click(object sender, RoutedEventArgs e) => await RefreshServerPopulation();
+
+        void Players_Click(object sender, RoutedEventArgs e)
+        {
+            InstallerView.IsEnabled = false;
+            PopulationOverlay.Visibility = Visibility.Visible;
+            ClosePopulationButton.Focus();
+        }
+
+        void ClosePopulation_Click(object sender, RoutedEventArgs e) => ClosePopulation();
+
+        void ClosePopulation(bool restoreFocus = true)
+        {
+            if (PopulationOverlay.Visibility != Visibility.Visible) return;
+            PopulationOverlay.Visibility = Visibility.Collapsed;
+            InstallerView.IsEnabled = true;
+            if (restoreFocus) PlayersButton.Focus();
+        }
+
+        async Task RefreshServerPopulation()
+        {
+            var session = _populationSession;
+            if (session == null || !RefreshPopulationButton.IsEnabled) return;
+            RefreshPopulationButton.IsEnabled = false;
+            PopulationUpdatedText.Text = "Refreshing...";
+            try
+            {
+                var regions = await VrPopulationClient.Fetch(session.Token);
+                if (session != _populationSession) return;
+                var players = regions.Sum(region => region.Players);
+                _populationPlayers = players;
+                PlayersButton.Content = $"Players ({players:N0})";
+                PlayersButton.ToolTip = "VR player counts by region";
+                PopulationRegionsList.ItemsSource = regions;
+                PopulationText.Text = $"{players:N0} VR {(players == 1 ? "player" : "players")} online";
+                PopulationUpdatedText.Text = "Updated " + DateTime.Now.ToString("t") + " - refreshes every minute";
+            }
+            catch (Exception)
+            {
+                if (session != _populationSession) return;
+                PlayersButton.Content = _populationPlayers == null ? "Players" : $"Players ({_populationPlayers:N0}*)";
+                PlayersButton.ToolTip = "Player counts unavailable - click for details";
+                if (_populationPlayers == null) PopulationText.Text = "Player counts unavailable";
+                PopulationUpdatedText.Text = _populationPlayers == null
+                    ? "Couldn't reach the VR servers. Retry or wait for the next refresh."
+                    : "Couldn't refresh. Showing last known counts.";
+            }
+            finally
+            {
+                if (session == _populationSession)
+                    RefreshPopulationButton.IsEnabled = true;
+            }
         }
 
         async Task Refresh()
@@ -1057,6 +1139,12 @@ namespace BigWalkVRInstaller
             if (_confirm != null)
             {
                 CloseConfirm(false);
+                e.Handled = true;
+                return;
+            }
+            if (PopulationOverlay.Visibility == Visibility.Visible)
+            {
+                ClosePopulation();
                 e.Handled = true;
                 return;
             }
