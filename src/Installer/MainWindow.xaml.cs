@@ -2,12 +2,14 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using BigWalkVRInstaller.Installers;
 using BigWalkVRInstaller.Services;
 
@@ -45,6 +47,11 @@ namespace BigWalkVRInstaller
         GameStartupWatcher _watcher;
         IInputElement _changelogLink;
         Func<Task> _changelogUpdate;
+        readonly NorthstarPopulationClient _populationClient = new NorthstarPopulationClient();
+        readonly DispatcherTimer _populationTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        CancellationTokenSource _populationSession;
+        ServerPopulation _population;
+        bool _populationRefreshing;
 
         public MainWindow()
         {
@@ -53,6 +60,7 @@ namespace BigWalkVRInstaller
             TitanfallAddonsList.ItemsSource = _titanfallAddons;
             LogsList.ItemsSource = _logs;
             VersionText.Text = "v" + SelfUpdater.CurrentVersion;
+            _populationTimer.Tick += async (sender, e) => await RefreshServerPopulation();
         }
 
         bool HasGame => _bigWalk?.HasGame == true;
@@ -111,6 +119,15 @@ namespace BigWalkVRInstaller
             SelectedGameName.Text = bigWalk ? "Big Walk VR" : "Titanfall 2 VR";
             SelectedGameImage.Source = new BitmapImage(new Uri(bigWalk ? "Assets/big-walk.jpg" : "Assets/titanfall-2.jpg", UriKind.Relative));
 
+            StopPopulationUpdates();
+            if (!bigWalk)
+            {
+                _populationSession = new CancellationTokenSource();
+                _populationTimer.Start();
+                // Population requests run independently of manifest downloads and installation.
+                _ = RefreshServerPopulation();
+            }
+
             Status($"Loading {SelectedGameName.Text}...");
             await Refresh();
 
@@ -128,6 +145,7 @@ namespace BigWalkVRInstaller
 
         void ShowGameSelection()
         {
+            StopPopulationUpdates();
             StopWatcher();
             LaunchOverlay.Visibility = Visibility.Collapsed;
             _selectedGame = SelectedGame.None;
@@ -135,6 +153,62 @@ namespace BigWalkVRInstaller
             GameSelectionView.Visibility = Visibility.Visible;
             UpdateGameCards();
             Status("Choose a game to continue");
+        }
+
+        void StopPopulationUpdates()
+        {
+            _populationTimer.Stop();
+            var session = _populationSession;
+            _populationSession = null;
+            session?.Cancel();
+            session?.Dispose();
+            _populationRefreshing = false;
+        }
+
+        async void RefreshPopulation_Click(object sender, RoutedEventArgs e) => await RefreshServerPopulation();
+
+        async Task RefreshServerPopulation()
+        {
+            var session = _populationSession;
+            if (session == null || _populationRefreshing) return;
+            _populationRefreshing = true;
+            RefreshPopulationButton.IsEnabled = false;
+            PopulationText.Text = _population == null ? "Checking online players..." : PopulationSummary(_population);
+            PopulationUpdatedText.Text = "Refreshing...";
+            try
+            {
+                var population = await _populationClient.Fetch(session.Token);
+                if (session != _populationSession) return;
+                _population = population;
+                PopulationText.Text = PopulationSummary(population);
+                PopulationUpdatedText.Text = "Updated " + population.RetrievedAt.ToLocalTime().ToString("t") + " - refreshes every minute";
+            }
+            catch (OperationCanceledException) when (session != _populationSession) { }
+            catch (Exception)
+            {
+                if (session != _populationSession) return;
+                PopulationText.Text = _population == null ? "Player counts unavailable" : PopulationSummary(_population) + " (last known)";
+                PopulationUpdatedText.Text = _population == null
+                    ? "Couldn't reach Northstar. Retry or wait for the next refresh."
+                    : "Couldn't refresh. Last updated " + _population.RetrievedAt.ToLocalTime().ToString("g") + ".";
+            }
+            finally
+            {
+                if (session == _populationSession)
+                {
+                    _populationRefreshing = false;
+                    RefreshPopulationButton.IsEnabled = true;
+                }
+            }
+        }
+
+        static string PopulationSummary(ServerPopulation population) =>
+            $"{population.Players:N0} {(population.Players == 1 ? "player" : "players")} online across {population.Servers:N0} {(population.Servers == 1 ? "server" : "servers")}";
+
+        protected override void OnClosed(EventArgs e)
+        {
+            StopPopulationUpdates();
+            base.OnClosed(e);
         }
 
         async Task Refresh()

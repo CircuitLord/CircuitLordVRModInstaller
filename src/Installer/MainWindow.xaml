@@ -377,6 +377,26 @@
                                 <Border Style="{StaticResource CardStatic}" Padding="16,13">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,14,0">
+                                            <TextBlock Text="Northstar multiplayer" FontSize="13.5" FontWeight="SemiBold" />
+                                            <TextBlock x:Name="PopulationText" Text="Checking online players..." FontSize="12"
+                                                       TextWrapping="Wrap" Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite" />
+                                            <TextBlock x:Name="PopulationUpdatedText" FontSize="11" Foreground="{StaticResource TextDim}"
+                                                       TextWrapping="Wrap" Margin="0,3,0,0" />
+                                            <TextBlock Text="Listed Northstar servers only. VR campaign has no online population."
+                                                       FontSize="11" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                        </StackPanel>
+                                        <Button x:Name="RefreshPopulationButton" Grid.Column="1" Style="{StaticResource Ghost}" Content="Refresh"
+                                                Padding="14,7" VerticalAlignment="Top" Click="RefreshPopulation_Click"
+                                                AutomationProperties.Name="Refresh Northstar player counts" />
+                                    </Grid>
+                                </Border>
+                                <Border Style="{StaticResource CardStatic}" Padding="16,13">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />

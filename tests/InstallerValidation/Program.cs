@@ -16,7 +16,7 @@ namespace InstallerValidation
     {
 
         [STAThread]
-        static int Main(string[] args) => args.Length == 0 ? Validate() : args[0] == "apply" ? FakeAssetPatcher(args) : FakeMonitor(args);
+        static int Main(string[] args) => args.Length == 0 ? Validate() : args[0] == "population" ? PopulationValidation.Run() : args[0] == "apply" ? FakeAssetPatcher(args) : FakeMonitor(args);
 
         static int FakeMonitor(string[] args)
         {
@@ -55,6 +55,7 @@ namespace InstallerValidation
             try
             {
                 ValidateSaveModal(root);
+                PopulationValidation.Validate();
                 ValidateLaunchPermissions();
                 ValidateChannelMenu();
                 ValidateDownloadListErrors();
@@ -527,6 +528,7 @@ namespace InstallerValidation
         static void ValidateSaveModal(string root)
         {
             var app = new App();
+            app.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
             app.InitializeComponent();
             ValidateProgressBar();
             var window = new MainWindow();
