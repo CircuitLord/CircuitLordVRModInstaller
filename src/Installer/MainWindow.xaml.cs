@@ -49,8 +49,7 @@ namespace BigWalkVRInstaller
         Func<Task> _changelogUpdate;
         readonly DispatcherTimer _populationTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
         CancellationTokenSource _populationSession;
-        ServerPopulation _population;
-        bool _populationRefreshing;
+        long? _populationPlayers;
 
         public MainWindow()
         {
@@ -60,6 +59,7 @@ namespace BigWalkVRInstaller
             LogsList.ItemsSource = _logs;
             VersionText.Text = "v" + SelfUpdater.CurrentVersion;
             _populationTimer.Tick += async (sender, e) => await RefreshServerPopulation();
+            Closed += (sender, e) => StopPopulationUpdates();
         }
 
         bool HasGame => _bigWalk?.HasGame == true;
@@ -124,7 +124,6 @@ namespace BigWalkVRInstaller
             {
                 _populationSession = new CancellationTokenSource();
                 _populationTimer.Start();
-                // Population requests run independently of manifest downloads and installation.
                 _ = RefreshServerPopulation();
             }
 
@@ -163,7 +162,7 @@ namespace BigWalkVRInstaller
             _populationSession = null;
             session?.Cancel();
             session?.Dispose();
-            _populationRefreshing = false;
+            RefreshPopulationButton.IsEnabled = true;
         }
 
         async void RefreshPopulation_Click(object sender, RoutedEventArgs e) => await RefreshServerPopulation();
@@ -188,51 +187,37 @@ namespace BigWalkVRInstaller
         async Task RefreshServerPopulation()
         {
             var session = _populationSession;
-            if (session == null || _populationRefreshing) return;
-            _populationRefreshing = true;
+            if (session == null || !RefreshPopulationButton.IsEnabled) return;
             RefreshPopulationButton.IsEnabled = false;
-            PopulationText.Text = _population == null ? "Checking online players..." : PopulationSummary(_population);
             PopulationUpdatedText.Text = "Refreshing...";
             try
             {
-                var population = await NorthstarPopulationClient.Fetch(session.Token);
+                var regions = await NorthstarPopulationClient.Fetch(session.Token);
                 if (session != _populationSession) return;
-                _population = population;
-                PlayersButton.Content = $"Players ({population.Players:N0})";
+                var players = regions.Sum(region => region.Players);
+                var servers = regions.Sum(region => region.Servers);
+                _populationPlayers = players;
+                PlayersButton.Content = $"Players ({players:N0})";
                 PlayersButton.ToolTip = "Player counts by region";
-                PopulationRegionsList.ItemsSource = population.Regions;
-                PopulationEmptyText.Visibility = population.Servers == 0 ? Visibility.Visible : Visibility.Collapsed;
-                PopulationText.Text = PopulationSummary(population);
-                PopulationUpdatedText.Text = "Updated " + population.RetrievedAt.ToLocalTime().ToString("t") + " - refreshes every minute";
+                PopulationRegionsList.ItemsSource = regions;
+                PopulationText.Text = $"{players:N0} {(players == 1 ? "player" : "players")} online across {servers:N0} {(servers == 1 ? "server" : "servers")}";
+                PopulationUpdatedText.Text = "Updated " + DateTime.Now.ToString("t") + " - refreshes every minute";
             }
-            catch (OperationCanceledException) when (session != _populationSession) { }
             catch (Exception)
             {
                 if (session != _populationSession) return;
-                PlayersButton.Content = _population == null ? "Players" : $"Players ({_population.Players:N0}*)";
-                PlayersButton.ToolTip = _population == null ? "Player counts unavailable - click for details" : "Last known player count - click for details";
-                PopulationText.Text = _population == null ? "Player counts unavailable" : PopulationSummary(_population) + " (last known)";
-                PopulationUpdatedText.Text = _population == null
+                PlayersButton.Content = _populationPlayers == null ? "Players" : $"Players ({_populationPlayers:N0}*)";
+                PlayersButton.ToolTip = "Player counts unavailable - click for details";
+                if (_populationPlayers == null) PopulationText.Text = "Player counts unavailable";
+                PopulationUpdatedText.Text = _populationPlayers == null
                     ? "Couldn't reach Northstar. Retry or wait for the next refresh."
-                    : "Couldn't refresh. Last updated " + _population.RetrievedAt.ToLocalTime().ToString("g") + ".";
+                    : "Couldn't refresh. Showing last known counts.";
             }
             finally
             {
                 if (session == _populationSession)
-                {
-                    _populationRefreshing = false;
                     RefreshPopulationButton.IsEnabled = true;
-                }
             }
-        }
-
-        static string PopulationSummary(ServerPopulation population) =>
-            $"{population.Players:N0} {(population.Players == 1 ? "player" : "players")} online across {population.Servers:N0} {(population.Servers == 1 ? "server" : "servers")}";
-
-        protected override void OnClosed(EventArgs e)
-        {
-            StopPopulationUpdates();
-            base.OnClosed(e);
         }
 
         async Task Refresh()

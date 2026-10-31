@@ -31,14 +31,6 @@ Launching Titanfall 2 normally stays unmodded. To play in VR, start SteamVR/your
 
 VR campaign save files are stored in `%LOCALAPPDATA%\Respawn\Titanfall2_VR`
 
-### Northstar player counts
-
-The **Players** button shows Northstar's online count. Click it for player and
-server totals by region (US, EU, and others). Counts come
-from [Northstar's public server list](https://northstar.tf/client/servers), refresh
-every minute, and are marked as last known if unavailable. They cover Northstar
-multiplayer servers, not vanilla Titanfall 2 or VR campaign players.
-
 ## Big Walk VR
 
 Big Walk VR adds full multiplayer-compatible SteamVR support to the game Big Walk by House House. It includes stereo rendering support, full 6dof motion controls with support for grabbing and throwing objects, and more!

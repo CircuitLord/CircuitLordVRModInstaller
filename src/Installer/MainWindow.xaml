@@ -572,56 +572,35 @@
 
         <Border x:Name="PopulationOverlay" Grid.Row="0" Grid.RowSpan="3" Background="{StaticResource Scrim}" Visibility="Collapsed">
             <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
-                    CornerRadius="10" Padding="22,18" Width="570" MaxHeight="560" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Northstar players" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock x:Name="PopulationText" Text="Checking online players..." FontSize="12"
-                                   TextWrapping="Wrap" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite" />
-                        <TextBlock x:Name="PopulationUpdatedText" FontSize="11" Foreground="{StaticResource TextDim}"
-                                   TextWrapping="Wrap" Margin="0,3,0,0" />
-                    </StackPanel>
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" MaxHeight="365">
-                        <StackPanel>
-                            <TextBlock x:Name="PopulationEmptyText" Text="No Northstar servers are listed right now."
-                                       Foreground="{StaticResource TextDim}" FontSize="12" Visibility="Collapsed" Margin="0,0,0,12" />
-                            <ItemsControl x:Name="PopulationRegionsList">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{StaticResource Hover}" CornerRadius="6" Padding="12,10" Margin="0,0,0,6">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Accent}" />
-                                                <TextBlock Grid.Column="1" Text="{Binding Summary}" FontSize="11.5" Foreground="{StaticResource TextDim}"
-                                                           VerticalAlignment="Center" HorizontalAlignment="Right" Margin="12,0,0,0" />
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+                    CornerRadius="10" Padding="22,18" Width="480" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="Northstar players" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock x:Name="PopulationText" Text="Checking online players..." FontSize="12"
+                               TextWrapping="Wrap" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite" />
+                    <TextBlock x:Name="PopulationUpdatedText" FontSize="11" Foreground="{StaticResource TextDim}"
+                               TextWrapping="Wrap" Margin="0,3,0,0" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" MaxHeight="365">
+                        <ItemsControl x:Name="PopulationRegionsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource Hover}" CornerRadius="6" Padding="12,10" Margin="0,0,0,6">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" FontSize="11.5" Foreground="{StaticResource TextDim}"
+                                                       VerticalAlignment="Center" Margin="12,0,0,0" />
+                                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Accent}" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </ScrollViewer>
-                    <Grid Grid.Row="2" Margin="0,6,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Listed Northstar servers" FontSize="11" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" />
-                        <Button x:Name="RefreshPopulationButton" Grid.Column="1" Style="{StaticResource Ghost}" Content="Refresh"
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button x:Name="RefreshPopulationButton" Style="{StaticResource Ghost}" Content="Refresh"
                                 Padding="14,7" Click="RefreshPopulation_Click" AutomationProperties.Name="Refresh Northstar player counts" />
-                        <Button x:Name="ClosePopulationButton" Grid.Column="2" Style="{StaticResource Ghost}" Content="Close"
+                        <Button x:Name="ClosePopulationButton" Style="{StaticResource Ghost}" Content="Close"
                                 Padding="14,7" Margin="8,0,0,0" Click="ClosePopulation_Click" />
-                    </Grid>
-                </Grid>
+                    </StackPanel>
+                </StackPanel>
             </Border>
         </Border>
 
