@@ -113,6 +113,7 @@ namespace BigWalkVRInstaller
             var bigWalk = game == SelectedGame.BigWalk;
             BigWalkContent.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
             TitanfallContent.Visibility = bigWalk ? Visibility.Collapsed : Visibility.Visible;
+            PlayersButton.Visibility = bigWalk ? Visibility.Collapsed : Visibility.Visible;
             LaunchNonVrButton.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
             LaunchButton.Content = "Launch in VR";
             PulseLaunch(false);
@@ -157,6 +158,7 @@ namespace BigWalkVRInstaller
 
         void StopPopulationUpdates()
         {
+            ClosePopulation(false);
             _populationTimer.Stop();
             var session = _populationSession;
             _populationSession = null;
@@ -166,6 +168,23 @@ namespace BigWalkVRInstaller
         }
 
         async void RefreshPopulation_Click(object sender, RoutedEventArgs e) => await RefreshServerPopulation();
+
+        void Players_Click(object sender, RoutedEventArgs e)
+        {
+            InstallerView.IsEnabled = false;
+            PopulationOverlay.Visibility = Visibility.Visible;
+            ClosePopulationButton.Focus();
+        }
+
+        void ClosePopulation_Click(object sender, RoutedEventArgs e) => ClosePopulation();
+
+        void ClosePopulation(bool restoreFocus = true)
+        {
+            if (PopulationOverlay.Visibility != Visibility.Visible) return;
+            PopulationOverlay.Visibility = Visibility.Collapsed;
+            InstallerView.IsEnabled = true;
+            if (restoreFocus) PlayersButton.Focus();
+        }
 
         async Task RefreshServerPopulation()
         {
@@ -179,7 +198,13 @@ namespace BigWalkVRInstaller
             {
                 var population = await _populationClient.Fetch(session.Token);
                 if (session != _populationSession) return;
+                foreach (var region in population.Regions)
+                    region.IsExpanded = _population?.Regions.Any(previous => previous.Name == region.Name && previous.IsExpanded) == true;
                 _population = population;
+                PlayersButton.Content = $"Players ({population.Players:N0})";
+                PlayersButton.ToolTip = "Player counts by region and server";
+                PopulationRegionsList.ItemsSource = population.Regions;
+                PopulationEmptyText.Visibility = population.Servers == 0 ? Visibility.Visible : Visibility.Collapsed;
                 PopulationText.Text = PopulationSummary(population);
                 PopulationUpdatedText.Text = "Updated " + population.RetrievedAt.ToLocalTime().ToString("t") + " - refreshes every minute";
             }
@@ -187,6 +212,8 @@ namespace BigWalkVRInstaller
             catch (Exception)
             {
                 if (session != _populationSession) return;
+                PlayersButton.Content = _population == null ? "Players" : $"Players ({_population.Players:N0}*)";
+                PlayersButton.ToolTip = _population == null ? "Player counts unavailable - click for details" : "Last known player count - click for details";
                 PopulationText.Text = _population == null ? "Player counts unavailable" : PopulationSummary(_population) + " (last known)";
                 PopulationUpdatedText.Text = _population == null
                     ? "Couldn't reach Northstar. Retry or wait for the next refresh."
@@ -1131,6 +1158,12 @@ namespace BigWalkVRInstaller
             if (_confirm != null)
             {
                 CloseConfirm(false);
+                e.Handled = true;
+                return;
+            }
+            if (PopulationOverlay.Visibility == Visibility.Visible)
+            {
+                ClosePopulation();
                 e.Handled = true;
                 return;
             }

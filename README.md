@@ -33,12 +33,16 @@ VR campaign save files are stored in `%LOCALAPPDATA%\Respawn\Titanfall2_VR`
 
 ### Northstar player counts
 
-The Titanfall 2 screen shows online players and servers from Northstar's public
+The Titanfall 2 screen has a small **Players** button showing the online count.
+Click it to see region totals (US, EU, Asia, and others). Expand a region to see
+each server's location and current / maximum players. Servers with the most
+players appear first within each region; missing locations appear as Unknown.
+Counts come from Northstar's public
 [`/client/servers` endpoint](https://northstar.tf/client/servers). These are counts
 across listed Northstar multiplayer servers, not vanilla Titanfall 2 players or
 VR campaign players. Counts refresh when you open the screen, every minute while
-it is open, or with the panel's Refresh button. Requests stop when you leave the
-screen or close the installer. If Northstar is unavailable, the panel marks any
+it is open, or with the dialog's Refresh button. Requests stop when you leave the
+screen or close the installer. If Northstar is unavailable, the dialog marks any
 previous counts as last known and offers a retry; installation and launching
 remain available.
 

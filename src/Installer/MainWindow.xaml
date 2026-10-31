@@ -20,6 +20,53 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
+        <Style x:Key="PopulationRegionStyle" TargetType="Expander">
+            <Setter Property="Foreground" Value="{StaticResource Text}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Expander">
+                        <StackPanel>
+                            <ToggleButton Content="{TemplateBinding Header}" HorizontalContentAlignment="Stretch" Cursor="Hand"
+                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="RegionHeader" Background="{StaticResource Hover}" CornerRadius="6" Padding="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="Arrow" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                                           Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="0,0,9,0" />
+                                                <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Arrow" Property="Text" Value="&#xE70D;" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="RegionHeader" Property="Background" Value="{StaticResource Stroke}" />
+                                            </Trigger>
+                                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                                <Setter TargetName="RegionHeader" Property="Background" Value="{StaticResource Stroke}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="RegionContent" ContentSource="Content" Visibility="Collapsed" Margin="10,2,10,0" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="RegionContent" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <DataTemplate x:Key="ModCard">
             <Border Style="{StaticResource Card}" Padding="16,13">
                 <Grid>
@@ -295,6 +342,11 @@
                     </StackPanel>
                 </Border>
 
+                <Button x:Name="PlayersButton" Style="{StaticResource Ghost}" Content="Players" FontSize="11.5"
+                        Padding="12,6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,0,12"
+                        Visibility="Collapsed" Click="Players_Click" ToolTip="Player counts by region and server"
+                        AutomationProperties.Name="View Northstar players by region and server" />
+
                 <Grid Grid.Row="1">
                     <ScrollViewer x:Name="InstallView" VerticalScrollBarVisibility="Auto" Margin="0,0,-10,0">
                         <Grid Margin="0,0,10,0">
@@ -374,26 +426,6 @@
                             </StackPanel>
 
                             <StackPanel x:Name="TitanfallContent" Visibility="Collapsed">
-                                <Border Style="{StaticResource CardStatic}" Padding="16,13">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Margin="0,0,14,0">
-                                            <TextBlock Text="Northstar multiplayer" FontSize="13.5" FontWeight="SemiBold" />
-                                            <TextBlock x:Name="PopulationText" Text="Checking online players..." FontSize="12"
-                                                       TextWrapping="Wrap" Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite" />
-                                            <TextBlock x:Name="PopulationUpdatedText" FontSize="11" Foreground="{StaticResource TextDim}"
-                                                       TextWrapping="Wrap" Margin="0,3,0,0" />
-                                            <TextBlock Text="Listed Northstar servers only. VR campaign has no online population."
-                                                       FontSize="11" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,6,0,0" />
-                                        </StackPanel>
-                                        <Button x:Name="RefreshPopulationButton" Grid.Column="1" Style="{StaticResource Ghost}" Content="Refresh"
-                                                Padding="14,7" VerticalAlignment="Top" Click="RefreshPopulation_Click"
-                                                AutomationProperties.Name="Refresh Northstar player counts" />
-                                    </Grid>
-                                </Border>
                                 <Border Style="{StaticResource CardStatic}" Padding="16,13">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -582,6 +614,82 @@
                     <Button Style="{StaticResource Ghost}" Content="Stop" Padding="16,7" Margin="0,18,0,0"
                             HorizontalAlignment="Right" Click="LaunchStop_Click" />
                 </StackPanel>
+            </Border>
+        </Border>
+
+        <Border x:Name="PopulationOverlay" Grid.Row="0" Grid.RowSpan="3" Background="{StaticResource Scrim}" Visibility="Collapsed">
+            <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
+                    CornerRadius="10" Padding="22,18" Width="570" MaxHeight="560" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Northstar players" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock x:Name="PopulationText" Text="Checking online players..." FontSize="12"
+                                   TextWrapping="Wrap" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite" />
+                        <TextBlock x:Name="PopulationUpdatedText" FontSize="11" Foreground="{StaticResource TextDim}"
+                                   TextWrapping="Wrap" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,16,0,0" MaxHeight="365">
+                        <StackPanel>
+                            <TextBlock x:Name="PopulationEmptyText" Text="No Northstar servers are listed right now."
+                                       Foreground="{StaticResource TextDim}" FontSize="12" Visibility="Collapsed" Margin="0,0,0,12" />
+                            <ItemsControl x:Name="PopulationRegionsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander Style="{StaticResource PopulationRegionStyle}" IsExpanded="{Binding IsExpanded, Mode=TwoWay}" Margin="0,0,0,6">
+                                          <Expander.Header>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Accent}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Summary}" FontSize="11.5" Foreground="{StaticResource TextDim}"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Right" Margin="12,0,0,0" />
+                                            </Grid>
+                                          </Expander.Header>
+                                            <ItemsControl ItemsSource="{Binding Servers}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="{StaticResource Stroke}" BorderThickness="0,1,0,0" Padding="0,8">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel Margin="0,0,14,0">
+                                                                    <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                                                                    <TextBlock Text="{Binding Region}" FontSize="10.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
+                                                                </StackPanel>
+                                                                <TextBlock Grid.Column="1" Text="{Binding PlayerCountText}" FontSize="12" VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <Grid Grid.Row="2" Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Listed Northstar servers" FontSize="11" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" />
+                        <Button x:Name="RefreshPopulationButton" Grid.Column="1" Style="{StaticResource Ghost}" Content="Refresh"
+                                Padding="14,7" Click="RefreshPopulation_Click" AutomationProperties.Name="Refresh Northstar player counts" />
+                        <Button x:Name="ClosePopulationButton" Grid.Column="2" Style="{StaticResource Ghost}" Content="Close"
+                                Padding="14,7" Margin="8,0,0,0" Click="ClosePopulation_Click" />
+                    </Grid>
+                </Grid>
             </Border>
         </Border>
 
