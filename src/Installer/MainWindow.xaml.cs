@@ -192,15 +192,14 @@ namespace BigWalkVRInstaller
             PopulationUpdatedText.Text = "Refreshing...";
             try
             {
-                var regions = await NorthstarPopulationClient.Fetch(session.Token);
+                var regions = await VrPopulationClient.Fetch(session.Token);
                 if (session != _populationSession) return;
                 var players = regions.Sum(region => region.Players);
-                var servers = regions.Sum(region => region.Servers);
                 _populationPlayers = players;
                 PlayersButton.Content = $"Players ({players:N0})";
-                PlayersButton.ToolTip = "Player counts by region";
+                PlayersButton.ToolTip = "VR player counts by region";
                 PopulationRegionsList.ItemsSource = regions;
-                PopulationText.Text = $"{players:N0} {(players == 1 ? "player" : "players")} online across {servers:N0} {(servers == 1 ? "server" : "servers")}";
+                PopulationText.Text = $"{players:N0} VR {(players == 1 ? "player" : "players")} online";
                 PopulationUpdatedText.Text = "Updated " + DateTime.Now.ToString("t") + " - refreshes every minute";
             }
             catch (Exception)
@@ -210,7 +209,7 @@ namespace BigWalkVRInstaller
                 PlayersButton.ToolTip = "Player counts unavailable - click for details";
                 if (_populationPlayers == null) PopulationText.Text = "Player counts unavailable";
                 PopulationUpdatedText.Text = _populationPlayers == null
-                    ? "Couldn't reach Northstar. Retry or wait for the next refresh."
+                    ? "Couldn't reach the VR servers. Retry or wait for the next refresh."
                     : "Couldn't refresh. Showing last known counts.";
             }
             finally

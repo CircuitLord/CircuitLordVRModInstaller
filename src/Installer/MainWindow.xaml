@@ -297,8 +297,8 @@
 
                 <Button x:Name="PlayersButton" Style="{StaticResource Ghost}" Content="Players" FontSize="11.5"
                         Padding="12,6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,0,12"
-                        Visibility="Collapsed" Click="Players_Click" ToolTip="Player counts by region"
-                        AutomationProperties.Name="View Northstar players by region" />
+                        Visibility="Collapsed" Click="Players_Click" ToolTip="VR player counts by region"
+                        AutomationProperties.Name="View VR players by region" />
 
                 <Grid Grid.Row="1">
                     <ScrollViewer x:Name="InstallView" VerticalScrollBarVisibility="Auto" Margin="0,0,-10,0">
@@ -574,7 +574,7 @@
             <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
                     CornerRadius="10" Padding="22,18" Width="480" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="Northstar players" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="VR players" FontSize="16" FontWeight="SemiBold" />
                     <TextBlock x:Name="PopulationText" Text="Checking online players..." FontSize="12"
                                TextWrapping="Wrap" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite" />
                     <TextBlock x:Name="PopulationUpdatedText" FontSize="11" Foreground="{StaticResource TextDim}"
@@ -596,7 +596,7 @@
                     </ScrollViewer>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button x:Name="RefreshPopulationButton" Style="{StaticResource Ghost}" Content="Refresh"
-                                Padding="14,7" Click="RefreshPopulation_Click" AutomationProperties.Name="Refresh Northstar player counts" />
+                                Padding="14,7" Click="RefreshPopulation_Click" AutomationProperties.Name="Refresh VR player counts" />
                         <Button x:Name="ClosePopulationButton" Style="{StaticResource Ghost}" Content="Close"
                                 Padding="14,7" Margin="8,0,0,0" Click="ClosePopulation_Click" />
                     </StackPanel>
