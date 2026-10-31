@@ -47,7 +47,6 @@ namespace BigWalkVRInstaller
         GameStartupWatcher _watcher;
         IInputElement _changelogLink;
         Func<Task> _changelogUpdate;
-        readonly NorthstarPopulationClient _populationClient = new NorthstarPopulationClient();
         readonly DispatcherTimer _populationTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
         CancellationTokenSource _populationSession;
         ServerPopulation _population;
@@ -196,7 +195,7 @@ namespace BigWalkVRInstaller
             PopulationUpdatedText.Text = "Refreshing...";
             try
             {
-                var population = await _populationClient.Fetch(session.Token);
+                var population = await NorthstarPopulationClient.Fetch(session.Token);
                 if (session != _populationSession) return;
                 foreach (var region in population.Regions)
                     region.IsExpanded = _population?.Regions.Any(previous => previous.Name == region.Name && previous.IsExpanded) == true;

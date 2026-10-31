@@ -77,16 +77,10 @@ namespace BigWalkVRInstaller.Services
         }
     }
 
-    public sealed class NorthstarPopulationClient
+    public static class NorthstarPopulationClient
     {
         public const string ServersUrl = "https://northstar.tf/client/servers";
-        static readonly HttpClient SharedHttp = CreateHttp();
-        readonly HttpClient _http;
-
-        public NorthstarPopulationClient() : this(SharedHttp) { }
-
-        // The caller owns an injected client; the default client is shared for the app lifetime.
-        public NorthstarPopulationClient(HttpClient http) => _http = http ?? throw new ArgumentNullException(nameof(http));
+        static readonly HttpClient Http = CreateHttp();
 
         static HttpClient CreateHttp()
         {
@@ -100,9 +94,9 @@ namespace BigWalkVRInstaller.Services
             return http;
         }
 
-        public async Task<ServerPopulation> Fetch(CancellationToken cancellationToken)
+        public static async Task<ServerPopulation> Fetch(CancellationToken cancellationToken)
         {
-            using (var response = await _http.GetAsync(ServersUrl, cancellationToken).ConfigureAwait(false))
+            using (var response = await Http.GetAsync(ServersUrl, cancellationToken).ConfigureAwait(false))
             {
                 response.EnsureSuccessStatusCode();
                 var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
