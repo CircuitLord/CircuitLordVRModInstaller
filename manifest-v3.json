@@ -84,10 +84,10 @@
       "id": "Titanfall2VR_bhaptics",
       "name": "bHaptics Support",
       "author": "floh-bhaptics",
-      "version": "1.6.1",
-      "url": "https://github.com/floh-bhaptics/Titanfall2VR_bhaptics/releases/download/v1.6.1/Titanfall2VR_bhaptics.zip",
-      "sha256": "43dd6129a6329642862f6c983268b8551981987022f6baae3e04cf63e7784618",
-      "size": 1579088,
+      "version": "1.7.2",
+      "url": "https://github.com/floh-bhaptics/Titanfall2VR_bhaptics/releases/download/v1.7.2/Titanfall2VR_bhaptics.zip",
+      "sha256": "479d5ed8b021b97bac6bb0bb470972f302b3d9ddc1cad5d580379e55a6855741",
+      "size": 1581815,
       "repository": "https://github.com/floh-bhaptics/Titanfall2VR_bhaptics"
     }
   ]
