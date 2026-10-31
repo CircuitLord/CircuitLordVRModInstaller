@@ -20,53 +20,6 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
-        <Style x:Key="PopulationRegionStyle" TargetType="Expander">
-            <Setter Property="Foreground" Value="{StaticResource Text}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Expander">
-                        <StackPanel>
-                            <ToggleButton Content="{TemplateBinding Header}" HorizontalContentAlignment="Stretch" Cursor="Hand"
-                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
-                                <ToggleButton.Template>
-                                    <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="RegionHeader" Background="{StaticResource Hover}" CornerRadius="6" Padding="10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock x:Name="Arrow" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
-                                                           Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="0,0,9,0" />
-                                                <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" />
-                                            </Grid>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsChecked" Value="True">
-                                                <Setter TargetName="Arrow" Property="Text" Value="&#xE70D;" />
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="RegionHeader" Property="Background" Value="{StaticResource Stroke}" />
-                                            </Trigger>
-                                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                                <Setter TargetName="RegionHeader" Property="Background" Value="{StaticResource Stroke}" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </ToggleButton.Template>
-                            </ToggleButton>
-                            <ContentPresenter x:Name="RegionContent" ContentSource="Content" Visibility="Collapsed" Margin="10,2,10,0" />
-                        </StackPanel>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsExpanded" Value="True">
-                                <Setter TargetName="RegionContent" Property="Visibility" Value="Visible" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <DataTemplate x:Key="ModCard">
             <Border Style="{StaticResource Card}" Padding="16,13">
                 <Grid>
@@ -344,8 +297,8 @@
 
                 <Button x:Name="PlayersButton" Style="{StaticResource Ghost}" Content="Players" FontSize="11.5"
                         Padding="12,6" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,0,12"
-                        Visibility="Collapsed" Click="Players_Click" ToolTip="Player counts by region and server"
-                        AutomationProperties.Name="View Northstar players by region and server" />
+                        Visibility="Collapsed" Click="Players_Click" ToolTip="Player counts by region"
+                        AutomationProperties.Name="View Northstar players by region" />
 
                 <Grid Grid.Row="1">
                     <ScrollViewer x:Name="InstallView" VerticalScrollBarVisibility="Auto" Margin="0,0,-10,0">
@@ -640,8 +593,7 @@
                             <ItemsControl x:Name="PopulationRegionsList">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Expander Style="{StaticResource PopulationRegionStyle}" IsExpanded="{Binding IsExpanded, Mode=TwoWay}" Margin="0,0,0,6">
-                                          <Expander.Header>
+                                        <Border Background="{StaticResource Hover}" CornerRadius="6" Padding="12,10" Margin="0,0,0,6">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -651,27 +603,7 @@
                                                 <TextBlock Grid.Column="1" Text="{Binding Summary}" FontSize="11.5" Foreground="{StaticResource TextDim}"
                                                            VerticalAlignment="Center" HorizontalAlignment="Right" Margin="12,0,0,0" />
                                             </Grid>
-                                          </Expander.Header>
-                                            <ItemsControl ItemsSource="{Binding Servers}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border BorderBrush="{StaticResource Stroke}" BorderThickness="0,1,0,0" Padding="0,8">
-                                                            <Grid>
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*" />
-                                                                    <ColumnDefinition Width="Auto" />
-                                                                </Grid.ColumnDefinitions>
-                                                                <StackPanel Margin="0,0,14,0">
-                                                                    <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
-                                                                    <TextBlock Text="{Binding Region}" FontSize="10.5" Foreground="{StaticResource TextDim}" Margin="0,2,0,0" />
-                                                                </StackPanel>
-                                                                <TextBlock Grid.Column="1" Text="{Binding PlayerCountText}" FontSize="12" VerticalAlignment="Center" />
-                                                            </Grid>
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </Expander>
+                                        </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

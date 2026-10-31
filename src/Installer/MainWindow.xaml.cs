@@ -197,11 +197,9 @@ namespace BigWalkVRInstaller
             {
                 var population = await NorthstarPopulationClient.Fetch(session.Token);
                 if (session != _populationSession) return;
-                foreach (var region in population.Regions)
-                    region.IsExpanded = _population?.Regions.Any(previous => previous.Name == region.Name && previous.IsExpanded) == true;
                 _population = population;
                 PlayersButton.Content = $"Players ({population.Players:N0})";
-                PlayersButton.ToolTip = "Player counts by region and server";
+                PlayersButton.ToolTip = "Player counts by region";
                 PopulationRegionsList.ItemsSource = population.Regions;
                 PopulationEmptyText.Visibility = population.Servers == 0 ? Visibility.Visible : Visibility.Collapsed;
                 PopulationText.Text = PopulationSummary(population);
