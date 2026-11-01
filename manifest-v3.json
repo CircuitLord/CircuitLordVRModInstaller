@@ -60,10 +60,10 @@
       {
         "id": "multiplayer-beta",
         "description": "Multiplayer open beta",
-        "version": "1.1.27",
-        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-multiplayer-beta-1.1.27.zip",
-        "sha256": "776b262aacbad86f798b1e057ed60ede545b1fc44516dac655749babab098a23",
-        "size": 74948724
+        "version": "1.1.28",
+        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-multiplayer-beta-1.1.28.zip",
+        "sha256": "fdd836e87c05abb2b958c593560c4d8260bdc2bdccb454261afa5ea740c4c999",
+        "size": 74952738
       }
     ],
     "changes": [
