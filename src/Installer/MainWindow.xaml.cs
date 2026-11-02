@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -82,7 +82,7 @@ namespace BigWalkVRInstaller
         {
             var installedVersion = installer.InstalledVersion;
             var installed = installedVersion != null;
-            status.Text = !installer.HasGame ? "Game not found" : installed ? "Ready to play" : "Ready to install";
+            status.Text = !installer.HasGame ? Localize.T("Game not found") : installed ? Localize.T("Ready to play") : Localize.T("Ready to install");
             installedChip.Visibility = installed ? Visibility.Visible : Visibility.Collapsed;
             installedChip.Content = installed ? "v" + installedVersion : null;
             art.Opacity = installer.HasGame ? 1 : 0.45;
@@ -245,7 +245,7 @@ namespace BigWalkVRInstaller
             var ready = HasGame && loaderReady;
             ModsList.IsEnabled = ready;
             ModsList.Opacity = ready ? 1 : 0.4;
-            SelectedGameStatus.Text = canLaunch ? "Ready to play" : HasGame ? "Setup required" : "Game not found";
+            SelectedGameStatus.Text = canLaunch ? Localize.T("Ready to play") : HasGame ? Localize.T("Setup required") : Localize.T("Game not found");
         }
 
         void RefreshTitanfallState()
@@ -302,7 +302,7 @@ namespace BigWalkVRInstaller
             TitanfallCrashReportButton.IsEnabled = hasGame;
             TitanfallSavesButton.IsEnabled = !_titanfallBusy;
             LaunchButton.ToolTip = installed ? "Launch Titanfall 2 VR" : "Install Titanfall 2 VR first";
-            SelectedGameStatus.Text = installed ? update ? "Update available" : "Ready to play" : hasGame ? "Setup required" : "Game not found";
+            SelectedGameStatus.Text = installed ? update ? Localize.T("Update available") : Localize.T("Ready to play") : hasGame ? Localize.T("Setup required") : Localize.T("Game not found");
         }
 
         void SetStep(Border badge, TextBlock label, bool done)
@@ -800,7 +800,7 @@ namespace BigWalkVRInstaller
             {
                 menu.Items.Add(ChannelItem($"Stable v{available.version}", "Recommended", !custom && current == null, () => select(null)));
                 foreach (var channel in available.AvailableChannels)
-                    menu.Items.Add(ChannelItem($"{channel.Title} v{channel.version}", channel.description, !custom && current == channel.id, () => select(channel)));
+                    menu.Items.Add(ChannelItem($"{channel.Title} v{channel.version}", Localize.ChannelDetail(channel.description), !custom && current == channel.id, () => select(channel)));
             }
             if (installZip != null)
             {

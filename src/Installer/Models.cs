@@ -69,7 +69,7 @@ namespace BigWalkVRInstaller
         {
             Version = change.version,
             Date = DateTime.ParseExact(change.date, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("MMM d, yyyy", CultureInfo.InvariantCulture),
-            Notes = change.notes,
+            Notes = Services.Localize.ChangeNotes(change.version, change.notes),
             IsInstalled = change.version == installedVersion,
             IsNew = installedVersion != null && VersionUtil.IsNewer(change.version, installedVersion)
         }).ToList();
@@ -148,7 +148,7 @@ namespace BigWalkVRInstaller
 
         public string Id => Remote.id;
         public string Name => string.IsNullOrEmpty(Remote.name) ? Remote.id : Remote.name;
-        public string Description => Remote.description;
+        public string Description => Services.Localize.ModDescription(Remote.id, Remote.description);
         public bool HasDescription => !string.IsNullOrEmpty(Remote.description);
         public bool HasChanges => Available.HasChanges;
         public bool HasRepository => !string.IsNullOrEmpty(Remote.repository);

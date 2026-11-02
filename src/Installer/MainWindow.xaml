@@ -1,4 +1,4 @@
-<Window x:Class="BigWalkVRInstaller.MainWindow"
+﻿<Window x:Class="BigWalkVRInstaller.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BigWalkVRInstaller"
@@ -50,7 +50,7 @@
                                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                <Button Style="{StaticResource QuietDanger}" Content="Uninstall" FontSize="11.5" Padding="6,3"
+                                <Button Style="{StaticResource QuietDanger}" Content="{DynamicResource S_Uninstall}" FontSize="11.5" Padding="6,3"
                                         Margin="0,0,8,0" Click="Uninstall_Click"
                                         Visibility="{Binding ShowUninstall, Converter={StaticResource BoolToVis}}" />
                                 <local:InstallAction x:Name="Action" State="{Binding State}" Label="{Binding ActionLabel}"
@@ -109,7 +109,7 @@
                             </StackPanel>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource QuietDanger}" Content="Uninstall" FontSize="11.5" Padding="6,3"
+                            <Button Style="{StaticResource QuietDanger}" Content="{DynamicResource S_Uninstall}" FontSize="11.5" Padding="6,3"
                                     Margin="0,0,8,0" Click="Uninstall_Click"
                                     Visibility="{Binding ShowUninstall, Converter={StaticResource BoolToVis}}" />
                             <local:InstallAction x:Name="Action" State="{Binding State}" Label="{Binding ActionLabel}" Click="Install_Click" />
@@ -142,7 +142,7 @@
         <Grid Grid.Row="0">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
                 <Image Source="app.ico" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,10,0" />
-                <TextBlock Text="CircuitLord's VR Mod Installer" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <TextBlock Text="{DynamicResource S_CircuitLordSVRModInstaller}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                 <TextBlock x:Name="VersionText" FontSize="11" Foreground="{StaticResource TextDim}"
                            VerticalAlignment="Center" Margin="10,1,0,0" />
             </StackPanel>
@@ -174,7 +174,7 @@
                 <TextBlock x:Name="SelfUpdateTitle" Grid.Column="1" FontSize="13" FontWeight="SemiBold"
                            VerticalAlignment="Center" Margin="0,0,14,0" />
                 <Button x:Name="SelfUpdateButton" Grid.Column="2" Style="{StaticResource Update}"
-                        Content="Update now" Padding="18,7" Click="SelfUpdate_Click" />
+                        Content="{DynamicResource S_UpdateNow}" Padding="18,7" Click="SelfUpdate_Click" />
             </Grid>
         </Border>
 
@@ -186,7 +186,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <StackPanel Margin="2,0,0,14">
-                <TextBlock Text="Choose a game" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock Text="{DynamicResource S_ChooseAGame}" FontSize="20" FontWeight="SemiBold" />
             </StackPanel>
             <StackPanel Grid.Row="1" VerticalAlignment="Top">
                 <Button x:Name="BigWalkCard" Style="{StaticResource GameCard}" Height="96" Margin="0,0,0,8"
@@ -204,8 +204,8 @@
                             </Border.Background>
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,12,0">
-                            <TextBlock Text="Big Walk VR" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock x:Name="BigWalkCardStatus" Text="Checking game..." FontSize="11.5" TextTrimming="CharacterEllipsis"
+                            <TextBlock Text="{DynamicResource S_BigWalkVR}" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock x:Name="BigWalkCardStatus" Text="{DynamicResource S_CheckingGame}" FontSize="11.5" TextTrimming="CharacterEllipsis"
                                        Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
                         </StackPanel>
                         <ContentControl x:Name="BigWalkInstalledChip" Grid.Column="2" Style="{StaticResource InstalledChip}"
@@ -230,11 +230,11 @@
                         </Border>
                         <Border Style="{StaticResource Tag}" Background="White" BorderBrush="White" Padding="7,2"
                                 Margin="8,8,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
-                            <TextBlock Text="NEW" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource Bg}" />
+                            <TextBlock Text="{DynamicResource S_NEW}" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource Bg}" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,12,0">
-                            <TextBlock Text="Titanfall 2 VR" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock x:Name="TitanfallCardStatus" Text="Checking game..." FontSize="11.5" TextTrimming="CharacterEllipsis"
+                            <TextBlock Text="{DynamicResource S_Titanfall2VR}" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock x:Name="TitanfallCardStatus" Text="{DynamicResource S_CheckingGame}" FontSize="11.5" TextTrimming="CharacterEllipsis"
                                        Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
                         </StackPanel>
                         <ContentControl x:Name="TitanfallCardInstalledChip" Grid.Column="2" Style="{StaticResource InstalledChip}"
@@ -261,7 +261,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Button x:Name="BackButton" Style="{StaticResource Ghost}" Content="‹  Games" Padding="12,7" Click="BackToGames_Click" />
+                <Button x:Name="BackButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_Games}" Padding="12,7" Click="BackToGames_Click" />
                 <Border Grid.Column="1" Width="30" Height="30" CornerRadius="6" ClipToBounds="True" Margin="12,0,9,0">
                     <Image x:Name="SelectedGameImage" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                 </Border>
@@ -270,10 +270,10 @@
                     <TextBlock x:Name="SelectedGameStatus" FontSize="10.5" Foreground="{StaticResource TextDim}" />
                 </StackPanel>
                 <StackPanel Grid.Column="3" Orientation="Horizontal">
-                    <Button x:Name="RefreshButton" Style="{StaticResource Ghost}" Content="Refresh" Click="Refresh_Click" />
-                    <Button x:Name="LaunchNonVrButton" Style="{StaticResource Secondary}" Content="Launch in Non-VR"
+                    <Button x:Name="RefreshButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_Refresh}" Click="Refresh_Click" />
+                    <Button x:Name="LaunchNonVrButton" Style="{StaticResource Secondary}" Content="{DynamicResource S_LaunchInNonVR}"
                             Padding="16,7" Margin="8,0,0,0" Click="LaunchNonVr_Click" />
-                    <Button x:Name="LaunchButton" Style="{StaticResource Launch}" Content="Launch in VR"
+                    <Button x:Name="LaunchButton" Style="{StaticResource Launch}" Content="{DynamicResource S_LaunchInVR}"
                             Padding="16,7" Margin="8,0,0,0" Click="Launch_Click" />
                 </StackPanel>
             </Grid>
@@ -286,11 +286,11 @@
                 <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
                         CornerRadius="10" Padding="3" HorizontalAlignment="Left" Margin="0,0,0,12">
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="NavInstall" Style="{StaticResource NavPill}" Content="Setup"
+                        <RadioButton x:Name="NavInstall" Style="{StaticResource NavPill}" Content="{DynamicResource S_Setup}"
                                      IsChecked="True" Checked="Nav_Checked" />
-                        <RadioButton x:Name="NavAddons" Style="{StaticResource NavPill}" Content="Addons" Margin="3,0,0,0"
+                        <RadioButton x:Name="NavAddons" Style="{StaticResource NavPill}" Content="{DynamicResource S_Addons}" Margin="3,0,0,0"
                                      Checked="Nav_Checked" Visibility="Collapsed" />
-                        <RadioButton x:Name="NavLogs" Style="{StaticResource NavPill}" Content="Logs" Margin="3,0,0,0"
+                        <RadioButton x:Name="NavLogs" Style="{StaticResource NavPill}" Content="{DynamicResource S_Logs}" Margin="3,0,0,0"
                                      Checked="Nav_Checked" />
                     </StackPanel>
                 </Border>
@@ -310,12 +310,12 @@
                                             <TextBlock x:Name="GameBadgeText" Text="1" Tag="1" Style="{StaticResource StepBadgeText}" />
                                         </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
-                                            <TextBlock Text="Find Big Walk" FontSize="13.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{DynamicResource S_FindBigWalk}" FontSize="13.5" FontWeight="SemiBold" />
                                             <TextBlock x:Name="GamePathText" FontSize="11.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,3,0,0" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button x:Name="OpenFolderButton" Style="{StaticResource Ghost}" Content="Open" Padding="14,7" Click="OpenGameFolder_Click" />
-                                            <Button x:Name="ChangeFolderButton" Style="{StaticResource Ghost}" Content="Change" Padding="14,7" Margin="8,0,0,0" Click="ChangeGamePath_Click" />
+                                            <Button x:Name="OpenFolderButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_Open}" Padding="14,7" Click="OpenGameFolder_Click" />
+                                            <Button x:Name="ChangeFolderButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_Change}" Padding="14,7" Margin="8,0,0,0" Click="ChangeGamePath_Click" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -332,7 +332,7 @@
                                                 <TextBlock x:Name="BepInExBadgeText" Text="2" Tag="2" Style="{StaticResource StepBadgeText}" />
                                             </Border>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
-                                                <TextBlock Text="Set up BepInEx" FontSize="13.5" FontWeight="SemiBold" />
+                                                <TextBlock Text="{DynamicResource S_SetUpBepInEx}" FontSize="13.5" FontWeight="SemiBold" />
                                                 <TextBlock x:Name="BepInExText" FontSize="11.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,3,0,0" />
                                             </StackPanel>
                                             <Button x:Name="BepInExButton" Grid.Column="2" Style="{StaticResource Primary}" Padding="18,7"
@@ -349,25 +349,25 @@
                                     <Border x:Name="ModsBadge" Style="{StaticResource StepBadge}">
                                         <TextBlock x:Name="ModsBadgeText" Text="3" Tag="3" Style="{StaticResource StepBadgeText}" />
                                     </Border>
-                                    <TextBlock Text="Install mods" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Text="{DynamicResource S_InstallMods}" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" />
                                 </StackPanel>
 
                                 <ItemsControl x:Name="ModsList" ItemTemplate="{StaticResource ModCard}" />
 
-                                <TextBlock x:Name="OfflineNotice" Text="Couldn't reach the download list. Check your connection and press Refresh."
+                                <TextBlock x:Name="OfflineNotice" Text="{DynamicResource S_CouldnTReachTheDownloadListCheckYourConnectionAndPressRe}"
                                            Foreground="{StaticResource TextDim}" HorizontalAlignment="Center" Margin="0,20,0,0" Visibility="Collapsed" />
 
                                 <StackPanel HorizontalAlignment="Center" Margin="0,22,0,10">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Style="{StaticResource Quiet}" Content="Discord" FontSize="11.5" Padding="6,3" Click="OpenDiscord_Click" />
+                                        <Button Style="{StaticResource Quiet}" Content="{DynamicResource S_Discord}" FontSize="11.5" Padding="6,3" Click="OpenDiscord_Click" />
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
-                                        <Button Style="{StaticResource Quiet}" Content="GitHub" FontSize="11.5" Padding="6,3" Click="OpenRepo_Click" />
+                                        <Button Style="{StaticResource Quiet}" Content="{DynamicResource S_GitHub}" FontSize="11.5" Padding="6,3" Click="OpenRepo_Click" />
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
-                                        <Button Style="{StaticResource Quiet}" Content="Mod logs" FontSize="11.5" Padding="6,3" Click="OpenModLogs_Click" />
+                                        <Button Style="{StaticResource Quiet}" Content="{DynamicResource S_ModLogs}" FontSize="11.5" Padding="6,3" Click="OpenModLogs_Click" />
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
-                                        <Button x:Name="CrashReportButton" Style="{StaticResource Quiet}" Content="Create crash report" FontSize="11.5" Padding="6,3" Click="CreateCrashReport_Click" />
+                                        <Button x:Name="CrashReportButton" Style="{StaticResource Quiet}" Content="{DynamicResource S_CreateCrashReport}" FontSize="11.5" Padding="6,3" Click="CreateCrashReport_Click" />
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
-                                        <Button x:Name="RestoreVanillaButton" Style="{StaticResource QuietDanger}" Content="Restore vanilla" FontSize="11.5" Padding="6,3" Click="RestoreVanilla_Click" />
+                                        <Button x:Name="RestoreVanillaButton" Style="{StaticResource QuietDanger}" Content="{DynamicResource S_RestoreVanilla}" FontSize="11.5" Padding="6,3" Click="RestoreVanilla_Click" />
                                     </StackPanel>
                                     <local:SupportFooter Margin="0,26,0,8" Button.Click="OpenSupport_Click" />
                                 </StackPanel>
@@ -385,12 +385,12 @@
                                             <TextBlock x:Name="TitanfallGameBadgeText" Text="1" Tag="1" Style="{StaticResource StepBadgeText}" />
                                         </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
-                                            <TextBlock Text="Find Titanfall 2" FontSize="13.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{DynamicResource S_FindTitanfall2}" FontSize="13.5" FontWeight="SemiBold" />
                                             <TextBlock x:Name="TitanfallGamePathText" FontSize="11.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,3,0,0" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button x:Name="TitanfallOpenFolderButton" Style="{StaticResource Ghost}" Content="Open" Padding="14,7" Click="OpenGameFolder_Click" />
-                                            <Button Style="{StaticResource Ghost}" Content="Change" Padding="14,7" Margin="8,0,0,0" Click="ChangeGamePath_Click" />
+                                            <Button x:Name="TitanfallOpenFolderButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_Open}" Padding="14,7" Click="OpenGameFolder_Click" />
+                                            <Button Style="{StaticResource Ghost}" Content="{DynamicResource S_Change}" Padding="14,7" Margin="8,0,0,0" Click="ChangeGamePath_Click" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -406,7 +406,7 @@
                                             <TextBlock x:Name="TitanfallEaBadgeText" Text="2" Tag="2" Style="{StaticResource StepBadgeText}" />
                                         </Border>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
-                                            <TextBlock Text="Sign in to EA app" FontSize="13.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{DynamicResource S_SignInToEAApp}" FontSize="13.5" FontWeight="SemiBold" />
                                             <TextBlock x:Name="TitanfallEaText" FontSize="11.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,3,0,0" />
                                         </StackPanel>
                                         <Button x:Name="TitanfallEaButton" Grid.Column="2" Style="{StaticResource Ghost}" Padding="14,7"
@@ -427,7 +427,7 @@
                                             </Border>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="Titanfall 2 VR" FontSize="14" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{DynamicResource S_Titanfall2VR}" FontSize="14" FontWeight="SemiBold" />
                                                     <Border x:Name="TitanfallChannelTag" Style="{StaticResource Tag}" Padding="6,1" Margin="8,0,0,0"
                                                             Background="{StaticResource AmberFill}" BorderBrush="{StaticResource AmberFillBorder}" Visibility="Collapsed">
                                                         <TextBlock x:Name="TitanfallChannelTagText" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
@@ -441,7 +441,7 @@
                                                 </StackPanel>
                                             </StackPanel>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button x:Name="TitanfallUninstallButton" Style="{StaticResource QuietDanger}" Content="Uninstall"
+                                                <Button x:Name="TitanfallUninstallButton" Style="{StaticResource QuietDanger}" Content="{DynamicResource S_Uninstall}"
                                                         FontSize="11.5" Padding="6,3" Margin="0,0,8,0" Click="TitanfallUninstall_Click" Visibility="Collapsed" />
                                                 <local:InstallAction x:Name="TitanfallAction" ShowChannels="True"
                                                                      Click="TitanfallInstall_Click" ChannelsClick="TitanfallChannels_Click" />
@@ -456,14 +456,14 @@
 
                                 <StackPanel HorizontalAlignment="Center" Margin="0,28,0,10">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Style="{StaticResource Quiet}" Content="Discord" FontSize="11.5" Padding="6,3" Click="OpenDiscord_Click" />
+                                        <Button Style="{StaticResource Quiet}" Content="{DynamicResource S_Discord}" FontSize="11.5" Padding="6,3" Click="OpenDiscord_Click" />
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
-                                        <Button Style="{StaticResource Quiet}" Content="GitHub" FontSize="11.5" Padding="6,3" Click="OpenRepo_Click" />
+                                        <Button Style="{StaticResource Quiet}" Content="{DynamicResource S_GitHub}" FontSize="11.5" Padding="6,3" Click="OpenRepo_Click" />
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
-                                        <Button x:Name="TitanfallCrashReportButton" Style="{StaticResource Quiet}" Content="Create crash report"
+                                        <Button x:Name="TitanfallCrashReportButton" Style="{StaticResource Quiet}" Content="{DynamicResource S_CreateCrashReport}"
                                                 FontSize="11.5" Padding="6,3" Click="CreateCrashReport_Click" />
                                         <TextBlock Text="•" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" Margin="4,0" />
-                                        <Button x:Name="TitanfallSavesButton" Style="{StaticResource Quiet}" Content="Campaign saves"
+                                        <Button x:Name="TitanfallSavesButton" Style="{StaticResource Quiet}" Content="{DynamicResource S_CampaignSaves}"
                                                 FontSize="11.5" Padding="6,3" Click="TitanfallSaves_Click" />
                                     </StackPanel>
                                     <local:SupportFooter Margin="0,26,0,8" Button.Click="OpenSupport_Click" />
@@ -480,17 +480,17 @@
                                     <TextBlock Text="&#xEA86;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource Accent}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
-                                <TextBlock Text="Community addons" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,14,0,6" />
-                                <TextBlock Text="Addons are optional extras made by community members, not CircuitLord."
+                                <TextBlock Text="{DynamicResource S_CommunityAddons}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,14,0,6" />
+                                <TextBlock Text="{DynamicResource S_AddonsAreOptionalExtrasMadeByCommunityMembersNotCircuitL}"
                                            FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" TextAlignment="Center" />
-                                <TextBlock Text="They aren't officially supported and may cause bugs or crashes."
+                                <TextBlock Text="{DynamicResource S_TheyArenTOfficiallySupportedAndMayCauseBugsOrCrashes}"
                                            FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,18" />
-                                <Button Style="{StaticResource Primary}" Content="I understand, show addons" Padding="16,7" HorizontalAlignment="Center"
+                                <Button Style="{StaticResource Primary}" Content="{DynamicResource S_IUnderstandShowAddons}" Padding="16,7" HorizontalAlignment="Center"
                                         Click="AcknowledgeAddons_Click" />
                             </StackPanel>
 
                             <StackPanel x:Name="AddonsContent" Visibility="Collapsed">
-                                <TextBlock Text="Made by other modders. Uninstall addons before reporting a crash." FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="2,0,0,10" />
+                                <TextBlock Text="{DynamicResource S_MadeByOtherModdersUninstallAddonsBeforeReportingACrash}" FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="2,0,0,10" />
                                 <Border x:Name="TitanfallAddonsPanel" Style="{StaticResource CardStatic}" Padding="0">
                                     <ItemsControl x:Name="TitanfallAddonsList" ItemTemplate="{StaticResource AddonRow}" />
                                 </Border>
@@ -559,7 +559,7 @@
                             </StackPanel>
                         </Grid>
                     </Border>
-                    <Button Style="{StaticResource Ghost}" Content="Stop" Padding="16,7" Margin="0,18,0,0"
+                    <Button Style="{StaticResource Ghost}" Content="{DynamicResource S_Stop}" Padding="16,7" Margin="0,18,0,0"
                             HorizontalAlignment="Right" Click="LaunchStop_Click" />
                 </StackPanel>
             </Border>
@@ -569,21 +569,21 @@
             <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Stroke}" BorderThickness="1"
                     CornerRadius="10" Padding="22,18" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
-                    <TextBlock Text="Campaign save" FontSize="16" FontWeight="SemiBold" />
-                    <TextBlock Text="Titanfall 2 VR keeps its own campaign, separate from the base game save."
+                    <TextBlock Text="{DynamicResource S_CampaignSave}" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="{DynamicResource S_Titanfall2VRKeepsItsOwnCampaignSeparateFromTheBaseGameSa}"
                                FontSize="12" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,6,0,0" />
                     <Grid Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="VR save" FontSize="12.5" />
+                        <TextBlock Text="{DynamicResource S_VRSave}" FontSize="12.5" />
                         <TextBlock x:Name="TitanfallVrSaveStatus" Grid.Column="1" FontSize="12.5" Foreground="{StaticResource TextDim}" />
                     </Grid>
                     <Grid Margin="0,18,0,0">
-                        <Button x:Name="TitanfallSaveDirectoryButton" Style="{StaticResource Ghost}" Content="Open folder"
+                        <Button x:Name="TitanfallSaveDirectoryButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_OpenFolder}"
                                 Padding="16,7" HorizontalAlignment="Left" Click="OpenTitanfallSaves_Click" />
-                        <Button x:Name="TitanfallSavesCloseButton" Style="{StaticResource Ghost}" Content="Close" Padding="16,7"
+                        <Button x:Name="TitanfallSavesCloseButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_Close}" Padding="16,7"
                                 HorizontalAlignment="Right" Click="CloseTitanfallSaves_Click" />
                     </Grid>
                 </StackPanel>
@@ -614,7 +614,7 @@
                                                 <Border Grid.Column="2" Style="{StaticResource Tag}" Padding="6,1"
                                                         Background="{StaticResource GreenFill}" BorderBrush="{StaticResource GreenFillBorder}"
                                                         Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVis}}">
-                                                    <TextBlock Text="Installed" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Green}" />
+                                                    <TextBlock Text="{DynamicResource S_Installed}" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Green}" />
                                                 </Border>
                                             </Grid>
                                             <TextBlock Text="{Binding Notes}" FontSize="12.5" TextWrapping="Wrap" LineHeight="19" Margin="0,5,0,0" />
@@ -630,7 +630,7 @@
                         </ItemsControl>
                     </ScrollViewer>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-                        <Button x:Name="ChangelogCloseButton" Style="{StaticResource Ghost}" Content="Close" Padding="16,7" Click="CloseChangelog_Click" />
+                        <Button x:Name="ChangelogCloseButton" Style="{StaticResource Ghost}" Content="{DynamicResource S_Close}" Padding="16,7" Click="CloseChangelog_Click" />
                         <Button x:Name="ChangelogUpdateButton" Style="{StaticResource Update}" Padding="16,7" Margin="8,0,0,0" Click="ChangelogUpdate_Click" />
                     </StackPanel>
                 </StackPanel>
@@ -644,7 +644,7 @@
                     <TextBlock x:Name="ConfirmTitle" FontSize="14.5" FontWeight="SemiBold" />
                     <TextBlock x:Name="ConfirmText" FontSize="12.5" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,7,0,0" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-                        <Button x:Name="ConfirmCancel" Style="{StaticResource Ghost}" Content="Cancel" Padding="16,7" Click="ConfirmCancel_Click" />
+                        <Button x:Name="ConfirmCancel" Style="{StaticResource Ghost}" Content="{DynamicResource S_Cancel}" Padding="16,7" Click="ConfirmCancel_Click" />
                         <Button x:Name="ConfirmOk" Style="{StaticResource Danger}" Padding="16,7" Margin="8,0,0,0" Click="ConfirmOk_Click" />
                     </StackPanel>
                 </StackPanel>
