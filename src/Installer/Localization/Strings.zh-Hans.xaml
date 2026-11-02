@@ -45,4 +45,5 @@
     <sys:String x:Key="S_Uninstall">卸载</sys:String>
     <sys:String x:Key="S_UpdateNow">立即更新</sys:String>
     <sys:String x:Key="S_VRSave">VR 存档</sys:String>
+    <sys:String x:Key="S_Changelog">更新日志</sys:String>
 </ResourceDictionary>

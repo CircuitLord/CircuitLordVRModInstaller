@@ -106,7 +106,7 @@ namespace BigWalkVRInstaller
             BigWalkContent.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
             TitanfallContent.Visibility = bigWalk ? Visibility.Collapsed : Visibility.Visible;
             LaunchNonVrButton.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
-            LaunchButton.Content = "Launch in VR";
+            LaunchButton.Content = Localize.T("Launch in VR");
             PulseLaunch(false);
             SelectedGameName.Text = bigWalk ? "Big Walk VR" : "Titanfall 2 VR";
             SelectedGameImage.Source = new BitmapImage(new Uri(bigWalk ? "Assets/big-walk.jpg" : "Assets/titanfall-2.jpg", UriKind.Relative));
@@ -262,16 +262,16 @@ namespace BigWalkVRInstaller
             var signedIn = eaApp && _settings.Titanfall2EaSignedIn;
             SetStep(TitanfallEaBadge, TitanfallEaBadgeText, signedIn);
             TitanfallEaText.Text = eaApp
-                ? "Titanfall 2 requires you to be signed into the EA app to play."
-                : "EA app not found. Launch Titanfall 2 once from Steam to install it and sign in, then press Refresh.";
-            TitanfallEaButton.Content = eaApp ? "Open EA app" : "Launch from Steam";
+                ? Localize.T("Titanfall 2 requires you to be signed into the EA app to play.")
+                : Localize.T("EA app not found. Launch Titanfall 2 once from Steam to install it and sign in, then press Refresh.");
+            TitanfallEaButton.Content = eaApp ? Localize.T("Open EA app") : Localize.T("Launch from Steam");
             TitanfallEaButton.IsEnabled = eaApp || hasGame;
 
             TitanfallVersionText.Text = installed
-                ? $"Installed v{_titanfall.Record.version}{(_titanfall.Record.custom ? " custom" : _titanfall.Record.channel != null ? " " + _titanfall.Record.channel : "")}  •  Northstar v{_titanfall.Record.northstarVersion}"
+                ? $"{Localize.T("Installed")} v{_titanfall.Record.version}{(_titanfall.Record.custom ? " custom" : _titanfall.Record.channel != null ? " " + _titanfall.Record.channel : "")}  •  Northstar v{_titanfall.Record.northstarVersion}"
                 : _titanfallRelease != null
                     ? $"v{_titanfallRelease.version}{(_titanfallChannel != null ? " " + _titanfallChannel.id : "")}  •  Northstar v{Titanfall2Installer.NorthstarVersion}"
-                    : "Download list unavailable";
+                    : Localize.T("Download list unavailable");
             TitanfallUninstallButton.Visibility = installed && !_titanfallBusy ? Visibility.Visible : Visibility.Collapsed;
             TitanfallChangelog.Visibility = _titanfallAvailable?.HasChanges == true ? Visibility.Visible : Visibility.Collapsed;
             TitanfallAction.Visibility = _titanfallBusy ? Visibility.Collapsed : Visibility.Visible;
@@ -298,7 +298,7 @@ namespace BigWalkVRInstaller
             BackButton.IsEnabled = !_titanfallBusy;
             RefreshButton.IsEnabled = !_titanfallBusy;
             LaunchButton.IsEnabled = installed && !_titanfallBusy;
-            LaunchButton.Content = "Launch in VR";
+            LaunchButton.Content = Localize.T("Launch in VR");
             TitanfallCrashReportButton.IsEnabled = hasGame;
             TitanfallSavesButton.IsEnabled = !_titanfallBusy;
             LaunchButton.ToolTip = installed ? "Launch Titanfall 2 VR" : "Install Titanfall 2 VR first";
@@ -765,16 +765,16 @@ namespace BigWalkVRInstaller
         {
             select(channel?.id);
             _settings.Save();
-            Status(channel != null ? $"{channel.Title} selected" : "Stable selected");
+            Status(channel != null ? $"{Localize.T("selected")}{Localize.ChannelTitle(channel.id)}" : Localize.T("Stable selected"));
             await Refresh();
         }
 
         async Task InstallTitanfallZip()
         {
             if (!Ready()) return;
-            var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Install from ZIP", Filter = "Mod package (*.zip)|*.zip" };
+            var dialog = new Microsoft.Win32.OpenFileDialog { Title = Localize.T("Install from ZIP"), Filter = "Mod package (*.zip)|*.zip" };
             if (dialog.ShowDialog(this) != true) return;
-            if (!await Confirm("Install custom build", "Only install from sources you trust.\n\nSelect a release to replace this custom build.", "Install", danger: false)) return;
+            if (!await Confirm(Localize.T("Install custom build"), Localize.T("Only install from sources you trust.\n\nSelect a release to replace this custom build."), Localize.T("Install"), danger: false)) return;
             await InstallTitanfallPackage(dialog.FileName);
         }
 
@@ -798,13 +798,13 @@ namespace BigWalkVRInstaller
             };
             if (available != null)
             {
-                menu.Items.Add(ChannelItem($"Stable v{available.version}", "Recommended", !custom && current == null, () => select(null)));
+                menu.Items.Add(ChannelItem($"{Localize.T("Stable")} v{available.version}", Localize.T("Recommended"), !custom && current == null, () => select(null)));
                 foreach (var channel in available.AvailableChannels)
-                    menu.Items.Add(ChannelItem($"{channel.Title} v{channel.version}", Localize.ChannelDetail(channel.description), !custom && current == channel.id, () => select(channel)));
+                    menu.Items.Add(ChannelItem($"{Localize.ChannelTitle(channel.Title)} v{channel.version}", Localize.ChannelDetail(channel.description), !custom && current == channel.id, () => select(channel)));
             }
             if (installZip != null)
             {
-                var zip = PackageItem("Install from ZIP…", "Choose a custom build");
+                var zip = PackageItem(Localize.T("Install from ZIP…"), Localize.T("Choose a custom build"));
                 zip.Click += async (sender, e) => await installZip();
                 menu.Items.Add(zip);
             }

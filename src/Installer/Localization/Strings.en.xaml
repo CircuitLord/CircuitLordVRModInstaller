@@ -45,4 +45,5 @@
     <sys:String x:Key="S_Uninstall">Uninstall</sys:String>
     <sys:String x:Key="S_UpdateNow">Update now</sys:String>
     <sys:String x:Key="S_VRSave">VR save</sys:String>
+    <sys:String x:Key="S_Changelog">Changelog</sys:String>
 </ResourceDictionary>

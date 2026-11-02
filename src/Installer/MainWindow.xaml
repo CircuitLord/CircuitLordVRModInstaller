@@ -42,7 +42,7 @@
                                     <TextBlock Text="{Binding Subtitle}" FontSize="11.5" Foreground="{StaticResource TextDim}" />
                                     <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}"
                                                Visibility="{Binding HasChanges, Converter={StaticResource BoolToVis}}">
-                                        <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="Changelog_Click">Changelog</Hyperlink>
+                                        <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="Changelog_Click"><Run Text="{DynamicResource S_Changelog}"/></Hyperlink>
                                     </TextBlock>
                                 </StackPanel>
                                 <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource TextDim}"
@@ -100,7 +100,7 @@
                                 <TextBlock Text="{Binding Subtitle}" FontSize="11.5" Foreground="{StaticResource TextDim}" />
                                 <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}"
                                            Visibility="{Binding HasChanges, Converter={StaticResource BoolToVis}}">
-                                    <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="Changelog_Click">Changelog</Hyperlink>
+                                    <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="Changelog_Click"><Run Text="{DynamicResource S_Changelog}"/></Hyperlink>
                                 </TextBlock>
                                 <TextBlock FontSize="11.5" Foreground="{StaticResource TextDim}"
                                            Visibility="{Binding HasRepository, Converter={StaticResource BoolToVis}}">
@@ -436,7 +436,7 @@
                                                 <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                                                     <TextBlock x:Name="TitanfallVersionText" FontSize="11.5" Foreground="{StaticResource TextDim}" />
                                                     <TextBlock x:Name="TitanfallChangelog" FontSize="11.5" Foreground="{StaticResource TextDim}" Visibility="Collapsed">
-                                                        <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="TitanfallChangelog_Click">Changelog</Hyperlink>
+                                                        <Run Text="  •  " /><Hyperlink Style="{StaticResource ChangelogLink}" Click="TitanfallChangelog_Click"><Run Text="{DynamicResource S_Changelog}"/></Hyperlink>
                                                     </TextBlock>
                                                 </StackPanel>
                                             </StackPanel>

@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 
 namespace BigWalkVRInstaller.Services
 {
     /// <summary>
-    /// 服务端下发文案与少量动态文本的中文映射。
-    /// 界面静态文本走 Localization/Strings.*.xaml，这里只处理 manifest 与代码里拼出来的字符串。
+    /// 服务端下发文案、渠道名与代码内动态文本的中文映射。
+    /// 界面静态文本走 Localization/Strings.*.xaml，这里只处理 XAML 拿不到的部分。
     /// </summary>
     public static class Localize
     {
@@ -15,17 +15,53 @@ namespace BigWalkVRInstaller.Services
 
         private static readonly Dictionary<string, string> Zh = new Dictionary<string, string>
         {
+            // 状态与按钮
             { "Game not found", "未找到游戏" },
             { "Ready to play", "可以开玩" },
             { "Ready to install", "可以安装" },
             { "Setup required", "需要设置" },
             { "Update available", "有可用更新" },
+            { "Launch in VR", "启动 VR 模式" },
+            { "Join multiplayer beta", "加入多人测试版" },
+
+            // EA app 区块
+            { "Titanfall 2 requires you to be signed into the EA app to play.",
+              "Titanfall 2 需要登录 EA app 才能游玩。" },
+            { "EA app not found. Launch Titanfall 2 once from Steam to install it and sign in, then press Refresh.",
+              "未找到 EA app。请先从 Steam 启动一次 Titanfall 2 完成安装并登录，然后点刷新。" },
+            { "Open EA app", "打开 EA app" },
+            { "Launch from Steam", "从 Steam 启动" },
+
+            // 版本行与渠道菜单
+            { "Installed", "已安装" },
+            { "Download list unavailable", "下载列表不可用" },
+            { "Stable", "稳定版" },
+            { "Recommended", "推荐" },
+            { "selected", "已选择 " },
+            { "Stable selected", "已选择稳定版" },
+            { "Install from ZIP", "从 ZIP 安装" },
+            { "Install from ZIP…", "从 ZIP 安装…" },
+            { "Choose a custom build", "选择自定义版本" },
+            { "Install custom build", "安装自定义版本" },
+            { "Only install from sources you trust.\n\nSelect a release to replace this custom build.",
+              "请只安装来自可信来源的文件。\n\n选择正式版本可替换此自定义版本。" },
+            { "Install", "安装" },
         };
 
         private static readonly Dictionary<string, string> ZhChannel = new Dictionary<string, string>
         {
             { "New features, may be unstable", "包含新功能，可能不稳定" },
             { "Multiplayer open beta", "多人游戏公开测试" },
+        };
+
+        private static readonly Dictionary<string, string> ZhChannelTitle = new Dictionary<string, string>
+        {
+            { "beta", "测试版" },
+            { "Beta", "测试版" },
+            { "Multiplayer-beta", "多人测试版" },
+            { "Stable", "稳定版" },
+            { "multiplayer-beta", "多人测试版" },
+            { "stable", "稳定版" },
         };
 
         private static readonly Dictionary<string, string> ZhChangeNotes = new Dictionary<string, string>
@@ -44,11 +80,18 @@ namespace BigWalkVRInstaller.Services
                       + "加入 Discord 查看完整更新日志！" },
         };
 
-        /// <summary>动态拼接的短文本（状态栏等）。缺条目时回退英文。</summary>
+        /// <summary>动态拼接的短文本（状态栏、按钮、菜单项）。缺条目时回退英文。</summary>
         public static string T(string english)
         {
             if (!IsChinese || english == null) return english;
             return Zh.TryGetValue(english, out var zh) ? zh : english;
+        }
+
+        /// <summary>渠道名（beta / multiplayer-beta）在界面上以标题形式出现。</summary>
+        public static string ChannelTitle(string id)
+        {
+            if (!IsChinese || id == null) return id;
+            return ZhChannelTitle.TryGetValue(id, out var zh) ? zh : id;
         }
 
         public static string ModDescription(string id, string text)
