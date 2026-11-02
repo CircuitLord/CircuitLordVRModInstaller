@@ -196,7 +196,7 @@ namespace BigWalkVRInstaller
             get
             {
                 var author = string.IsNullOrEmpty(Remote.author) ? "unknown" : Remote.author;
-                var version = !IsInstalled ? "Not installed" : CanUpdate ? $"v{InstalledVersion} → v{Remote.version}" : $"v{InstalledVersion}";
+                var version = !IsInstalled ? Services.Localize.T("Not installed") : CanUpdate ? $"v{InstalledVersion} → v{Remote.version}" : $"v{InstalledVersion}";
                 var size = Remote.size > 0 ? $"  •  {FormatSize(Remote.size)}" : "";
                 return $"{author}  •  {version}{size}";
             }
@@ -205,7 +205,7 @@ namespace BigWalkVRInstaller
         static string FormatSize(long bytes) =>
             bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:0.#} MB" : $"{Math.Max(1, bytes / 1024)} KB";
 
-        public string ActionLabel => CanUpdate ? UpdateLabel : HasChannel ? $"Install {Channel.id} v{Remote.version}" : $"Install v{Remote.version}";
+        public string ActionLabel => CanUpdate ? UpdateLabel : HasChannel ? $"{Services.Localize.T("Install")} {Channel.id} v{Remote.version}" : $"{Services.Localize.T("Install")} v{Remote.version}";
         public string UpdateLabel => ChannelMismatch
             ? $"Switch to {Channel?.id ?? "stable"} v{Remote.version}"
             : $"Update to v{Remote.version}";
