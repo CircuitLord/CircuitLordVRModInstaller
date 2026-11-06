@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -69,7 +69,7 @@ namespace BigWalkVRInstaller
             if (!HasGame) _bigWalk.DetectGamePath();
             if (!_titanfall.HasGame) _titanfall.DetectGamePath();
             UpdateGameCards();
-            Status("Choose a game to continue");
+            Status(Localize.T("Choose a game to continue"));
         }
 
         void UpdateGameCards()
@@ -82,7 +82,7 @@ namespace BigWalkVRInstaller
         {
             var installedVersion = installer.InstalledVersion;
             var installed = installedVersion != null;
-            status.Text = !installer.HasGame ? "Game not found" : installed ? "Ready to play" : "Ready to install";
+            status.Text = !installer.HasGame ? Localize.T("Game not found") : installed ? Localize.T("Ready to play") : Localize.T("Ready to install");
             installedChip.Visibility = installed ? Visibility.Visible : Visibility.Collapsed;
             installedChip.Content = installed ? "v" + installedVersion : null;
             art.Opacity = installer.HasGame ? 1 : 0.45;
@@ -106,21 +106,21 @@ namespace BigWalkVRInstaller
             BigWalkContent.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
             TitanfallContent.Visibility = bigWalk ? Visibility.Collapsed : Visibility.Visible;
             LaunchNonVrButton.Visibility = bigWalk ? Visibility.Visible : Visibility.Collapsed;
-            LaunchButton.Content = "Launch in VR";
+            LaunchButton.Content = Localize.T("Launch in VR");
             PulseLaunch(false);
             SelectedGameName.Text = bigWalk ? "Big Walk VR" : "Titanfall 2 VR";
             SelectedGameImage.Source = new BitmapImage(new Uri(bigWalk ? "Assets/big-walk.jpg" : "Assets/titanfall-2.jpg", UriKind.Relative));
 
-            Status($"Loading {SelectedGameName.Text}...");
+            Status($"{Localize.T("Loading")} {SelectedGameName.Text}...");
             await Refresh();
 
             if (bigWalk && HasGame && BepInExInstaller.IsMelonLoaderInstalled(_bigWalk.GamePath))
-                Status("Remove MelonLoader in step 2 to continue.");
+                Status(Localize.T("Remove MelonLoader in step 2 to continue."));
             else if (bigWalk)
             {
                 var vr = _mods.FirstOrDefault();
                 if (vr?.CanUpdate == true) Status($"An update to v{vr.Remote.version} is available");
-                else if (vr?.IsInstalled == true) Status("Everything is up to date");
+                else if (vr?.IsInstalled == true) Status(Localize.T("Everything is up to date"));
             }
         }
 
@@ -134,7 +134,7 @@ namespace BigWalkVRInstaller
             InstallerView.Visibility = Visibility.Collapsed;
             GameSelectionView.Visibility = Visibility.Visible;
             UpdateGameCards();
-            Status("Choose a game to continue");
+            Status(Localize.T("Choose a game to continue"));
         }
 
         async Task Refresh()
@@ -245,7 +245,7 @@ namespace BigWalkVRInstaller
             var ready = HasGame && loaderReady;
             ModsList.IsEnabled = ready;
             ModsList.Opacity = ready ? 1 : 0.4;
-            SelectedGameStatus.Text = canLaunch ? "Ready to play" : HasGame ? "Setup required" : "Game not found";
+            SelectedGameStatus.Text = canLaunch ? Localize.T("Ready to play") : HasGame ? Localize.T("Setup required") : Localize.T("Game not found");
         }
 
         void RefreshTitanfallState()
@@ -262,16 +262,16 @@ namespace BigWalkVRInstaller
             var signedIn = eaApp && _settings.Titanfall2EaSignedIn;
             SetStep(TitanfallEaBadge, TitanfallEaBadgeText, signedIn);
             TitanfallEaText.Text = eaApp
-                ? "Titanfall 2 requires you to be signed into the EA app to play."
-                : "EA app not found. Launch Titanfall 2 once from Steam to install it and sign in, then press Refresh.";
-            TitanfallEaButton.Content = eaApp ? "Open EA app" : "Launch from Steam";
+                ? Localize.T("Titanfall 2 requires you to be signed into the EA app to play.")
+                : Localize.T("EA app not found. Launch Titanfall 2 once from Steam to install it and sign in, then press Refresh.");
+            TitanfallEaButton.Content = eaApp ? Localize.T("Open EA app") : Localize.T("Launch from Steam");
             TitanfallEaButton.IsEnabled = eaApp || hasGame;
 
             TitanfallVersionText.Text = installed
-                ? $"Installed v{_titanfall.Record.version}{(_titanfall.Record.custom ? " custom" : _titanfall.Record.channel != null ? " " + _titanfall.Record.channel : "")}  •  Northstar v{_titanfall.Record.northstarVersion}"
+                ? $"{Localize.T("Installed")} v{_titanfall.Record.version}{(_titanfall.Record.custom ? " custom" : _titanfall.Record.channel != null ? " " + _titanfall.Record.channel : "")}  •  Northstar v{_titanfall.Record.northstarVersion}"
                 : _titanfallRelease != null
                     ? $"v{_titanfallRelease.version}{(_titanfallChannel != null ? " " + _titanfallChannel.id : "")}  •  Northstar v{Titanfall2Installer.NorthstarVersion}"
-                    : "Download list unavailable";
+                    : Localize.T("Download list unavailable");
             TitanfallUninstallButton.Visibility = installed && !_titanfallBusy ? Visibility.Visible : Visibility.Collapsed;
             TitanfallChangelog.Visibility = _titanfallAvailable?.HasChanges == true ? Visibility.Visible : Visibility.Collapsed;
             TitanfallAction.Visibility = _titanfallBusy ? Visibility.Collapsed : Visibility.Visible;
@@ -298,11 +298,11 @@ namespace BigWalkVRInstaller
             BackButton.IsEnabled = !_titanfallBusy;
             RefreshButton.IsEnabled = !_titanfallBusy;
             LaunchButton.IsEnabled = installed && !_titanfallBusy;
-            LaunchButton.Content = "Launch in VR";
+            LaunchButton.Content = Localize.T("Launch in VR");
             TitanfallCrashReportButton.IsEnabled = hasGame;
             TitanfallSavesButton.IsEnabled = !_titanfallBusy;
             LaunchButton.ToolTip = installed ? "Launch Titanfall 2 VR" : "Install Titanfall 2 VR first";
-            SelectedGameStatus.Text = installed ? update ? "Update available" : "Ready to play" : hasGame ? "Setup required" : "Game not found";
+            SelectedGameStatus.Text = installed ? update ? Localize.T("Update available") : Localize.T("Ready to play") : hasGame ? Localize.T("Setup required") : Localize.T("Game not found");
         }
 
         void SetStep(Border badge, TextBlock label, bool done)
@@ -416,7 +416,7 @@ namespace BigWalkVRInstaller
             try
             {
                 _bigWalk.RestoreVanilla();
-                Status("Big Walk is back to vanilla");
+                Status(Localize.T("Big Walk is back to vanilla"));
             }
             catch (Exception ex)
             {
@@ -444,7 +444,7 @@ namespace BigWalkVRInstaller
             BepInExProgressPanel.Visibility = Visibility.Visible;
             BepInExProgress.Value = 0;
             BepInExProgressText.Text = "Downloading BepInEx...";
-            Status("Downloading BepInEx...");
+            Status(Localize.T("Downloading BepInEx..."));
             try
             {
                 var progress = new Progress<double>(value =>
@@ -512,7 +512,7 @@ namespace BigWalkVRInstaller
                 await EnsureTitanfallFolderAccess();
                 var northstarShare = packagePath != null ? TitanfallDownloadShare
                     : TitanfallDownloadShare * Titanfall2Installer.NorthstarSize / (Titanfall2Installer.NorthstarSize + _titanfallRelease.size);
-                Status("Downloading Northstar...");
+                Status(Localize.T("Downloading Northstar..."));
                 var northstarProgress = new Progress<double>(value =>
                 {
                     TitanfallProgress.Value = northstarShare * value;
@@ -524,12 +524,12 @@ namespace BigWalkVRInstaller
                 byte[] mod;
                 if (packagePath != null)
                 {
-                    Status("Reading ZIP...");
+                    Status(Localize.T("Reading ZIP..."));
                     mod = await Task.Run(() => File.ReadAllBytes(packagePath));
                 }
                 else
                 {
-                    Status("Downloading Titanfall 2 VR...");
+                    Status(Localize.T("Downloading Titanfall 2 VR..."));
                     var modProgress = new Progress<double>(value =>
                     {
                         TitanfallProgress.Value = northstarShare + (TitanfallDownloadShare - northstarShare) * value;
@@ -538,7 +538,7 @@ namespace BigWalkVRInstaller
                     mod = await RepoClient.Download(_titanfallRelease.url, _titanfallRelease.sha256, modProgress);
                 }
 
-                Status("Installing Titanfall 2 VR...");
+                Status(Localize.T("Installing Titanfall 2 VR..."));
                 TitanfallProgressText.Text = "Installing  0%";
                 var installProgress = new Progress<double>(value =>
                 {
@@ -563,7 +563,7 @@ namespace BigWalkVRInstaller
                 $"Titanfall 2 VR needs to write to {_titanfall.GamePath}. Windows will ask for permission once.",
                 "Continue", danger: false))
                 throw new Exception("the game folder needs write access.");
-            Status("Approve the Windows prompt to allow access to the game folder.");
+            Status(Localize.T("Approve the Windows prompt to allow access to the game folder."));
             await Task.Run(() => _titanfall.GrantGameFolderAccess());
         }
 
@@ -575,7 +575,7 @@ namespace BigWalkVRInstaller
             {
                 await EnsureTitanfallFolderAccess();
                 _titanfall.Uninstall();
-                Status("Titanfall 2 VR removed");
+                Status(Localize.T("Titanfall 2 VR removed"));
             }
             catch (Exception ex)
             {
@@ -608,7 +608,7 @@ namespace BigWalkVRInstaller
             if (!await Confirm("Sign in to EA app", "Sign in and stay signed in so Titanfall 2 VR can start without asking in VR.", "I'm signed in", danger: false)) return;
             _settings.Titanfall2EaSignedIn = true;
             _settings.Save();
-            Status("EA app sign in confirmed");
+            Status(Localize.T("EA app sign in confirmed"));
             RefreshTitanfallState();
         }
 
@@ -631,9 +631,9 @@ namespace BigWalkVRInstaller
                 {
                     if (!await ConfirmLaunchPermissions(LaunchPermissions.GetElevatedApps())) return;
                     await EnsureTitanfallFolderAccess();
-                    Status("Checking headset resolution...");
+                    Status(Localize.T("Checking headset resolution..."));
                     await Task.Run(() => _titanfall.Play());
-                    Status("Launching Titanfall 2 VR");
+                    Status(Localize.T("Launching Titanfall 2 VR"));
                 }
                 catch (Exception ex)
                 {
@@ -694,22 +694,22 @@ namespace BigWalkVRInstaller
                     GenTitle.Text = "Doing one-time setup for this game version";
                     GenText.Text = "This can take a minute, please wait.";
                     GenText.Visibility = Visibility.Visible;
-                    Status("BepInEx is doing one-time setup for this game version");
+                    Status(Localize.T("BepInEx is doing one-time setup for this game version"));
                     break;
                 case LaunchPhase.GenerationDone:
                     GenCheck.Visibility = Visibility.Visible;
                     GenTitle.Text = "Setup complete";
                     GenText.Visibility = Visibility.Collapsed;
-                    Status("One-time setup finished");
+                    Status(Localize.T("One-time setup finished"));
                     break;
                 case LaunchPhase.Ready:
                     LaunchTitle.Text = "Big Walk is running";
                     LaunchDescription.Visibility = Visibility.Collapsed;
-                    Status("Big Walk is running");
+                    Status(Localize.T("Big Walk is running"));
                     break;
                 case LaunchPhase.Exited:
                     CloseLaunchModal();
-                    Status("Big Walk closed");
+                    Status(Localize.T("Big Walk closed"));
                     break;
                 case LaunchPhase.Crashed:
                     CloseLaunchModal();
@@ -735,12 +735,12 @@ namespace BigWalkVRInstaller
         {
             _watcher?.StopGame();
             CloseLaunchModal();
-            Status("Stopping Big Walk");
+            Status(Localize.T("Stopping Big Walk"));
         }
 
         async void Refresh_Click(object sender, RoutedEventArgs e)
         {
-            Status("Refreshing...");
+            Status(Localize.T("Refreshing..."));
             await Refresh();
         }
 
@@ -765,16 +765,16 @@ namespace BigWalkVRInstaller
         {
             select(channel?.id);
             _settings.Save();
-            Status(channel != null ? $"{channel.Title} selected" : "Stable selected");
+            Status(channel != null ? $"{Localize.T("selected")}{Localize.ChannelTitle(channel.id)}" : Localize.T("Stable selected"));
             await Refresh();
         }
 
         async Task InstallTitanfallZip()
         {
             if (!Ready()) return;
-            var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Install from ZIP", Filter = "Mod package (*.zip)|*.zip" };
+            var dialog = new Microsoft.Win32.OpenFileDialog { Title = Localize.T("Install from ZIP"), Filter = "Mod package (*.zip)|*.zip" };
             if (dialog.ShowDialog(this) != true) return;
-            if (!await Confirm("Install custom build", "Only install from sources you trust.\n\nSelect a release to replace this custom build.", "Install", danger: false)) return;
+            if (!await Confirm(Localize.T("Install custom build"), Localize.T("Only install from sources you trust.\n\nSelect a release to replace this custom build."), Localize.T("Install"), danger: false)) return;
             await InstallTitanfallPackage(dialog.FileName);
         }
 
@@ -798,13 +798,13 @@ namespace BigWalkVRInstaller
             };
             if (available != null)
             {
-                menu.Items.Add(ChannelItem($"Stable v{available.version}", "Recommended", !custom && current == null, () => select(null)));
+                menu.Items.Add(ChannelItem($"{Localize.T("Stable")} v{available.version}", Localize.T("Recommended"), !custom && current == null, () => select(null)));
                 foreach (var channel in available.AvailableChannels)
-                    menu.Items.Add(ChannelItem($"{channel.Title} v{channel.version}", channel.description, !custom && current == channel.id, () => select(channel)));
+                    menu.Items.Add(ChannelItem($"{Localize.ChannelTitle(channel.Title)} v{channel.version}", Localize.ChannelDetail(channel.description), !custom && current == channel.id, () => select(channel)));
             }
             if (installZip != null)
             {
-                var zip = PackageItem("Install from ZIP…", "Choose a custom build");
+                var zip = PackageItem(Localize.T("Install from ZIP…"), Localize.T("Choose a custom build"));
                 zip.Click += async (sender, e) => await installZip();
                 menu.Items.Add(zip);
             }
@@ -974,7 +974,7 @@ namespace BigWalkVRInstaller
             try
             {
                 GameLauncher.SelectFile(create());
-                Status("Crash report created on the Desktop.");
+                Status(Localize.T("Crash report created on the Desktop."));
                 if (await Confirm("Crash report ready",
                     "The ZIP is selected in Explorer. You can send it in the #support channel on the Discord.",
                     "Open Discord", false)) GameLauncher.OpenUrl(DiscordUrl);
@@ -998,7 +998,7 @@ namespace BigWalkVRInstaller
             SelfUpdateButton.Content = "Updating...";
             try
             {
-                Status("Downloading installer update...");
+                Status(Localize.T("Downloading installer update..."));
                 await SelfUpdater.ApplyUpdate(_selfUpdate);
                 Application.Current.Shutdown();
             }
