@@ -17,6 +17,17 @@ namespace BigWalkVRInstaller
                 Environment.Exit(0);
             }
             SelfUpdater.CleanupOldExe();
+            // 按系统 UI 语言加载界面语言包；缺文件时回退英文
+            var uiLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh"
+                ? "zh-Hans" : "en";
+            try
+            {
+                Resources.MergedDictionaries.Add(new ResourceDictionary
+                {
+                    Source = new Uri($"pack://application:,,,/Localization/Strings.{uiLang}.xaml", UriKind.Absolute)
+                });
+            }
+            catch { }
             base.OnStartup(e);
         }
     }
