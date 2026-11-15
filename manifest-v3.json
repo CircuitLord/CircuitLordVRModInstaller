@@ -58,6 +58,13 @@
         "size": 74052673
       }
     ],
+    "news": [
+      {
+        "date": "2026-11-14",
+        "title": "Multiplayer Open Beta has concluded",
+        "notes": "Thank you guys for playing! Over 3500 unique players logged on to try the beta! I've got a lot of balance changes to make and missing features to add, but multiplayer will return!\n\nJoin the Discord for more details, and to fill out the multiplayer feedback form!"
+      }
+    ],
     "changes": [
       {
         "version": "1.0.25",
