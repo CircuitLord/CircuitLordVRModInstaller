@@ -1053,6 +1053,8 @@ namespace BigWalkVRInstaller
 
         void NewsTeaser_Click(object sender, RoutedEventArgs e) => NavNews.IsChecked = true;
 
+        void TextLink_Click(object sender, RoutedEventArgs e) => Open(() => GameLauncher.OpenUrl(((Hyperlink)e.OriginalSource).NavigateUri.AbsoluteUri));
+
         void NewsScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             NewsTopFade.Visibility = e.VerticalOffset > 0 ? Visibility.Visible : Visibility.Collapsed;

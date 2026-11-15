@@ -497,7 +497,7 @@
 
                     <Grid x:Name="NewsView" Visibility="Collapsed" Margin="0,0,-10,0">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" ScrollChanged="NewsScroll_ScrollChanged">
-                            <ItemsControl x:Name="NewsList" Margin="0,0,10,10">
+                            <ItemsControl x:Name="NewsList" Margin="0,0,10,10" Hyperlink.Click="TextLink_Click">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border x:Name="Post" Style="{StaticResource CardStatic}" Padding="16,13">
@@ -522,7 +522,7 @@
                                                     <TextBlock Grid.Column="2" Text="{Binding Date}" FontSize="11.5" Foreground="{StaticResource TextDim}"
                                                                VerticalAlignment="Center" Margin="10,0,0,0" />
                                                 </Grid>
-                                                <TextBlock Text="{Binding Notes}" FontSize="12.5" TextWrapping="Wrap" LineHeight="19" Margin="0,6,0,0" />
+                                                <TextBlock local:LinkText.Text="{Binding Notes}" FontSize="12.5" TextWrapping="Wrap" LineHeight="19" Margin="0,6,0,0" />
                                             </StackPanel>
                                         </Border>
                                         <DataTemplate.Triggers>
@@ -668,7 +668,7 @@
                     <TextBlock x:Name="ChangelogTitle" FontSize="16" FontWeight="SemiBold" />
                     <TextBlock x:Name="ChangelogSubtitle" FontSize="12" Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
                     <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
-                        <ItemsControl x:Name="ChangelogList">
+                        <ItemsControl x:Name="ChangelogList" Hyperlink.Click="TextLink_Click">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border x:Name="Entry" CornerRadius="8" Padding="12,10" Margin="0,0,0,4">
@@ -688,7 +688,7 @@
                                                     <TextBlock Text="Installed" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Green}" />
                                                 </Border>
                                             </Grid>
-                                            <TextBlock Text="{Binding Notes}" FontSize="12.5" TextWrapping="Wrap" LineHeight="19" Margin="0,5,0,0" />
+                                            <TextBlock local:LinkText.Text="{Binding Notes}" FontSize="12.5" TextWrapping="Wrap" LineHeight="19" Margin="0,5,0,0" />
                                         </StackPanel>
                                     </Border>
                                     <DataTemplate.Triggers>

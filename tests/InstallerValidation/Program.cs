@@ -67,6 +67,7 @@ namespace InstallerValidation
                 ValidateManifestChannels();
                 ValidateChangelog();
                 ValidateNews();
+                ValidateLinkText();
 
                 var profile = Path.Combine(root, "TF2VR");
                 var userFile = Path.Combine(profile, "save_data", "user.json");
@@ -394,6 +395,17 @@ namespace InstallerValidation
             Assert(items[3].IsInstalled && !items[2].IsInstalled && !items[0].IsInstalled, "installed update was not marked");
             Assert(items[2].IsUpdate && !items[1].IsUpdate, "updates and announcements were not told apart");
             Assert(new ManifestMod { version = "1.0.0" }.News(null).Count == 0, "empty feed had items");
+        }
+
+        // http links become hyperlinks without trailing punctuation, malformed links stay text
+        static void ValidateLinkText()
+        {
+            var block = new TextBlock();
+            LinkText.SetText(block, "Join https://discord.gg/abc! or http://[bad and https://example.com/a.");
+            var links = block.Inlines.OfType<System.Windows.Documents.Hyperlink>().ToList();
+            Assert(string.Join("|", links.Select(link => link.NavigateUri.OriginalString)) == "https://discord.gg/abc|https://example.com/a", "links were not detected");
+            var text = string.Concat(block.Inlines.Select(inline => new System.Windows.Documents.TextRange(inline.ContentStart, inline.ContentEnd).Text));
+            Assert(text == "Join https://discord.gg/abc! or http://[bad and https://example.com/a.", "link text changed the notes");
         }
 
         static void ValidateChannelMenu()
