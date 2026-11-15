@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using BigWalkVRInstaller.Installers;
@@ -40,6 +42,8 @@ namespace BigWalkVRInstaller
         ManifestMod _titanfallAvailable;
         ManifestMod _titanfallRelease;
         ModChannel _titanfallChannel;
+        List<NewsItem> _titanfallNews = new List<NewsItem>();
+        Task _manifestFetch;
         bool _bepInExBusy;
         bool _titanfallBusy;
         GameStartupWatcher _watcher;
@@ -57,8 +61,9 @@ namespace BigWalkVRInstaller
 
         bool HasGame => _bigWalk?.HasGame == true;
         bool TitanfallCanUpdate => _titanfall.IsInstalled && _titanfallRelease != null && _titanfall.CanUpdate(_titanfallRelease, _titanfallChannel?.id);
+        IEnumerable<NewsItem> UnreadNews => _titanfallNews.Where(item => !_settings.Titanfall2SeenNews.Contains(item.Key));
 
-        void Window_Loaded(object sender, RoutedEventArgs e)
+        async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _settings = AppSettings.Load();
             _bigWalk = new BigWalkInstaller(_settings);
@@ -70,19 +75,23 @@ namespace BigWalkVRInstaller
             if (!_titanfall.HasGame) _titanfall.DetectGamePath();
             UpdateGameCards();
             Status("Choose a game to continue");
+            // news hints on the game cards need the manifest
+            await Refresh();
         }
 
         void UpdateGameCards()
         {
-            SetGameCard(_bigWalk, BigWalkCardStatus, BigWalkInstalledChip, BigWalkArt);
-            SetGameCard(_titanfall, TitanfallCardStatus, TitanfallCardInstalledChip, TitanfallArt);
+            SetGameCard(_bigWalk, BigWalkCardStatus, BigWalkInstalledChip, BigWalkArt, null);
+            SetGameCard(_titanfall, TitanfallCardStatus, TitanfallCardInstalledChip, TitanfallArt, UnreadNews.FirstOrDefault()?.Title);
         }
 
-        static void SetGameCard(IVrModInstaller installer, TextBlock status, ContentControl installedChip, Border art)
+        void SetGameCard(IVrModInstaller installer, TextBlock status, ContentControl installedChip, Border art, string news)
         {
             var installedVersion = installer.InstalledVersion;
             var installed = installedVersion != null;
-            status.Text = !installer.HasGame ? "Game not found" : installed ? "Ready to play" : "Ready to install";
+            status.Inlines.Clear();
+            if (installer.HasGame && news != null) status.Inlines.Add(new Run("New: ") { Foreground = Brush("Amber"), FontWeight = FontWeights.SemiBold });
+            status.Inlines.Add(new Run(!installer.HasGame ? "Game not found" : news ?? (installed ? "Ready to play" : "Ready to install")));
             installedChip.Visibility = installed ? Visibility.Visible : Visibility.Collapsed;
             installedChip.Content = installed ? "v" + installedVersion : null;
             art.Opacity = installer.HasGame ? 1 : 0.45;
@@ -97,7 +106,9 @@ namespace BigWalkVRInstaller
             GameSelectionView.Visibility = Visibility.Collapsed;
             InstallerView.Visibility = Visibility.Visible;
             NavInstall.IsChecked = true;
+            NavNews.Visibility = Visibility.Collapsed;
             NavAddons.Visibility = Visibility.Collapsed;
+            NewsView.Visibility = Visibility.Collapsed;
             AddonsView.Visibility = Visibility.Collapsed;
             LogsView.Visibility = Visibility.Collapsed;
             InstallView.Visibility = Visibility.Visible;
@@ -139,7 +150,9 @@ namespace BigWalkVRInstaller
 
         async Task Refresh()
         {
-            await FetchManifest();
+            // share an in flight fetch, two at once would both fill the mod lists
+            if (_manifestFetch == null || _manifestFetch.IsCompleted) _manifestFetch = FetchManifest();
+            await _manifestFetch;
             RefreshSelectedState();
         }
 
@@ -160,6 +173,7 @@ namespace BigWalkVRInstaller
             _titanfallAvailable = null;
             _titanfallChannel = null;
             _titanfallRelease = null;
+            _titanfallNews = new List<NewsItem>();
 
             try
             {
@@ -176,6 +190,14 @@ namespace BigWalkVRInstaller
                     _settings.Titanfall2Channel = null;
                     settingsChanged = true;
                 }
+                _titanfallNews = manifest.titanfall2vr.News(_titanfall.InstalledVersion);
+                // first run starts with updates read, announcements stay new
+                if (_settings.Titanfall2SeenNews == null)
+                {
+                    _settings.Titanfall2SeenNews = _titanfallNews.Where(item => item.IsUpdate).Select(item => item.Key).ToList();
+                    settingsChanged = true;
+                }
+                foreach (var item in _titanfallNews) item.IsUnread = !_settings.Titanfall2SeenNews.Contains(item.Key);
                 if (settingsChanged) _settings.Save();
 
                 ModEntry Entry(ManifestMod available, ModChannel channel) => previous.TryGetValue(available.id, out var live) && live.Busy
@@ -273,7 +295,6 @@ namespace BigWalkVRInstaller
                     ? $"v{_titanfallRelease.version}{(_titanfallChannel != null ? " " + _titanfallChannel.id : "")}  •  Northstar v{Titanfall2Installer.NorthstarVersion}"
                     : "Download list unavailable";
             TitanfallUninstallButton.Visibility = installed && !_titanfallBusy ? Visibility.Visible : Visibility.Collapsed;
-            TitanfallChangelog.Visibility = _titanfallAvailable?.HasChanges == true ? Visibility.Visible : Visibility.Collapsed;
             TitanfallAction.Visibility = _titanfallBusy ? Visibility.Collapsed : Visibility.Visible;
             TitanfallAction.State = !installed ? InstallState.Install : update ? InstallState.Update : InstallState.Installed;
             TitanfallChannelTag.Visibility = _titanfallChannel != null && !(installed && _titanfall.Record.custom) ? Visibility.Visible : Visibility.Collapsed;
@@ -287,9 +308,16 @@ namespace BigWalkVRInstaller
             TitanfallAction.ActionEnabled = hasGame && _titanfallRelease != null;
             foreach (var addon in _titanfallAddons)
                 addon.InstalledVersion = hasGame ? OwnedFileStore.Read(_titanfall.GamePath, addon.Id)?.version : null;
+            var unread = UnreadNews.ToList();
+            NewsList.ItemsSource = _titanfallNews;
+            NewsCountBadge.Visibility = unread.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            NewsCount.Text = unread.Count.ToString();
+            NewsTeaser.Visibility = unread.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            NewsTeaserTitle.Text = unread.FirstOrDefault()?.Title;
+            NavNews.Visibility = _titanfallNews.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             NavAddons.Visibility = _titanfallAddons.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            // a failed manifest refresh hides the tab while it may be open
-            if (_titanfallAddons.Count == 0 && NavAddons.IsChecked == true) NavInstall.IsChecked = true;
+            // a failed manifest refresh hides the tabs while one may be open
+            if ((_titanfallNews.Count == 0 && NavNews.IsChecked == true) || (_titanfallAddons.Count == 0 && NavAddons.IsChecked == true)) NavInstall.IsChecked = true;
             AddonsIntro.Visibility = _settings.AddonsAcknowledged ? Visibility.Collapsed : Visibility.Visible;
             AddonsContent.Visibility = _settings.AddonsAcknowledged ? Visibility.Visible : Visibility.Collapsed;
             var addonsReady = installed && !_titanfallBusy;
@@ -896,10 +924,6 @@ namespace BigWalkVRInstaller
             Open(() => GameLauncher.OpenUrl(mod.Remote.repository));
         }
 
-        void TitanfallChangelog_Click(object sender, RoutedEventArgs e) =>
-            ShowChangelog((IInputElement)sender, _titanfallAvailable, "Titanfall 2 VR", _titanfall.IsInstalled ? _titanfall.Record.version : null, _titanfallRelease.version,
-                TitanfallCanUpdate && !_titanfallBusy ? TitanfallAction.Label : null, () => InstallTitanfallPackage());
-
         // null updateLabel hides the update action
         void ShowChangelog(IInputElement source, ManifestMod available, string name, string installedVersion, string latestVersion, string updateLabel, Func<Task> update)
         {
@@ -1014,8 +1038,25 @@ namespace BigWalkVRInstaller
         {
             if (InstallView == null) return;
             InstallView.Visibility = NavInstall.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            NewsView.Visibility = NavNews.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             AddonsView.Visibility = NavAddons.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
             LogsView.Visibility = NavLogs.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            if (NavNews.IsChecked == true) MarkNewsSeen();
+        }
+
+        void MarkNewsSeen()
+        {
+            _settings.Titanfall2SeenNews = _titanfallNews.Select(item => item.Key).ToList();
+            _settings.Save();
+            RefreshTitanfallState();
+        }
+
+        void NewsTeaser_Click(object sender, RoutedEventArgs e) => NavNews.IsChecked = true;
+
+        void NewsScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            NewsTopFade.Visibility = e.VerticalOffset > 0 ? Visibility.Visible : Visibility.Collapsed;
+            NewsBottomFade.Visibility = e.VerticalOffset < e.ExtentHeight - e.ViewportHeight ? Visibility.Visible : Visibility.Collapsed;
         }
 
         void AcknowledgeAddons_Click(object sender, RoutedEventArgs e)

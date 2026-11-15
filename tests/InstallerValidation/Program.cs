@@ -66,6 +66,7 @@ namespace InstallerValidation
 
                 ValidateManifestChannels();
                 ValidateChangelog();
+                ValidateNews();
 
                 var profile = Path.Combine(root, "TF2VR");
                 var userFile = Path.Combine(profile, "save_data", "user.json");
@@ -377,6 +378,22 @@ namespace InstallerValidation
             Assert(items[0].Notes == "- snap turn\n- fixed drift" && items[0].Date == "Oct 9, 2026", "changelog entry was not read");
             Assert(items[0].IsNew && !items[0].IsInstalled && !items[1].IsNew && items[1].IsInstalled, "installed or new versions were not marked");
             Assert(mod.Changelog(null).All(item => !item.IsNew && !item.IsInstalled), "uninstalled mod marked versions");
+        }
+
+        // announcements merge with changes newest first, announcements lead on the same day
+        static void ValidateNews()
+        {
+            var mod = JsonUtil.Deserialize<Manifest>("{\"titanfall2vr\":{\"id\":\"Titanfall2VR\",\"version\":\"1.0.25\",\"changes\":["
+                + "{\"version\":\"1.0.25\",\"date\":\"2026-10-24\",\"notes\":\"ticks\"},"
+                + "{\"version\":\"1.0.24\",\"date\":\"2026-10-23\",\"notes\":\"titans\"}],"
+                + "\"news\":[{\"date\":\"2026-11-12\",\"title\":\"Beta testers\",\"notes\":\"try it\"},"
+                + "{\"date\":\"2026-10-24\",\"title\":\"Launch\",\"notes\":\"out now\"}]}}").titanfall2vr;
+            var items = mod.News("1.0.24");
+            Assert(string.Join("|", items.Select(item => item.Title)) == "Beta testers|Launch|Update v1.0.25|Update v1.0.24", "news order was wrong");
+            Assert(items[0].Date == "Nov 12, 2026" && items[0].Notes == "try it" && items[0].Key == "2026-11-12 Beta testers", "news post was not read");
+            Assert(items[3].IsInstalled && !items[2].IsInstalled && !items[0].IsInstalled, "installed update was not marked");
+            Assert(items[2].IsUpdate && !items[1].IsUpdate, "updates and announcements were not told apart");
+            Assert(new ManifestMod { version = "1.0.0" }.News(null).Count == 0, "empty feed had items");
         }
 
         static void ValidateChannelMenu()

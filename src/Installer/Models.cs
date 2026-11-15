@@ -62,17 +62,34 @@ namespace BigWalkVRInstaller
         public List<string> tokenize = new List<string>();
         // newest first, covers every channel, missing for mods published without notes
         public List<ChangelogEntry> changes;
+        // optional announcements, shown with changes in the news tab
+        public List<NewsPost> news;
 
         public bool HasChanges => changes != null;
 
         public List<ChangelogItem> Changelog(string installedVersion) => changes.Select(change => new ChangelogItem
         {
             Version = change.version,
-            Date = DateTime.ParseExact(change.date, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("MMM d, yyyy", CultureInfo.InvariantCulture),
+            Date = NewsItem.FormatDate(ParseDate(change.date)),
             Notes = change.notes,
             IsInstalled = change.version == installedVersion,
             IsNew = installedVersion != null && VersionUtil.IsNewer(change.version, installedVersion)
         }).ToList();
+
+        // announcements before changes on the same day, newest first
+        public List<NewsItem> News(string installedVersion) => (news ?? new List<NewsPost>())
+            .Select(post => new NewsItem { Title = post.title, Notes = post.notes, Published = ParseDate(post.date) })
+            .Concat((changes ?? new List<ChangelogEntry>()).Select(change => new NewsItem
+            {
+                Title = $"Update v{change.version}",
+                Notes = change.notes,
+                Published = ParseDate(change.date),
+                IsUpdate = true,
+                IsInstalled = change.version == installedVersion
+            }))
+            .OrderByDescending(item => item.Published).ToList();
+
+        static DateTime ParseDate(string date) => DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         public List<ModChannel> AvailableChannels =>
             channels?.Where(channel => VersionUtil.IsNewer(channel.version, version)).ToList() ?? new List<ModChannel>();
@@ -115,6 +132,30 @@ namespace BigWalkVRInstaller
         public bool IsInstalled { get; set; }
         // newer than the installed version
         public bool IsNew { get; set; }
+    }
+
+    public class NewsPost
+    {
+        public string date;
+        public string title;
+        public string notes;
+    }
+
+    public class NewsItem
+    {
+        public string Title { get; set; }
+        public string Notes { get; set; }
+        public DateTime Published { get; set; }
+        public string Date => FormatDate(Published);
+        // read state is stored by key
+        public string Key => $"{Published:yyyy-MM-dd} {Title}";
+        // from changes, announcements are false
+        public bool IsUpdate { get; set; }
+        public bool IsInstalled { get; set; }
+        // unread when the feed was fetched, stays highlighted while the tab is open
+        public bool IsUnread { get; set; }
+
+        public static string FormatDate(DateTime date) => date.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
     }
 
     public class ModChannel : ReleaseInfo

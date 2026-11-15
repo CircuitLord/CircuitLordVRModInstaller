@@ -567,6 +567,48 @@
         </Setter>
     </Style>
 
+    <!-- fades content into the background at a scroll edge, flip it with ScaleY -1 for the top -->
+    <Style x:Key="ScrollFade" TargetType="Border">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Margin" Value="0,0,10,0" />
+        <Setter Property="Background" Value="{StaticResource Bg}" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+        <Setter Property="OpacityMask">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="Transparent" Offset="0" />
+                    <GradientStop Color="Black" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- amber strip linking to unread news -->
+    <Style x:Key="NewsTeaser" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AmberFill}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AmberFillBorder}" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocus}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="14,9,12,9">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Amber}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="StepBadge" TargetType="Border">
         <Setter Property="Width" Value="24" />
         <Setter Property="Height" Value="24" />
