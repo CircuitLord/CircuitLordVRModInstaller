@@ -67,6 +67,11 @@
     ],
     "changes": [
       {
+        "version": "1.0.28",
+        "date": "2026-11-17",
+        "notes": "released TF2VR v1.0.28 BETA\n\nAdded:\n- grab, throw, and kick out magazines from appropriate guns\n- trigger and hand animations on guns (with finger tracking)\n- additional grab point on front of R-201\n\nChanges:\n- raised pilot punch speed requirement to 3m/s\n- Steam Frame improvements, cleaned up bindings and tutorials"
+      },
+      {
         "version": "1.0.25",
         "date": "2026-10-24",
         "notes": "Changes:\n- added support for ticks and satchels\n- fixed offset when two-handing archer, thunderbolt, or arc gun\n- fixed Ronin sword core preventing ability use\n- fixed grab pose for EPG mag"
