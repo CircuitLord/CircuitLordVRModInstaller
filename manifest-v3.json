@@ -52,10 +52,10 @@
       {
         "id": "beta",
         "description": "New features, may be unstable",
-        "version": "1.0.28",
-        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.28.zip",
-        "sha256": "119fde0fc3a88dbfc207686175831a3854961be87e6a82705bf587895e41b3ef",
-        "size": 74134065
+        "version": "1.0.30",
+        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.30.zip",
+        "sha256": "c462628526d6c4b6fce3d3a8a8a924904c14087d64abf9b8ff3cc4de8ca73e4f",
+        "size": 74135962
       }
     ],
     "news": [
