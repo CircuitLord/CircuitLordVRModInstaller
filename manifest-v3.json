@@ -67,6 +67,11 @@
     ],
     "changes": [
       {
+        "version": "1.0.32",
+        "date": "2026-11-21",
+        "notes": "Highlights:\n- added \"None\" turning option\n- adjusted how joystick input was calculated to fix some people who were unable to wallrun or walk at full speed\n- fixed pilot hud status messages not rendering in VR\n- converted more cutscenes into VR, one with full VR interactions"
+      },
+      {
         "version": "1.0.29",
         "date": "2026-11-17",
         "notes": "Stable full release of all the beta features!\n\nHighlights:\n- Steam Frame support! Finger tracking + updated tutorials\n- Configurable laser sights!\n- Magazine physics! Grab, throw, and knock them out of guns!\n- Gun trigger animations and improved hand poses"
