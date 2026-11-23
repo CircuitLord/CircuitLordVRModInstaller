@@ -228,8 +228,9 @@
                                 <ImageBrush ImageSource="Assets/titanfall-2.jpg" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border.Background>
                         </Border>
+                        <!-- set Visible to badge a newly added game -->
                         <Border Style="{StaticResource Tag}" Background="White" BorderBrush="White" Padding="7,2"
-                                Margin="8,8,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                Margin="8,8,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed">
                             <TextBlock Text="NEW" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource Bg}" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,12,0">
@@ -308,7 +309,24 @@
 
                 <Grid Grid.Row="1">
                     <ScrollViewer x:Name="InstallView" VerticalScrollBarVisibility="Auto" Margin="0,0,-10,0">
-                        <Grid Margin="0,0,10,0">
+                        <StackPanel Margin="0,0,10,0">
+                            <Button x:Name="NewsTeaser" Style="{StaticResource NewsTeaser}" Margin="0,0,0,8" Click="NewsTeaser_Click" Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="New" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                    <TextBlock x:Name="NewsTeaserTitle" Grid.Column="1" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
+                                        <TextBlock Text="News" FontSize="11.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" />
+                                        <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="9" Foreground="{StaticResource TextDim}"
+                                                   VerticalAlignment="Center" Margin="6,1,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
                             <StackPanel x:Name="BigWalkContent">
                                 <Border Style="{StaticResource CardStatic}" Padding="16,13">
                                     <Grid>
@@ -356,13 +374,13 @@
                                     </StackPanel>
                                 </Border>
 
-                                <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                                    <Border x:Name="ModsBadge" Style="{StaticResource StepBadge}">
-                                        <TextBlock x:Name="ModsBadgeText" Text="3" Tag="3" Style="{StaticResource StepBadgeText}" />
-                                    </Border>
-                                    <TextBlock Text="Install mods" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                </StackPanel>
+                                <local:ModStepCard x:Name="BigWalkModCard" Step="3" ShowChannels="True" Title="{Binding Name}" Detail="{Binding Detail}"
+                                                   ChannelTag="{Binding ChannelTag}" State="{Binding State}" Label="{Binding ActionLabel}"
+                                                   ShowUninstall="{Binding IsInstalled}" Busy="{Binding Busy}" ShowProgress="{Binding Busy}"
+                                                   BusyText="{Binding BusyText}" Progress="{Binding Progress}"
+                                                   Click="Install_Click" ChannelsClick="Channels_Click" UninstallClick="Uninstall_Click" />
 
+                                <!-- optional mods -->
                                 <ItemsControl x:Name="ModsList" ItemTemplate="{StaticResource ModCard}" />
 
                                 <TextBlock x:Name="OfflineNotice" Text="Couldn't reach the download list. Check your connection and press Refresh."
@@ -385,23 +403,6 @@
                             </StackPanel>
 
                             <StackPanel x:Name="TitanfallContent" Visibility="Collapsed">
-                                <Button x:Name="NewsTeaser" Style="{StaticResource NewsTeaser}" Margin="0,0,0,8" Click="NewsTeaser_Click" Visibility="Collapsed">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="New" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" VerticalAlignment="Center" Margin="0,0,10,0" />
-                                        <TextBlock x:Name="NewsTeaserTitle" Grid.Column="1" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
-                                            <TextBlock Text="News" FontSize="11.5" Foreground="{StaticResource TextDim}" VerticalAlignment="Center" />
-                                            <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="9" Foreground="{StaticResource TextDim}"
-                                                       VerticalAlignment="Center" Margin="6,1,0,0" />
-                                        </StackPanel>
-                                    </Grid>
-                                </Button>
-
                                 <Border Style="{StaticResource CardStatic}" Padding="16,13">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -442,40 +443,8 @@
                                     </Grid>
                                 </Border>
 
-                                <Border Style="{StaticResource CardStatic}" Padding="16,13">
-                                    <StackPanel>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <Border x:Name="TitanfallInstallBadge" Grid.Column="0" Style="{StaticResource StepBadge}">
-                                                <TextBlock x:Name="TitanfallInstallBadgeText" Text="3" Tag="3" Style="{StaticResource StepBadgeText}" />
-                                            </Border>
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="Titanfall 2 VR" FontSize="14" FontWeight="SemiBold" />
-                                                    <Border x:Name="TitanfallChannelTag" Style="{StaticResource Tag}" Padding="6,1" Margin="8,0,0,0"
-                                                            Background="{StaticResource AmberFill}" BorderBrush="{StaticResource AmberFillBorder}" Visibility="Collapsed">
-                                                        <TextBlock x:Name="TitanfallChannelTagText" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource Amber}" />
-                                                    </Border>
-                                                </StackPanel>
-                                                <TextBlock x:Name="TitanfallVersionText" FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="0,3,0,0" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button x:Name="TitanfallUninstallButton" Style="{StaticResource QuietDanger}" Content="Uninstall"
-                                                        FontSize="11.5" Padding="6,3" Margin="0,0,8,0" Click="TitanfallUninstall_Click" Visibility="Collapsed" />
-                                                <local:InstallAction x:Name="TitanfallAction" ShowChannels="True"
-                                                                     Click="TitanfallInstall_Click" ChannelsClick="TitanfallChannels_Click" />
-                                            </StackPanel>
-                                        </Grid>
-                                        <StackPanel x:Name="TitanfallProgressPanel" Margin="0,12,0,2" Visibility="Collapsed">
-                                            <TextBlock x:Name="TitanfallProgressText" FontSize="11.5" Foreground="{StaticResource TextDim}" Margin="0,0,0,6" />
-                                            <ProgressBar x:Name="TitanfallProgress" Style="{StaticResource Progress}" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
+                                <local:ModStepCard x:Name="TitanfallModCard" Step="3" Title="Titanfall 2 VR" ShowChannels="True"
+                                                   Click="TitanfallInstall_Click" ChannelsClick="TitanfallChannels_Click" UninstallClick="TitanfallUninstall_Click" />
 
                                 <StackPanel HorizontalAlignment="Center" Margin="0,28,0,10">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -492,7 +461,7 @@
                                     <local:SupportFooter Margin="0,26,0,8" Button.Click="OpenSupport_Click" />
                                 </StackPanel>
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
                     </ScrollViewer>
 
                     <Grid x:Name="NewsView" Visibility="Collapsed" Margin="0,0,-10,0">

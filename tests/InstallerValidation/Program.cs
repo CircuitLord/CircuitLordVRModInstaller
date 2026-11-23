@@ -469,12 +469,12 @@ namespace InstallerValidation
             {
                 typeof(MainWindow).GetField("_titanfallChannel", flags).SetValue(window, channel);
                 typeof(MainWindow).GetMethod("RefreshTitanfallState", flags).Invoke(window, null);
-                var action = (InstallAction)window.FindName("TitanfallAction");
-                Assert(action.State == InstallState.Update && action.ActionEnabled, "optional update action unavailable");
+                var card = (ModStepCard)window.FindName("TitanfallModCard");
+                Assert(card.State == InstallState.Update && card.ActionEnabled, "optional update action unavailable");
                 var launch = (Button)window.FindName("LaunchButton");
                 Assert(launch.IsEnabled && (string)launch.Content == "Launch in VR", "pending update changed the launch action");
                 Assert((string)launch.ToolTip == "Launch Titanfall 2 VR", "launch tooltip required an update");
-                Assert(((TextBlock)window.FindName("TitanfallInstallBadgeText")).Text == "✓", "pending update marked installation incomplete");
+                Assert(card.Done, "pending update marked installation incomplete");
             }
             window.Close();
             Console.WriteLine("validated optional Titanfall updates and launch availability");
@@ -498,9 +498,10 @@ namespace InstallerValidation
             typeof(MainWindow).GetField("_titanfallAvailable", flags).SetValue(window, release);
             typeof(MainWindow).GetField("_titanfallRelease", flags).SetValue(window, release);
             typeof(MainWindow).GetMethod("RefreshTitanfallState", flags).Invoke(window, null);
-            var action = (InstallAction)window.FindName("TitanfallAction");
+            var card = (ModStepCard)window.FindName("TitanfallModCard");
+            var action = (InstallAction)card.FindName("Action");
             Assert(((Button)action.FindName("ChannelsButton")).Visibility == System.Windows.Visibility.Visible, "dropdown hidden without beta");
-            Assert(((TextBlock)window.FindName("TitanfallVersionText")).Text.Contains("custom"), "custom version label missing");
+            Assert(card.Detail.Contains("custom"), "custom version label missing");
             var chip = (ContentControl)action.FindName("InstalledChip");
             Assert(chip.Visibility == System.Windows.Visibility.Visible, "custom install did not show the Installed chip");
             chip.ApplyTemplate();

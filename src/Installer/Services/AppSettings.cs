@@ -16,6 +16,7 @@ namespace BigWalkVRInstaller.Services
         public bool Titanfall2EaSignedIn;
         public bool AddonsAcknowledged;
         // news keys already shown, null until the first feed loads
+        public List<string> BigWalkSeenNews;
         public List<string> Titanfall2SeenNews;
 
         static string Dir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BigWalkVRInstaller");

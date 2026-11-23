@@ -52,6 +52,8 @@ namespace BigWalkVRInstaller
         public string url;
         public string sha256;
         public long size;
+        // the game's main mod, shown as its own setup step
+        public bool core;
         // optional source page linked from the mod card
         public string repository;
         // optional release channels, a channel shows only while newer than stable
@@ -246,6 +248,11 @@ namespace BigWalkVRInstaller
         static string FormatSize(long bytes) =>
             bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:0.#} MB" : $"{Math.Max(1, bytes / 1024)} KB";
 
+        public string Detail => IsInstalled ? $"Installed {VersionLabel(InstalledVersion, InstalledChannel)}" : VersionLabel(Remote.version, Channel?.id);
+
+        // null channel is stable
+        public static string VersionLabel(string version, string channel) => $"v{version}{(channel != null ? " " + channel : "")}";
+
         public string ActionLabel => CanUpdate ? UpdateLabel : HasChannel ? $"Install {Channel.id} v{Remote.version}" : $"Install v{Remote.version}";
         public string UpdateLabel => ChannelMismatch
             ? $"Switch to {Channel?.id ?? "stable"} v{Remote.version}"
@@ -254,7 +261,7 @@ namespace BigWalkVRInstaller
         void NotifyState()
         {
             foreach (var name in new[] { nameof(IsInstalled), nameof(ChannelMismatch), nameof(CanUpdate), nameof(IsCurrent),
-                nameof(State), nameof(ShowUpdate), nameof(ShowUninstall), nameof(Subtitle), nameof(ActionLabel), nameof(UpdateLabel) })
+                nameof(State), nameof(ShowUpdate), nameof(ShowUninstall), nameof(Subtitle), nameof(Detail), nameof(ActionLabel), nameof(UpdateLabel) })
                 Notify(name);
         }
     }
