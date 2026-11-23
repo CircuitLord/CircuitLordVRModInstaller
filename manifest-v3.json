@@ -33,17 +33,17 @@
                                       {
                                           "id":  "beta",
                                           "description":  "New features, may be unstable",
-                                          "version":  "1.2.0",
-                                          "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.2.0.zip",
-                                          "sha256":  "e14a5a918408943c382f3b0cea637c4e00b0c4cd520d6e9a2cf99c5f2db325d7",
-                                          "size":  20135403
+                                          "version":  "1.2.1",
+                                          "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.2.1.zip",
+                                          "sha256":  "19978a16930bae24f55770e61ddd887924efc2251e4642aedc3c23138c55f487",
+                                          "size":  20135549
                                       }
                                   ],
                      "news":  [
                                   {
                                       "date":  "2026-11-23",
-                                      "title":  "Big Walk VR v1.2.0 BETA",
-                                      "notes":  "Switch to the beta channel to try these new features!\n\nChanges:\n- crouch on right stick down\n- ported to OpenXR\n- CPU and GPU performance improvements\n- added desktop mirror by default and made window not steal mouse input"
+                                      "title":  "Big Walk VR v1.2.1 BETA",
+                                      "notes":  "Switch to the beta channel to try these new features!\n\nChanges:\n- crouch on right stick down\n- ported to OpenXR\n- CPU and GPU performance improvements\n- added desktop mirror by default and made window not steal mouse input\n- added toggle grip"
                                   }
                               ]
                  }
