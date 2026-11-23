@@ -28,7 +28,10 @@ namespace BigWalkVRInstaller.Services
             @"Big Walk_Data\Plugins\x86_64\XRSDKOpenVR.dll",
             @"Big Walk_Data\Plugins\x86_64\openvr_api.dll",
             @"Big Walk_Data\UnitySubsystems\XRSDKOpenVR\UnitySubsystemsManifest.json",
-            @"Big Walk_Data\StreamingAssets\SteamVR\OpenVRSettings.asset"
+            @"Big Walk_Data\StreamingAssets\SteamVR\OpenVRSettings.asset",
+            @"Big Walk_Data\Plugins\x86_64\XRSDKOpenXR.dll",
+            @"Big Walk_Data\Plugins\x86_64\openxr_loader.dll",
+            @"Big Walk_Data\UnitySubsystems\XRSDKOpenXR\UnitySubsystemsManifest.json"
         };
 
         public static bool IsInstalled(string gamePath) =>

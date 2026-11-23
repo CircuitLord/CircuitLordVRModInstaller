@@ -259,7 +259,7 @@ namespace BigWalkVRInstaller
             LaunchNonVrButton.IsEnabled = canLaunch;
             LaunchButton.IsEnabled = canLaunch;
             LaunchNonVrButton.ToolTip = canLaunch ? "Play normally while seeing VR players' tracked movement" : "Finish steps 1-3 first";
-            LaunchButton.ToolTip = canLaunch ? "Launch Big Walk in VR, start SteamVR first" : "Finish steps 1-3 first";
+            LaunchButton.ToolTip = canLaunch ? "Launch Big Walk in VR, start your VR runtime first" : "Finish steps 1-3 first";
             RestoreVanillaButton.IsEnabled = HasGame;
             CrashReportButton.IsEnabled = HasGame;
             SetStep(ModsBadge, ModsBadgeText, loaderReady && _mods.Any(mod => mod.IsCurrent));
@@ -674,7 +674,7 @@ namespace BigWalkVRInstaller
                 return;
             }
 
-            Launch(() => _bigWalk.Play(), "Launching Big Walk in VR", "Make sure SteamVR is running and your headset is connected.");
+            Launch(() => _bigWalk.Play(), "Launching Big Walk in VR", "Make sure your VR runtime is running and your headset is connected.");
         }
 
         Task<bool> ConfirmLaunchPermissions(string[] elevatedApps)
