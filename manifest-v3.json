@@ -2,10 +2,10 @@
     "schemaVersion":  3,
     "name":  "Big Walk Mods",
     "installer":  {
-                      "version":  "1.2.14",
-                      "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.14/CircuitLordVRModInstaller.exe",
-                      "sha256":  "cf00edc26291f1f5df024cb3937a1b03fb58de553feb4617a8739109146b0a26",
-                      "commit":  "8d4dae68fc3fa080d3bda8f1856ec263320e4ba6"
+                      "version":  "1.2.15",
+                      "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.15/CircuitLordVRModInstaller.exe",
+                      "sha256":  "1829e242b585c07245224bf32ace55480f0ab5fc5fdc4e7ab4c0f1bdabddba46",
+                      "commit":  "52125a3c35fe7867694fe8261c7c1224628cb169"
                   },
     "bepinex":  {
                     "version":  "6.0.755",
