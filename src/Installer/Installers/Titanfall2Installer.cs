@@ -117,6 +117,8 @@ namespace BigWalkVRInstaller.Installers
                     ?? throw new Exception("Titanfall 2 VR package is missing xr_probe.exe");
                 var monitor = modArchive.GetEntry("crash_monitor.exe")
                     ?? throw new Exception("VR package is missing crash_monitor.exe");
+                // packages before steam playtime support lack it
+                var steamApi = modArchive.GetEntry("steam_api64.dll");
                 var launch = modArchive.GetEntry("launch.json")
                     ?? throw new Exception("Titanfall 2 VR package is missing launch.json");
                 var releaseEntry = modArchive.GetEntry("release.json")
@@ -134,6 +136,7 @@ namespace BigWalkVRInstaller.Installers
                 files.Add((plugin.Length, () => Extract(plugin, ProfileName + "/plugins/Titanfall2VR.dll", written)));
                 files.Add((probe.Length, () => Extract(probe, ProfileName + "/tools/xr_probe.exe", written)));
                 files.Add((monitor.Length, () => Extract(monitor, ProfileName + "/tools/crash_monitor.exe", written)));
+                if (steamApi != null) files.Add((steamApi.Length, () => Extract(steamApi, ProfileName + "/tools/steam_api64.dll", written)));
                 files.Add((launch.Length, () => Extract(launch, ProfileName + "/tools/launch.json", written)));
                 foreach (var entry in modArchive.Entries.Where(entry => entry.Name.Length > 0 && IsProfileEntry(entry.FullName)))
                     files.Add((entry.Length, () => Extract(entry, ProfileName + "/" + entry.FullName, written)));
