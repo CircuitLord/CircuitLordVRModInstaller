@@ -41,9 +41,9 @@
                                   ],
                      "news":  [
                                   {
-                                      "date":  "2026-11-23",
-                                      "title":  "Big Walk VR v1.2.1 BETA",
-                                      "notes":  "Switch to the beta channel to try these new features!\n\nChanges:\n- crouch on right stick down\n- ported to OpenXR\n- CPU and GPU performance improvements\n- added desktop mirror by default and made window not steal mouse input\n- added toggle grip"
+                                      "date":  "2026-11-26",
+                                      "title":  "Big Walk VR v1.2.2 BETA",
+                                      "notes":  "Switch to the beta channel to try these new features!\n\nChanges:\n- improved throwing\n- with toggle grip on, releasing the grip button drops the held item\n- new VR gesture HUD to show what poses you're sending for flat players\n- fixed bug where VR gestures were incorrectly converted when sending to flat players\n- held props are now properly sent to flat players at chest height or overhead depending on where you hold it"
                                   }
                               ]
                  }
