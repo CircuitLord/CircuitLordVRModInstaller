@@ -33,10 +33,10 @@
                                       {
                                           "id":  "beta",
                                           "description":  "New features, may be unstable",
-                                          "version":  "1.2.1",
-                                          "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.2.1.zip",
-                                          "sha256":  "19978a16930bae24f55770e61ddd887924efc2251e4642aedc3c23138c55f487",
-                                          "size":  20135549
+                                          "version":  "1.2.2",
+                                          "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.2.2.zip",
+                                          "sha256":  "9f91100c7f36fa08ceb8c300b40c64fa52e7688eeb5447e118300cf59c5d1289",
+                                          "size":  20136918
                                       }
                                   ],
                      "news":  [
