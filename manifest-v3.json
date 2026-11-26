@@ -79,6 +79,11 @@
     ],
     "changes": [
       {
+        "version": "1.0.33",
+        "date": "2026-11-26",
+        "notes": "adding some helpful stuff for left handed people, lowkey forgot sorry this took so long!\n\nChanges:\n- added stick-swap support\n- swap jump/dash input\n- steam should now track playtime in the VR mod"
+      },
+      {
         "version": "1.0.32",
         "date": "2026-11-21",
         "notes": "Highlights:\n- added \"None\" turning option\n- adjusted how joystick input was calculated to fix some people who were unable to wallrun or walk at full speed\n- fixed pilot hud status messages not rendering in VR\n- converted more cutscenes into VR, one with full VR interactions"
