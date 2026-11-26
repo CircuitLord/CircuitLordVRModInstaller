@@ -1,117 +1,115 @@
 {
-    "schemaVersion":  3,
-    "name":  "Big Walk Mods",
-    "installer":  {
-                      "version":  "1.2.16",
-                      "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.16/CircuitLordVRModInstaller.exe",
-                      "sha256":  "c7d6259dbd8be75d36d8ca78e30db9d49b49a248203e6f49b657dec58e2df281",
-                      "commit":  "89cc8c59af5c75de0fefee101c8db9261ed7fc46"
-                  },
-    "bepinex":  {
-                    "version":  "6.0.755",
-                    "url":  "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
-                    "sha256":  "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
-                },
-    "mods":  [
-                 {
-                     "id":  "BigWalkVR",
-                     "name":  "Big Walk VR",
-                     "author":  "CircuitLord",
-                     "version":  "1.1.5",
-                     "description":  "Full multiplayer-compatible SteamVR support for Big Walk.",
-                     "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-1.1.5.zip",
-                     "sha256":  "c8657be2aa6f18a7908fbc04bd976092d250da9d9e865b0efc416d676a5fb62f",
-                     "size":  20821633,
-                     "core":  true,
-                     "preserve":  [
-                                      "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
-                                  ],
-                     "tokenize":  [
-
-                                  ],
-                     "channels":  [
-                                      {
-                                          "id":  "beta",
-                                          "description":  "New features, may be unstable",
-                                          "version":  "1.2.2",
-                                          "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.2.2.zip",
-                                          "sha256":  "9f91100c7f36fa08ceb8c300b40c64fa52e7688eeb5447e118300cf59c5d1289",
-                                          "size":  20136918
-                                      }
-                                  ],
-                     "news":  [
-                                  {
-                                      "date":  "2026-11-26",
-                                      "title":  "Big Walk VR v1.2.2 BETA",
-                                      "notes":  "Switch to the beta channel to try these new features!\n\nChanges:\n- improved throwing\n- with toggle grip on, releasing the grip button drops the held item\n- new VR gesture HUD to show what poses you're sending for flat players\n- fixed bug where VR gestures were incorrectly converted when sending to flat players\n- held props are now properly sent to flat players at chest height or overhead depending on where you hold it"
-                                  },
-                                  {
-                                      "date":  "2026-11-23",
-                                      "title":  "Big Walk VR v1.2.1 BETA",
-                                      "notes":  "Switch to the beta channel to try these new features!\n\nChanges:\n- crouch on right stick down\n- added toggle grip\n- ported to OpenXR\n- CPU and GPU performance improvements\n- added desktop mirror by default and made window not steal mouse input\n\nPlease report issues on the Discord!"
-                                  }
-                              ]
-                 }
-             ],
-    "titanfall2vr":  {
-                         "id":  "Titanfall2VR",
-                         "name":  "Titanfall 2 VR",
-                         "author":  "CircuitLord",
-                         "description":  "OpenXR campaign VR support for Titanfall 2.",
-                         "version":  "1.0.32",
-                         "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-1.0.32.zip",
-                         "sha256":  "e71498ec5b30bfb19ebce3dfcdad97e67cc37d61b0cacf10896ea632c3548367",
-                         "size":  74136090,
-                         "channels":  [
-                                          {
-                                              "id":  "beta",
-                                              "description":  "New features, may be unstable",
-                                              "version":  "1.0.31",
-                                              "url":  "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.31.zip",
-                                              "sha256":  "98ad4a77fc2a524687ea8b05a4ea53171f389e9876135578b8ddd2a18126ed2e",
-                                              "size":  74136094
-                                          }
-                                      ],
-                         "news":  [
-                                      {
-                                          "date":  "2026-11-14",
-                                          "title":  "Multiplayer Open Beta has concluded",
-                                          "notes":  "Thank you guys for playing! Over 3500 unique players logged on to try the beta! I\u0027ve got a lot of balance changes to make and missing features to add, but multiplayer will return!\n\nJoin the Discord for more details, and to fill out the multiplayer feedback form!\nhttps://discord.gg/MTKwud2cCP"
-                                      }
-                                  ],
-                         "changes":  [
-                                         {
-                                             "version":  "1.0.32",
-                                             "date":  "2026-11-21",
-                                             "notes":  "Highlights:\n- added \"None\" turning option\n- adjusted how joystick input was calculated to fix some people who were unable to wallrun or walk at full speed\n- fixed pilot hud status messages not rendering in VR\n- converted more cutscenes into VR, one with full VR interactions"
-                                         },
-                                         {
-                                             "version":  "1.0.29",
-                                             "date":  "2026-11-17",
-                                             "notes":  "Stable full release of all the beta features!\n\nHighlights:\n- Steam Frame support! Finger tracking + updated tutorials\n- Configurable laser sights!\n- Magazine physics! Grab, throw, and knock them out of guns!\n- Gun trigger animations and improved hand poses"
-                                         },
-                                         {
-                                             "version":  "1.0.25",
-                                             "date":  "2026-10-24",
-                                             "notes":  "Changes:\n- added support for ticks and satchels\n- fixed offset when two-handing archer, thunderbolt, or arc gun\n- fixed Ronin sword core preventing ability use\n- fixed grab pose for EPG mag"
-                                         },
-                                         {
-                                             "version":  "1.0.24",
-                                             "date":  "2026-10-23",
-                                             "notes":  "The biggest update for TF2VR by far!\n\nHighlights:\n- Brand new head-based Titan control scheme\n- Improved and standardized mag grab poses on all guns\n- \"Shimmer Reduction\" graphics setting, massively reduces jagged edges for very little perf cost!\n- Tons of other polish and bug-fixes!\n\nJoin the Discord to see the full changelog!"
-                                         }
-                                     ]
-                     },
-    "titanfall2addons":  [
-                             {
-                                 "id":  "Titanfall2VR_bhaptics",
-                                 "name":  "bHaptics Support",
-                                 "author":  "floh-bhaptics",
-                                 "version":  "1.7.2",
-                                 "url":  "https://github.com/floh-bhaptics/Titanfall2VR_bhaptics/releases/download/v1.7.2/Titanfall2VR_bhaptics.zip",
-                                 "sha256":  "479d5ed8b021b97bac6bb0bb470972f302b3d9ddc1cad5d580379e55a6855741",
-                                 "size":  1581815,
-                                 "repository":  "https://github.com/floh-bhaptics/Titanfall2VR_bhaptics"
-                             }
-                         ]
+  "schemaVersion": 3,
+  "name": "Big Walk Mods",
+  "installer": {
+    "version": "1.2.16",
+    "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/v1.2.16/CircuitLordVRModInstaller.exe",
+    "sha256": "c7d6259dbd8be75d36d8ca78e30db9d49b49a248203e6f49b657dec58e2df281",
+    "commit": "89cc8c59af5c75de0fefee101c8db9261ed7fc46"
+  },
+  "bepinex": {
+    "version": "6.0.755",
+    "url": "https://thunderstore.io/package/download/BepInEx/BepInExPack_IL2CPP/6.0.755/",
+    "sha256": "a3ec977c7760c6045b742a9bf3e59c7b11baa80b023f402ebdbff07bad6b0d96"
+  },
+  "mods": [
+    {
+      "id": "BigWalkVR",
+      "name": "Big Walk VR",
+      "author": "CircuitLord",
+      "version": "1.1.5",
+      "description": "Full multiplayer-compatible SteamVR support for Big Walk.",
+      "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-1.1.5.zip",
+      "sha256": "c8657be2aa6f18a7908fbc04bd976092d250da9d9e865b0efc416d676a5fb62f",
+      "size": 20821633,
+      "core": true,
+      "preserve": [
+        "BepInEx\\plugins\\BigWalkVR\\BigWalkVR.ItemOffsets.json"
+      ],
+      "tokenize": [],
+      "channels": [
+        {
+          "id": "beta",
+          "description": "New features, may be unstable",
+          "version": "1.2.2",
+          "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/BigWalkVR-beta-1.2.2.zip",
+          "sha256": "9f91100c7f36fa08ceb8c300b40c64fa52e7688eeb5447e118300cf59c5d1289",
+          "size": 20136918
+        }
+      ],
+      "news": [
+        {
+          "date": "2026-11-26",
+          "title": "Big Walk VR v1.2.2 BETA",
+          "notes": "Switch to the beta channel to try these new features!\n\nChanges:\n- improved throwing\n- with toggle grip on, releasing the grip button drops the held item\n- new VR gesture HUD to show what poses you're sending for flat players\n- fixed bug where VR gestures were incorrectly converted when sending to flat players\n- held props are now properly sent to flat players at chest height or overhead depending on where you hold it"
+        },
+        {
+          "date": "2026-11-23",
+          "title": "Big Walk VR v1.2.1 BETA",
+          "notes": "Switch to the beta channel to try these new features!\n\nChanges:\n- crouch on right stick down\n- added toggle grip\n- ported to OpenXR\n- CPU and GPU performance improvements\n- added desktop mirror by default and made window not steal mouse input\n\nPlease report issues on the Discord!"
+        }
+      ]
+    }
+  ],
+  "titanfall2vr": {
+    "id": "Titanfall2VR",
+    "name": "Titanfall 2 VR",
+    "author": "CircuitLord",
+    "description": "OpenXR campaign VR support for Titanfall 2.",
+    "version": "1.0.33",
+    "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-1.0.33.zip",
+    "sha256": "4b388db7d36b404dbe33b7c6fd9fe78aae1e5c65e32778bf3de3030a2d8c6f53",
+    "size": 74291499,
+    "channels": [
+      {
+        "id": "beta",
+        "description": "New features, may be unstable",
+        "version": "1.0.31",
+        "url": "https://github.com/CircuitLord/CircuitLordVRModInstaller/releases/download/mod-packages/Titanfall2VR-beta-1.0.31.zip",
+        "sha256": "98ad4a77fc2a524687ea8b05a4ea53171f389e9876135578b8ddd2a18126ed2e",
+        "size": 74136094
+      }
+    ],
+    "news": [
+      {
+        "date": "2026-11-14",
+        "title": "Multiplayer Open Beta has concluded",
+        "notes": "Thank you guys for playing! Over 3500 unique players logged on to try the beta! I've got a lot of balance changes to make and missing features to add, but multiplayer will return!\n\nJoin the Discord for more details, and to fill out the multiplayer feedback form!\nhttps://discord.gg/MTKwud2cCP"
+      }
+    ],
+    "changes": [
+      {
+        "version": "1.0.32",
+        "date": "2026-11-21",
+        "notes": "Highlights:\n- added \"None\" turning option\n- adjusted how joystick input was calculated to fix some people who were unable to wallrun or walk at full speed\n- fixed pilot hud status messages not rendering in VR\n- converted more cutscenes into VR, one with full VR interactions"
+      },
+      {
+        "version": "1.0.29",
+        "date": "2026-11-17",
+        "notes": "Stable full release of all the beta features!\n\nHighlights:\n- Steam Frame support! Finger tracking + updated tutorials\n- Configurable laser sights!\n- Magazine physics! Grab, throw, and knock them out of guns!\n- Gun trigger animations and improved hand poses"
+      },
+      {
+        "version": "1.0.25",
+        "date": "2026-10-24",
+        "notes": "Changes:\n- added support for ticks and satchels\n- fixed offset when two-handing archer, thunderbolt, or arc gun\n- fixed Ronin sword core preventing ability use\n- fixed grab pose for EPG mag"
+      },
+      {
+        "version": "1.0.24",
+        "date": "2026-10-23",
+        "notes": "The biggest update for TF2VR by far!\n\nHighlights:\n- Brand new head-based Titan control scheme\n- Improved and standardized mag grab poses on all guns\n- \"Shimmer Reduction\" graphics setting, massively reduces jagged edges for very little perf cost!\n- Tons of other polish and bug-fixes!\n\nJoin the Discord to see the full changelog!"
+      }
+    ]
+  },
+  "titanfall2addons": [
+    {
+      "id": "Titanfall2VR_bhaptics",
+      "name": "bHaptics Support",
+      "author": "floh-bhaptics",
+      "version": "1.7.2",
+      "url": "https://github.com/floh-bhaptics/Titanfall2VR_bhaptics/releases/download/v1.7.2/Titanfall2VR_bhaptics.zip",
+      "sha256": "479d5ed8b021b97bac6bb0bb470972f302b3d9ddc1cad5d580379e55a6855741",
+      "size": 1581815,
+      "repository": "https://github.com/floh-bhaptics/Titanfall2VR_bhaptics"
+    }
+  ]
 }
